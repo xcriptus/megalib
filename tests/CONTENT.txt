@@ -1,0 +1,3 @@
+This directory contains tests/examples for the different library classes.
+Most tests display some results that are to be inspected and
+therefore play the role of examples of usage of the library.

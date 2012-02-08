@@ -1,0 +1,10 @@
+This directory contains configuration files used by the various libraries files.
+It typically defines usefull constants but also path to external libraries.
+In some cases some actual code is executed but this is typically to initialize
+system wide variables or to define autoloaders, etc.
+
+Files should be in the form of configXXX or localConfigXXX where XXX is 
+the name of a library file. localConfiglXXX file are not ignored when commited
+so that the parameters inside of them are not disclosed. This typically
+serve for storing access to databases with passwords and this kind of things.
+ 
