@@ -57,3 +57,21 @@ function columnValuesFromArrayMap($arrayMap,$key,$distinct=false) {
   }
   return ($distinct ? array_unique($result) : $result) ;
 }
+
+
+
+/**
+ * Return the last error message produced by json_encode and json_decode.
+ * @return String! Error message.
+ */
+function jsonLastErrorMessage() {
+  $JSON_ERRORS = array(
+      JSON_ERROR_NONE => 'No errors|',
+      JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
+      JSON_ERROR_STATE_MISMATCH => 'Underflow or the modes mismatch',
+      JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
+      JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
+      JSON_ERROR_UTF8 =>'Malformed UTF-8 characters, possibly incorrectly encoded'
+  );
+  return $JSON_ERRORS[json_last_error()];
+}
