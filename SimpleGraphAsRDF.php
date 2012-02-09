@@ -1,85 +1,86 @@
 <?php
-/**
- * TODO: Should be rewritten based on RDF.php
- */
 
-require_once 'config.php' ;
+require_once 'RDF.php' ;
+require_once 'SimpleGraph.php' ;
 
-/**
- * TODO: Should be rewritten based on RDF.php
- */
-function makeURIName($s) {
-  return strtr(strtolower($s),' .@-+','_____') ;
-}
-
-/**
- * TODO: Should be rewritten based on RDF.php
- */
-function toRDFTriplet($entitykind,$keyvalue,$attributename,$value,$type,$ontologyprefix) {
-  $triple = array() ;
-  $triple['s']        = makeURIName($keyvalue) ;
-  $triple['s_type']   = 'uri';
-  $triple['p'] = ((strpos($attributename,':')) ? '' : $ontologyprefix.':') .$attributename ;
-  switch ($type) {
-    case 'string':
-      $triple['o']=$value ;
-      $triple['o_type']='literal' ;
-      break ;
-    case 'class':
-      $triple['o']=$value ;
-      $triple['o_type']='uri' ;
-      break ;
-    default :
-      $triple['o']=makeURIName($value) ;
-    $triple['o_type']='uri' ;
-    break ;
+class SimpleGraphAsRDF {
+  protected /*RDFTripleSet!*/ $tripleSet ;
+  
+  /**
+   * @return Set*(RDFTriple!)!
+   */
+  public function getTriples() {
+    return $this->tripleSet->triples ;
   }
-  return $triple ;
-}
-
-function simpleGraphToRDFtripletSet($graph, $ontologyprefix) {
-  $triples = array() ;
-  foreach($graph->R as $entitykind => $mapofentities) {
-    $attributes=$graph->schema->getAttributeDescriptions($entitykind) ;
-    foreach ($mapofentities as $keyvalue => $map ) {
-      $triples[]=toRDFTriplet($entitykind,$keyvalue,
-                              'rdf:type',$ontologyprefix.':'.$entitykind,'class',$ontologyprefix) ;
-      foreach ($attributes as $attributename => $attributeinfo) {
-        switch ($attributeinfo['tag']) {
-          case '@':
-          case '!':
-          case '?':
-            if (isset($map[$attributename])) {
-
-              $value=$map[$attributename] ;
-              $triples[]=toRDFTriplet($entitykind,$keyvalue,
-                                      $attributename,$value,$attributeinfo['type'],$ontologyprefix) ;
-
-            }
-            break ;
-          case '*':
-            if (isset($map[$attributename])) {
-              foreach ($map[$attributename] as $value) {
-                $triples[]=toRDFTriplet($entitykind,$keyvalue,
-                                        $attributename,$value,$attributeinfo['type'],$ontologyprefix) ;
+  
+  /**
+   * Add the given graph to the triple set using the prefixes specified.
+   * @param SimpleGraph! $graph
+   * @param URI!|Map(EntityKind!,URI!)! $dataprefixes Prefix(es) to build URIs for
+   * entities. If $dataprefixes is a string, then all kinds of entities will use
+   * the same schema. Otherwise a prefix should be given for each entity kind in
+   * the form of a Map(EntityKind!,URI!)! 
+   * @param URI! $ontologyprefix This prefix will be added in the context
+   * type declaration of entities to create an URI for the type of entity.
+   * For instance a type of entity 'feature' will be converted to
+   * http://data.mydomain.org/schema#feature if $ontologyprefix has the 
+   * value http://data.mydomain.org/schema# 
+   * @return void 
+   */
+  public function addSimpleGraph(SimpleGraph $graph, $dataprefixes,$ontologyprefix) {
+    
+    echo( isset($this->tripletSet)) ;
+    // set the default schema prefix
+    $this->tripleSet->currentSchemaPrefix = $ontologyprefix ;
+    
+    foreach($graph->DATA as $entitykind => $mapofentities) {
+      // set the data prefix for this kind of entities.
+      $dataprefix = (is_string($dataprefixes)?$dataprefixes:$dataprefixes[$entitykind]) ;
+      $this->tripleSet->currentDataPrefix = $dataprefix ;
+      
+      $attributes=$graph->SCHEMA->getAttributeDescriptions($entitykind) ;
+      foreach ($mapofentities as $keyvalue => $map ) {
+        
+        // define the type of the entity
+        $this->tripleSet->addTriple('type',$keyvalue,'rdf:type',$entitykind) ;
+        
+        // define data or links triple for each attribbute
+        foreach ($attributes as $attributename => $attributeinfo) {
+          switch ($attributeinfo['tag']) {
+            case '@':
+            case '!':
+            case '?':
+              if (isset($map[$attributename])) {
+                $value=$map[$attributename] ;
+                $this->tripleSet->addTriple(
+                    'data',$keyvalue,$attributename,$value) ;
               }
-            }
-            break ;
-          default:
-            assert(false) ;
+              break ;
+            case '*':
+              if (isset($map[$attributename])) {
+                foreach ($map[$attributename] as $value) {
+                  $this->tripleSet->addTriple(
+                      'link',$keyvalue,$attributename,$value) ;
+                }
+              }
+              break ;
+            default:
+              assert(false) ;
+          }
+  
         }
-
       }
     }
+    // reset the default prefixes to avoid side effect in the future
+    $this->tripleSet->currentSchemaPrefix = null ;
+    $this->tripleSet->currentDataPrefix = null ;
+    
   }
-  return $triples ;
-}
-
-function saveTriplesToRDFStore($triples,$rdfstore,$graphuri) {
-  $rdfstore->insert($triples,$graphuri) ;
-  if ($errs = $rdfstore->getErrors()) {
-    print_r($errs) ;
-  } else {
-    if (DEBUG) echo "<h1>triples saved to RDF store.</h1>" ;
+  
+  /**
+   * Create a converter of SimpleGraph to RDF. 
+   */
+  public function __construct() {
+    $this->tripleSet = new RDFTripleSet() ;
   }
 }

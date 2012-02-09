@@ -15,6 +15,22 @@ function prefixIfNeeded($str, $prefix) {
   return startsWith($str,$prefix) ? $str : $prefix . $str ;
 }
 
+
+/**
+ * Remove comments and replace them by a given string.
+ * @param String! $expr The string to clean.
+ * @param RegExpr? $commentRegExpr the regular expression corresponding to a comment. 
+ * Default to C_LINE_COMMENT_REGEXPR for suppressing // comments.
+ * @param String? $replacement Replacement string (default to a newline). 
+ */
+
+define ('C_LINE_COMMENT_REGEXPR','/\/\/[^\n]*\n/') ;
+
+function removeComments($expr,$commentRegExpr=C_LINE_COMMENT_REGEXPR,$replacement="\n") {
+  return preg_replace($commentRegExpr,$replacement,$expr) ; 
+}
+
+
 function withoutOptionalPrefix($str, $prefix) {
   return startsWith($str,$prefix) ? substr($str,strlen($prefix)) : $str  ;
 }
