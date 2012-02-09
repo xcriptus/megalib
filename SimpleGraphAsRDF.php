@@ -3,14 +3,27 @@
 require_once 'RDF.php' ;
 require_once 'SimpleGraph.php' ;
 
+/**
+ * Converter for SimpleGraph to RDF Triples
+ *
+ */
 class SimpleGraphAsRDF {
   protected /*RDFTripleSet!*/ $tripleSet ;
   
   /**
+   * Return the triples as a arc2 array of triples.
    * @return Set*(RDFTriple!)!
    */
   public function getTriples() {
     return $this->tripleSet->triples ;
+  }
+  
+  /**
+   * Return a TripletSet object
+   * @return RDFTripleSet
+   */
+  public function getTripleSet() {
+    return $this->tripleSet ;
   }
   
   /**

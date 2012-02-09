@@ -513,13 +513,14 @@ class RDFStore {
    * @param URI! $graphURI The target named graph where to put the triples.
    * @param Boolean $resetTripleSet Should the triple set be emptied. 
    * True by default.
+   * @return Integer! The number of triples added.
    */
   public function loadTripleSet(RDFTripleSet $tripleSet,$graphURI,$emptyTripleSet=true) {
     $result=$this->arc2store->insert($tripleSet->triples,$graphURI) ;
     if ($emptyTripleSet) {
       $tripleSet->triples = array() ;
     }
-    return $result ;
+    return $result['t_count'] ;
   }
   
   /**

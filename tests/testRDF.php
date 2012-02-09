@@ -27,6 +27,8 @@ foreach($querynames as $queryname) {
   echo homoArrayMapToHTMLTable($introspector->introspect($queryname)) ;
 }
 
+//$store->startSparqlEndpoint() ;
+
 
 // function test() {
 //   foreach( array("n2","n21","n31","n51","n61",'ttodgpsf') as $n) {
