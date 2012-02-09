@@ -270,11 +270,11 @@ class SimpleGraph {
    * Check that all references refers to an entity that exist. If this is not the case
    * then create a 'ghost' entity of the target type with the key value corresponding
    * to the value of the reference. At the end of this function all references are therefore
-   * defined although some ghost entities were added. The list of ghosts is returned by
-   * the function.
-   * @return Set*<EntityId!>! the list of ghosts entities that have been added
+   * defined although some ghost entities were added. The collection of ghosts is returned by
+   * sorted by entity kind.
+   * @return Map*(EntityKind!,Set*(EntityId)!)! the list of ghosts entities that have been added
    */
-  public function /*Set*<EntityId!>!*/ checkReferentialConstraints() {
+  public function checkReferentialConstraints() {
     $ghostsAdded = array() ;
     foreach ($this->SCHEMA->getEntityKinds() as $entitykind) {
 
@@ -285,12 +285,14 @@ class SimpleGraph {
           
           // check all values that are in the 
           foreach ($this->DATA[$entitykind] as $entitykey => $entityinfo) {
-            $targets = $entityinfo[$attributename] ;
-            foreach ($targets as $target) {
-              if (! isset($this->DATA[$targettype][$target])) {
-                if (DEBUG) echo "<li><b>Undefined reference target:</b> ".$entitykey." --".$attributename.':'.$targettype.'--> '.$target ;
-                $this->addGhostEntity($targettype,$target) ;
-                $ghostsAdded[] = $target ;
+            if (isset($entityinfo[$attributename])) {
+              $targets = $entityinfo[$attributename]  ;
+              foreach ($targets as $target) {
+                if (! isset($this->DATA[$targettype][$target])) {
+                  if (DEBUG) echo "<li><b>Undefined reference target:</b> ".$entitykey." --".$attributename.':'.$targettype.'--> '.$target ;
+                  $this->addGhostEntity($targettype,$target) ;
+                  $ghostsAdded[$targettype][] = $target ;
+                }
               }
             }
           }
