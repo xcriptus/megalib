@@ -269,7 +269,7 @@ class RDFTripleSet {
    */
   public function addMapAsTriples($triplekind,$source,$map) {
     foreach($map as $predicate => $value) {
-      $this->addTriple($triplekind,$source,$predicate,$array) ;
+      $this->addTriple($triplekind,$source,$predicate,$map) ;
     }
   }
   
