@@ -234,7 +234,7 @@ class RDFTripleSet {
         $triple['o_type'] = 'uri' ;
         break ;
       case 'type' :
-        assert('RDFDefinitions::isTypePredicate($predicate)') ;
+        assert('$this->rdfConfiguration->isTypePredicate($predicate)') ;
         $triple['o'] = $this->makeURI($value,'schema') ;
         $triple['o_type'] = 'uri' ;
         break ;
