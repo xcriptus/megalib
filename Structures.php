@@ -2,6 +2,18 @@
 
 
 /**
+ * Merge flat arrays and remove duplicates. Does not work with nested arrays 
+ * because it uses array_unique. 
+ * @param List*(Any) $array2
+ * @param List*(Any) $array2
+ * @return Set*(Any)
+ */
+function union($array1, $array2) {
+  var_dump(array_unique(array_merge($array1,$array2))) ;
+  return array_unique(array_merge($array1,$array2)) ;
+}
+
+/**
  * Return all the possible keys that are used in the different rows.
  * @param List*(String!,Any!)! $arrayMap
  * @return List*(String!)!
@@ -74,4 +86,21 @@ function jsonLastErrorMessage() {
       JSON_ERROR_UTF8 =>'Malformed UTF-8 characters, possibly incorrectly encoded'
   );
   return $JSON_ERRORS[json_last_error()];
+}
+
+/**
+ * Get the type of a variable
+ * @param Mixed $value
+ * @return 'null'|'string'|'bool'|'integer'|'float'|'array'|'resource'|classname|null
+ */
+function typeOf($var) {
+  if(is_string($var)) return 'string';
+  if(is_int($var)) return 'integer';
+  if(is_bool($var)) return 'boolean';
+  if(is_null($var)) return 'null';
+  if(is_float($var)) return 'float';
+  if(is_object($var)) return get_class($var);
+  if(is_array($var)) return 'array';
+  if(is_resource($var)) return 'resource';
+  return null ; 
 }

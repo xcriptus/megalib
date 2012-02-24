@@ -139,7 +139,7 @@ function /*Set*<String!>!*/ listAllFileNames($url,$typefilter="dir|file",$namere
       // don't care if elements cannot be read (this is the case if the rool is a file)
       // print_r($childforest) ;
       if ($childforest !== NULL) {
-        $results = array_merge($results,$childforest) ;
+        $results = union($results,$childforest) ;
       }
     }
     return $results ;

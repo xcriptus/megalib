@@ -1,10 +1,22 @@
 <?php
-require 'Structures.php' ;
+require_once 'Structures.php' ;
+
+
+/**
+ * Return a html string keeping the format of the existing string.
+ * @param String! $string
+ * @return HTML!
+ */
+function htmlAsIs($string) {
+  return '<pre>'.htmlentities($string).'</pre>' ;
+}
+    
 /*
  * Generate HTML output according to basic data structure. Useful to debug.
  */
 
 /**
+ * Return a list from a map where all pair in the map is on a line.
  * @param Map*<String!,String!>! $map
  * @param String? $separator Separator between the key and the value (' => ' by default).
  * @return HTML!
@@ -22,6 +34,7 @@ function mapToHTMLList($map,$separator=' => ') {
 }
 
 /**
+ * 
  * @param List*<String!,String!>! $arraymap
  * @return HTML!
  */

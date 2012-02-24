@@ -221,6 +221,8 @@ class SimpleSchema {
 
 /**
  * A simple graph based on some nested array structure and with a explicit schema definition.
+ * The structure of the graph is directly exposed in a white box manner:
+ * Map*<EntityKind!,Map<EntityId!,Map!<AttributeName!,Mixed>!)!)!
  */
 class SimpleGraph {
   

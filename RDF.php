@@ -8,37 +8,103 @@
  */
 require_once 'config/configRDF.php' ;
 require_once 'Database.php' ;
+require_once 'Graph.php' ;
+
 
 /**
  * Helper class to create arc2 triples as defined in https://github.com/semsol/arc2/wiki/Internal-Structures .
  * This class helps in the burden of creating arc2 RDF triples with 
- * always specifying prefixes, datatypes, etc. 
+ * always specifying prefixes, datatypes, etc.  
  * with default current values for both data prefix and schema prefix.
- * This are public properties that can be accessed directly.
+ * These are public properties that can be accessed directly.
+ * This class also provide a method to load a document at once (load)
+ * as well as some helper functions.
+ * 
+ * Optionaly if a RDFConfiguration is given, its list of prefixes is used 
+ * for short display. So far there is no support for using other elements
+ * from the configuration (and it is not clear whether this would help).
  * 
  * In arc2 triples are represented as the php structure specified below.
  *
  * @See https://github.com/semsol/arc2/wiki/Internal-Structures for the 
  * documentation of triple internal structure.
  * 
+ * type ResourceKind == 'uri'|'bnode'|'var' 
+ * type ItemKind == ResourceKind | 'literal'
+ * 
  * type RDFTriple == Map{ 
- *    's' : String!  // the subject value (a URI, Bnode ID, or Variable)
- *    's_type' : 'uri'|'bnode'|'var'
- *    'p' : String!  // the property URI (or a Variable)
- *    'o' : String!  // the subject value (see below)
- *    'o_type' : 'uri'|'bnode'|'literal'|'var'
+ *    's'          : String!  // the subject value (a URI, Bnode ID, or Variable)
+ *    's_type'     : ResourceType!
+ *    'p'          : String!  // the property URI (or a Variable)
+ *    'o'          : String!  // the subject value (see below)
+ *    'o_type'     : ItemKind!
  *    'o_datatype' : URI?
- *    'o_lang' : String?   // a language identifier, e.g. ("en-us")
+ *    'o_lang'     : String?   // a language identifier, e.g. ("en-us")
  *   }
  */   
 class RDFTripleSet {
+
+  /**
+   * @var Set*(RDFTriple!)!
+   * The resulting triples. This property can be manipulated directly
+   * if necessary, but a priori it should be just read. 
+   */
+  public $triples ;
   
   /**
-   * @var String? current schema prefix for the ontology. 
+   * @var RDFConfiguration! A configuration used for its prefixes.
+   */
+  public $rdfConfiguration ;
+  
+  
+  /*-------------------------------------------------------------------------
+   *  Bulk interface.
+  *-------------------------------------------------------------------------
+  */
+  
+  /**
+   * Empty the set of triples.
+   */
+  public function reset() {
+    $this->triples = array() ;
+  }
+  
+  /**
+   * Reset the tripleset and load a document.
+   * @param URL corresponding to a local file or a remove file.
+   * @see ARC2::getRDFParser()->parse for supported format.
+   * @return the number of elements loaded or false if an error happened.
+   */
+  public function load($url) {
+    $this->reset() ;
+    $parser = ARC2::getRDFParser();
+    $parser->parse($url);
+    if ($parser->getErrors()) {
+      return false ;
+    } else {
+      $this->triples = $parser->getTriples() ;
+      return count($this->triples);
+    }
+  }
+  
+  /*-------------------------------------------------------------------------
+   *  Incremental interface. 
+   *-------------------------------------------------------------------------
+   * The methods and fields below allow to add easily new triples without 
+   * the burden of adding prefixes, dealing with annoying characters, etc.
+   * It also provides means to add triples from various structures.
+   * Interesting functions are
+   *    - addTriple
+   *    - addArrayAsTriples
+   *    - addMapAsTriples
+   */
+  
+  /**
+   * @var String? current schema prefix for the ontology.
    * This property can be set att will at any moment and it will
    * be used for subsequent triple additions. It can also be set to null.
    * Not that this prefix will be added only if the added value is not
-   * already prefixed. See makeURI function.   
+   * already prefixed. See makeURI function.
    */
   public $currentSchemaPrefix ;
   /**
@@ -46,36 +112,34 @@ class RDFTripleSet {
    * This property can be set att will at any moment and it will
    * be used for subsequent triple additions. It can also be set to null.
    * Not that this prefix will be added only if the added value is not
-   * already prefixed. See makeURI function.   
+   * already prefixed. See makeURI function.
    */
   public $currentDataPrefix ;
-  /**
-   * @var Set*(RDFTriple!)!
-   * The resulting triples. This property can be manipulated directly
-   * if necessary, but a priori it should be just read and reset to array()
-   */
-  public $triples ;
+  
   
   /**
    * @param String! $string
    * @return Boolean!
    */
   public function isFullURI($string) {
-    return preg_match('/^[a-z]+:\/\//',$string) !=0 ;
+    return preg_match('/^[a-z0-9A-Z]+:\/\//',$string) !=0 ;
   }
   
   /**
+   * Indicates if the string contains a ':' and is not a full uri.
+   * There is no check currently with respect to the prefixes in the configuration.
    * @param String! $string
    * @return Boolean!
    */
   public function isPrefixedName($string) {
-    return !$this->isFullURI($string) && strpos($string,':') ;
+    return !$this->isFullURI($string) && (strpos($string,':')!== false) ;
   }
-
-
+  
+  
   /**
    * Create a prefix either for 'data' or 'schema' or if a string is provideo
    * adds a ':' at the end if this is not an URI and there is no ':'
+   * There is no check currently with respect to the prefixes in the configuration.
    * @param 'data'|'schema'|String! $kindOrPrefix
    * @return String!
    */
@@ -97,7 +161,7 @@ class RDFTripleSet {
       }
     }
   }
-
+  
   /**
    * Replace annoying characters for URI by some _
    * @param unknown_type $string
@@ -106,12 +170,13 @@ class RDFTripleSet {
   protected function makeStringForURI($string) {
     return strtr(strtolower($string),' .,!?;@-+','_________') ;
   }
-
+  
   // if the string is a URI then returns it as is
   // if the string contains a : it is assumed that it is already prefixed
   // otherwise add the prefix to it and convert illegal characters
   /**
    * Add a prefix to the given URI only if the URI is not already prefixed.
+   * There is no check currently with respect to the prefixes in the configuration.
    * @param String! $string
    * @param 'data'|'schema'|String! $kindOrPrefix
    * @return URI! a prefixed uri
@@ -122,24 +187,26 @@ class RDFTripleSet {
       return $string ;
     } else {
       return $this->makePrefix($kindOrPrefix)
-             . $this->makeStringForURI($string) ;
+      . $this->makeStringForURI($string) ;
     }
   }
-
+  
   /**
+   * Internal method to factor the creation of one part of the triple.
+   * The triple will be completed later.
    * @param unknown_type $source
    * @param unknown_type $predicate
    */
-  protected function _makePartialTriple($source,$predicate) {
+  protected function _makePartialTriple($source,$property) {
     $triple = array() ;
     $triple['s'] = $this->makeURI($stource,'data') ;
     $triple['s_type'] = 'uri' ;
-    $triple['p'] = $this->mareURI($predicate,'schema') ;
+    $triple['p'] = $this->makeURI($property,'schema') ;
   }
 
   /**
    * Add a triple of a given kind (data, link or type).
-   * Link types must have 'rdf:type' as predicate.
+   * Link types must have type predicate as predicate.
    * TODO add support for indicating the Datatype, and language
    * TODO add support to infer the type from the value
    * @param 'data'|'link'|'type' $triplekind
@@ -167,7 +234,7 @@ class RDFTripleSet {
         $triple['o_type'] = 'uri' ;
         break ;
       case 'type' :
-        assert('$predicate=="rdf:type"') ;
+        assert('RDFDefinitions::isTypePredicate($predicate)') ;
         $triple['o'] = $this->makeURI($value,'schema') ;
         $triple['o_type'] = 'uri' ;
         break ;
@@ -205,26 +272,95 @@ class RDFTripleSet {
       $this->addTriple($triplekind,$source,$predicate,$array) ;
     }
   }
-
+  
+  
+  /*-------------------------------------------------------------------------
+   *  Conversion to HTML.
+   *-------------------------------------------------------------------------
+   */  
+  
   /**
-   * FIXME check what to do if no prefix are given as a parameter
+   * Generate either a link for uri or a simple value.
+   * @param Any $item
+   * @param ItemKind! $type
+   */
+  public function itemToHTML($item,$kind) {
+    switch ($kind) {
+      case 'uri':
+        $shorturl = $this->rdfConfiguration->prefixed($item) ;
+        return 
+          '<a class="rdfuri" href="'.$item.'">'
+          .$shorturl.'</a>' ;
+        break ;
+      case 'literal':
+        return $item ;
+        break ;
+      default:
+        return $item ;
+    }
+  }
+  
+  /**
+   * Generate an table.
+   * @return HTML! the triples represented as a table
+   */
+  public function toHTML() {
+    $table=array() ;
+    foreach($this->triples as $triple) {
+      $row['s'] = $this->itemToHTML($triple['s'],$triple['s_type']) ;
+      $row['p'] = $this->itemToHTML($triple['p'],'uri') ;
+      $row['o'] = $this->itemToHTML($triple['o'],$triple['o_type']) ;
+      $table[] = $row;
+    }
+    return homoArrayMapToHTMLTable($table) ;
+  }
+
+  
+  
+  
+  /**
+   * FIXME check what to do if no prefix are given as parameters. This may provoke errors if used.
    * @param String? $dataPrefix
    * @param String? $schemaPrefix
+   * @param RDFConfiguration? $configuration  a RDFConfiguration used for its prefixes.
    */
-  public function __construct($dataPrefix=null,$schemaPrefix=null) {
+  public function __construct($dataPrefix=null,$schemaPrefix=null,$configuration=null) {
     $this->currentDataPrefix = $dataPrefix ;
     $this->currentSchemaPrefix = $schemaPrefix ;
     $this->triples = array() ;
+    if (isset($configuration)) {
+      $this->rdfConfiguration = $configuration ;
+    } else  {
+      $this->rdfConfiguration = RDFConfiguration::getDefault() ;
+    }
   }
 }
 
 
+
+
 /**
- * Wrapper for an arc2 configuration. This is the root of a hierarchy
- * which makes it easier to understand which parameters in the configuration
- * should be set. This class provide the most simplified one.
+ * Wrapper for an arc2 configuration but contains as well convienience method to
+ * deal with uri and prefixes. 
+ * This is the root of a hierarchy which makes it easier to understand which parameters 
+ * in the configuration should be set. This class provide the most simplified one.
  */
 class RDFConfiguration {
+  
+  /**
+   * @var RDFConfiguration? The default configuration instance. Singleton pattern.
+   */
+  private static $DEFAULT_CONFIGURATION=null ;
+  /**
+   * Return the default configuration instance. 
+   * @return RDFConfiguration the default configuration instance.
+   */
+  public static function getDefault() {
+    if (! isset(RDFConfiguration::$DEFAULT_CONFIGURATION)) {
+      RDFConfiguration::$DEFAULT_CONFIGURATION = new RDFConfiguration() ;
+    }
+    return RDFConfiguration::$DEFAULT_CONFIGURATION ;
+  }
 
   /**
    * @var Map(String!,Mixed) An ARC configuration is a map with different fields used by ARC2 functions.
@@ -241,6 +377,126 @@ class RDFConfiguration {
 
 
   /**
+   * @var Set of property that serves as a type. 
+   * Includes rdf:type as well as full urls. 
+   */
+  public $RDF_TYPE_PREDICATES = array(
+      'rdf:type',
+      'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') ;
+  
+  /**
+   * Return
+   * @param URI $predicate
+   */
+  public function isTypePredicate($predicate) {
+    return array_search($predicate,$this->RDF_TYPE_PREDICATES)!==false ;
+  }
+    
+  /**
+   * Return the domain part of an uri
+   * @param URI $uri
+   * @return String domain (e.g. www.schema.org)
+   */
+  public function domain($uri) {
+    return parse_url($uri,PHP_URL_HOST) ;
+  }
+  
+  /**
+   * Return the set of domains from a list of uris
+   * @param List*(URI!)! $uris
+   * @return Set*(String!)! set of domains
+   */
+  public function domains($uris) {
+    $domains = array() ;
+    foreach ($uris as $uri) {
+      $domain = $this->domain($uris) ;
+      if (!in_array($domain,$domains)) {
+        $domains[] = $domain ;
+      }
+    }
+    return $domains ;
+  }
+  
+  /**
+   * Return the short part of the url (after # or the last /)
+   * @param URI $uri
+   * @return string the segment after # or the last /
+   */
+  public function shortname($uri) {
+    $pos = strpos($uri,'#') ;
+    if ($pos===false) {
+      $pos = strrpos($uri,'/') ;
+    }
+    assert('$pos!==false') ;
+    return substr($uri,$pos+1) ;
+  }
+  
+  /**
+   * Return the base of the url (before # or the last / included)
+   * @param URI $uri
+   * @return URI the path before # or the last / included
+   */
+  public function base($uri) {
+    if (strpos($uri,'#')===false) {
+      $pos = strrpos($uri,'/') ;
+      return substr($uri,0,$pos+1) ;
+    } else {
+      $pos = strrpos($uri,'#') ;
+      return substr($uri,0,$pos+1) ;
+    }
+  }
+  
+  /**
+   * @param unknown_type $uris
+   * @return multitype:Ambigous <string, mixed>
+   */
+  public function bases($uris) {
+    $bases = array() ;
+    foreach ($uris as $uri) {
+      $base = RDFDefinitions::base($uris) ;
+      if (!in_array($base,$bases)) {
+        $bases[] = $base ;
+      }
+    }
+    return $domains ;
+  }
+  
+  /**
+   * Return the shortened URI if it is corresponds to a prefix or the same URI otherwise
+   * @param unknown_type $uri
+   * @return String A string of the form <prefix>:<segment> or a full uri
+   */
+  public function prefixed($uri) {
+    $r = array_search($this->base($uri),$this->arc2config['ns']) ;
+    if ($r===false) {
+      return $uri ;
+    } else {
+      return $r.':'.$this->shortname($uri) ;
+    }
+  }
+  
+  /**
+   * Add a prefix to the list of prefixes. Ignore this statement if the prefix
+   * is already defined (even with another value).
+   * @param String $prefix The prefix without : (for instance "rdf")
+   * @param URI The full uri corresponding to the prefix
+   * @return void
+   */
+  public function addPrefix($prefix,$url) {
+    if (array_search($prefix,$this->arc2config['ns'])===false) {
+      $this->arc2config['ns'] = $prefixes ;
+    }
+  }
+  
+  /**
+   * Return the map of all prefixes.
+   * @return Map(String!,URI!)!
+   */
+  public function getPrefixes() {
+    return $this->arc2config['ns'] ;
+  }
+  
+  /**
    * @param Map*(String!,URI!)? $additionalPrefixes A list of prefix to define (without :). 
    * Default to an empty array.  xsd,rdf,rdfs,owl  are always defined.
    */
@@ -252,15 +508,35 @@ class RDFConfiguration {
     
     // Compute the list of prefixes available
     $defaultprefixes = array(
-        'xsd'      => 'http://www.w3.org/2001/XMLSchema#',
-        'rdf'      => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-        'rdfs'     => 'http://www.w3.org/2000/01/rdf-schema#',
-        'owl'      => 'http://www.w3.org/2002/07/owl#'
+        'rdf'       => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+        'rdfs'      => 'http://www.w3.org/2000/01/rdf-schema#',
+        'owl'       => 'http://www.w3.org/2002/07/owl#',
+        'xsd'       => 'http://www.w3.org/2001/XMLSchema#',
+        'swc'       => 'http://data.semanticweb.org/ns/swc/ontology#',
+        'swrc'      => 'http://swrc.ontoware.org/ontology#',
+        'foaf'      => 'http://xmlns.com/foaf/0.1/',
+        'ical'      => 'http://www.w3.org/2002/12/cal/ical#',
+        'dc'        => 'http://purl.org/dc/elements/1.1/',
+        'dbpedia'   => 'http://dbpedia.org/resource/',
+        'sdgperson' => 'http://data.semanticweb.org/person/',
+        'sdgorg'    => 'http://data.semanticweb.org/organization/'        
     ) ;
     $prefixes = array_merge($defaultprefixes,$additionalPrefixes) ;
     $this->arc2config['ns'] = $prefixes ;
   }
-}    
+}
+
+
+
+
+
+
+
+
+
+
+
+
   
 /**
  * Configuration suitable for a RDF Store and Sparql Endpoint.
@@ -329,6 +605,8 @@ class RDFStoreConfiguration extends RDFConfiguration {
 }
 
   
+
+
   
 /**
  * A RDF store with higher level functions than those provided by arc2. 
@@ -460,13 +738,18 @@ class RDFStore {
   
   /**
    * Check if an object is explicitely declared as a given type.
-   * No inference is done. Just look for the corresponding rdf:type link. 
+   * No inference is done. Just look for the existence of a "type" predicates. 
    * @param RDFId! $subject
    * @param RDFId! $type
    * @return boolean
    */
   public function /*boolean*/ isOfType($subject,$type ) {
-    return $this->isItFact($subject,'rdf:type',$type) ;
+    foreach (RDFDefinitions::$RDF_TYPE_PREDICATES as $rdftypepredicates) {
+      if ($this->isItFact($subject,'$rdftypepredicates',$type)!==false) {
+        return true ;
+      }
+    }
+    return false ; 
   }
   
 
@@ -552,6 +835,11 @@ class RDFStore {
   public function reset() {
     $this->getARC2Store()->reset() ;
   }
+  
+  
+  
+  
+  
   
   
   //-------------------------------------------------------------------------------
@@ -765,8 +1053,6 @@ class RDFStore {
     $this->currentResource = ARC2::getResource($arc2config) ;
     $this->currentResource->setStore($this->arc2store) ;
   }
-
-
 }
 
 
@@ -816,3 +1102,73 @@ SELECT DISTINCT ?property ?sourcetype ?rangetype WHERE {
 }
 
 
+
+
+
+
+
+
+
+/**
+ *
+ */
+class RDFAsGraphml {
+  
+  /**
+   * @var RDFConfiguration 
+   */
+  protected $rdfConfiguration ;
+  
+  public function rdfTripleSetAsGraphml(RDFTripleSet $tripleset) {
+    $this->rdfConfiguration = $tripleset->rdfConfiguration ; 
+    return $this->triplesAsGraphml($tripleset->triples);
+  }
+  
+  public function triplesAsGraphml($triples) {
+    $g = new Graphml() ;
+    foreach($triples as $triple) {
+      $node1 = $triple['s'] ;
+      $node1id = $this->rdfConfiguration->prefixed($node1) ;
+      $predicate = $triple['p'] ;
+      $predicateid = $this->rdfConfiguration->prefixed($predicate) ;
+      $otype = $triple['o_type'] ;
+      
+      if ($this->rdfConfiguration->isTypePredicate($predicate)) {
+        $g->addNode(
+            $node1id,
+            array('type'=>$this->rdfConfiguration->prefixed($triple['o']) )) ;
+        $g->addNode($node1id,array('url'=>$node1)) ;
+        
+      } elseif ($otype=='literal'){
+        $g->addNode($node1id,array($predicateid=>$triple['o'])) ;
+        
+      } elseif ($otype=='uri' || $otype=='bnode') {
+        $node2 = $triple['o'] ;
+        $node2id = $this->rdfConfiguration->prefixed($node2) ;
+        $g->addNode($node1id,array('url'=>$node1)) ;
+        $g->addNode($node2id,array('url'=>$node2)) ;        
+        $g->addEdge(
+            $node1id,
+            $node2id,
+            array(
+                'type'  => $predicateid,
+                'url'   => $predicate ));        
+      } else {
+        die('unexpected type in triple: '.$otype) ;
+      }
+    }
+    return $g->graphToString() ;
+  }
+  
+  /**
+   * @param RDFconfiguration? $configuration
+   */
+  public function __construct($configuration=null) {
+    if (isset($configuration)) {
+      $this->rdfConfiguration = $configuration ;
+    } else {
+      $this->rdfConfiguration = RDFConfiguration::getDefault() ;
+    } 
+  }
+  
+}
