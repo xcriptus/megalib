@@ -1,4 +1,5 @@
 <?php
+define('DEBUG',0) ;
 require_once '../Graph.php' ;
 
 function buildGraph1() {

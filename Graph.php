@@ -299,7 +299,7 @@ class Graphml extends Graph {
   protected $graphmlNodeId = array() ;
   protected $graphmlEdgeId = array() ;
   
-  protected function /*GraphmlSting!*/ attributeTypeToString($typename){
+  protected function /*GraphmlString!*/ attributeTypeToString($typename){
     switch($typename) {
       case 'string': 
         return 'string' ;
@@ -313,8 +313,11 @@ class Graphml extends Graph {
       case 'boolean':
         return 'bool' ;
         break ;
+      case 'null':    // in case where a triple contains a null value
+        return 'string';
+        break ;
       default:
-        die("attribute of type $typename not supported in graphml") ;
+        die('Graph.php: attribute of type "'.$typename.'" not supported in graphml') ;
     }
   }
   
@@ -327,6 +330,9 @@ class Graphml extends Graph {
     $out = '' ;
     foreach($this->schema as $kind=>$attdef) {
       foreach($attdef as $attname => $attributeinfo) {
+        if (DEBUG) {
+          var_dump($attdef) ;
+        }
         $out .= $indent.'<key id="'.$kind.".".$attributeinfo['name'].'"'
                 . ' for="'.$kind.'" attr.name="'.$attributeinfo['name'].'"'
                 . ' attr.type="'.$this->attributeTypeToString($attributeinfo['type']).'"' ;

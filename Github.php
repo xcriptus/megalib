@@ -4,27 +4,62 @@
  * This interface is based on the php-github-api available from github.
  * @author jeanmariefavre
  * @status underDevelopment
+ * 
+ * TODO add support for hooks (@see http://help.github.com/post-receive-hooks/)
  */
 
 /**
  * See the content of the file below to configure your system and use this library.
  */
 require_once 'config/configGithub.php' ;
+require_once 'Files.php' ;
 
+
+
+/*-----------------------------------------------------------------
+ *    Repositories
+ *-----------------------------------------------------------------
+ */
 
 /**
  * Provides on-demand access to a github repository.
+ * This class is to be used with GithubBlob, GithubDirectory, 
+ * GitubContributor, etc.
  */
 class GithubRepository {
   protected $github ;
+  /**
+   * @var String the owner of the repository, that is an github account.
+   */
   protected $username ;
+  /**
+   * @var String the name of the repository.
+   */
   protected $reponame ;
   
-  protected /*Map+<TagName!,Sha!>?*/ $tagsInfoCache = NULL ;
-  protected /*Map*<Sha!,GithubObject>!*/ $objectMapCache = array() ;
   
   /**
-   * Direct access to the Github api.
+   * @var Map*(String!,GithubContributor!)? The list of contributors.
+   * Includes contributors without account but also github users.
+   * Created on demand but all contributors are loaded at once. 
+   */
+  protected $contributorsCachedAtOnce = NULL ;
+  /**
+   * @var Map+(TagName!,Sha!)? The sha of each tagname.
+   * Created on demand but loaded at once
+   */
+  protected $tagsInfoCachedAtOnce = NULL ;
+  
+  /**
+   * @var Map*(Sha!,GithubObject!)!
+   */
+  protected $objectMapCache = array() ;
+  
+  
+  
+  
+  /**
+   * Direct access to the php Github api.
    * @return Github_Client!
    */
   public function getGithubClient() {
@@ -62,35 +97,52 @@ class GithubRepository {
   public function getProperties() {
     
   }
+
+  
+  
+  
   
   /**
-   * The following type may be incompleted. 
-   * It has been inferred from some tests.
-   * 
-   * type ContributorInfo == Map{
-   *     contributions:Integer!,
-   *     gravatar_id:String?,
-   *     type:'User'?,
-   *     login:String?,
-   *     name:String?,
-   *     company:String?
-   *     location:String?
-   *     blog:String?
-   *     email:String? 
-   *   }
-   */
-  
-  /**
-   * @param Boolean $all should all contributors be returned.
-   * In this case contributors are not necessarily Github user
-   * and may have only a few property defined.
+   * Returns the list of contibutors (some being users).
    * @return List*<ContributorInfo!> 
    */
-  public function getContributorsInfo($all=false) {
-    return 
-      $this->github->getRepoApi()
-        ->getRepoContributors($this->username,$this->reponame, $all);
+  public function getContributors() {
+    if (!isset($this->contributorsCachedAtOnce)) {
+      $infos =  
+        $this->github->getRepoApi()
+          ->getRepoContributors($this->username,$this->reponame, true);
+      
+      $this->contributorsCachedAtOnce = array();
+      foreach ($infos as $info) {
+        
+        if (isset($info['type']) && $info['type']=='User') {
+          $contributor = new GithubUser($info) ;
+        } else {
+          $contributor = new GithubContributor($info) ;
+        }
+        $this->contributorsCachedAtOnce[$contributor->getId()] = $contributor ;
+      }
+    }
+    return $this->contributorsCachedAtOnce ;
   }
+  
+  /**
+   * Return a contributor or user given a account name or a name in "".
+   * If no such contributor exist then return null.
+   * @param String! $id the login of the github user of the name between quotes of a 
+   * contributor
+   * @return GithubContributor|GithubUser|? null if there is no such contributor or user. 
+   */
+  public function getContributor($id) {
+    $contributors = $this->getContributors() ;
+    if (isset($contributors[$id])) {
+      return $contributors[$id] ;
+    } else {
+      return null ;
+    }
+  }
+
+  
   
   /**
    * Information about tags (that is branch)
@@ -99,12 +151,12 @@ class GithubRepository {
    * @return Map+<TagName!,Sha!>!
    */
   public function getTagsInfo() {
-    if (! isset($this->tagsInfocache)) {
-      $this->tagsInfocache = 
+    if (! isset($this->tagsInfoCachedAtOnce)) {
+      $this->tagsInfoCachedAtOnce = 
         $this->github->getRepoApi()
           ->getRepoBranches($this->username,$this->reponame) ;
     }
-    return $this->tagsInfocache ;      
+    return $this->tagsInfoCachedAtOnce ;      
   }
   
   /**
@@ -126,7 +178,7 @@ class GithubRepository {
    * Tree associated with a branch.
    * TODO check what is the difference between a tag and a branch
    * @param String? $tagname tag name ('master' by default)
-   * @return GithubTree?
+   * @return GithubTree? The tree if the tagname is valid. Null otherwise.
    */
   public function getBranchTree($tagname='master') {
     $sha = $this->getTagSha($tagname) ;
@@ -136,7 +188,6 @@ class GithubRepository {
       return new GithubTree($this,$sha) ;
     }
   }
-  
     
   /**
    * @param String! $username
@@ -151,14 +202,134 @@ class GithubRepository {
 
 
 
+
+
+/**
+ *-----------------------------------------------------------------
+ *    Contributors and users
+ *-----------------------------------------------------------------
+ *
+ * Github users have an account on github. They are particular cases
+ * of "contributors", some of them being just referenced somehow in
+ * the commits. With github there is no id for contibutors, but with
+ * this API we build this notion by using the 'login' as Id for users,
+ * and for contributors that are not user, we use __<name>__ with __ 
+ * enclosing the name. For instance __maria joe__  
+ *
+ * The following types may be incompleted.
+ * They have been inferred from some tests.
+ *
+ * type ContributorInfo == Map{
+ *     contributions:Integer!,
+ *     gravatar_id:String?,
+ *     type:'User'?,
+ *     login:String?,
+ *     name:String?,
+ *     company:String?
+ *     location:String?
+ *     blog:String?
+ *     email:String?
+ *   }
+ *   
+ * type UserInfo == ContributorInfo
+ *      where type=='User'
+ */
+
+
+class GithubContributor {
+  /**
+   * @var ContributorInfo!
+   */
+  public $info ;
+  
+  /**
+   * This method is overloaded for users, so here this will be
+   * the default for contributors that are not users.
+   * @return String!
+   */
+  public function getId() {
+    return '__'.$this->info['name'].'__' ;
+  }
+  
+  
+  /**  
+    * @param Contributorinfo! $info The information about the user.
+    * GithubUser::__constructor should be used to create github users.
+    */  
+  public function __construct($info) {
+    $this->info = $info ;
+  }
+}
+
+
+
+/**
+ * GitUsers are the contributors that have a github account.
+ * They therefore have a login.
+ */
+class GithubUser extends GithubContributor {
+  
+  /**
+   * Return the login of the user. This method overloads the method
+   * in the super class.
+   * @return String!
+   */
+  public function getId() {
+    return $this->getLogin() ;
+  }
+  
+ 
+  /**
+   * Return the username of a github user.
+   * @return String! the login of the github user. 
+   */
+  public function getLogin() {
+    return $this->info['login'] ;
+  }
+  
+  
+  /**
+   * @param UserInfo $userinfo The information about the user. 
+   * The 'type' field has to be "User"
+   */
+  public function __construct($userinfo) {
+    parent::__construct($userinfo) ;
+    assert('$this->info["type"]=="User"') ;
+  }
+  
+}
+
+
+
+
+/*-----------------------------------------------------------------
+ *    Trees
+*-----------------------------------------------------------------
+*/
+
+
 /**
  * Either a GithubTree (directory) or a GithubBlob (file).
+ * Note that "blobs" are mere "content"
+ * 
+ * type ObjectInfo == Map{
+ *   type:'blob'|'tree',
+ *   name:String!,
+ *   size:Integer!,
+ *   sha:SHA!,
+ *   mode:String!, 
+ *   mime_type: String!
+ *   fullname:String!    // computed. Not in the original api
+ *   extension:String!   // idem. Allways empty for directories.
+ * }
+ * 
  */
 abstract class GithubObject {
   protected /*GithubRepository!*/ $repository ;
   protected /*Sha!*/ $sha ;
   protected /*GithubObjectInfo?*/ $info=NULL ;  /*May not be known*/
   protected /*GithubTree?*/ $parent = NULL ;
+  protected /*String!*/ $fullname = NULL ;
   
   /**
    * @return Sha! Sha of the current object.
@@ -183,6 +354,10 @@ abstract class GithubObject {
                       $this->repository->getRepositoryName(), 
                       $this->sha);
   }
+  
+  public function getFullName() {
+    return $this->info['fullname'] ;
+  }
   /**
    * @param GithubRepository! $repository The containing repository.
    * @param Sha! $sha Sha of the object.
@@ -194,11 +369,18 @@ abstract class GithubObject {
     $this->sha = $sha ;
     $this->info = $info ;
     $this->parent = $parent ;
+    if (isset($info)) {
+      $this->info['fullname'] = 
+          (isset($this->parent) ? $this->parent->getFullName().'/' : '')
+          . $this->info['name'] ;
+      $this->info['extension'] = fileExtension($this->info['name']);
+    } 
   } 
 }
 
+
 /**
- * Basically represents a plain file in a github tree.
+ * Represents a github plain file.
  */
 class GithubBlob extends GithubObject {
   
@@ -209,24 +391,27 @@ class GithubBlob extends GithubObject {
    * @param GithubTree? $parent Parent (tree) of the object if any and if known.
    */
   public function __construct($repository,$sha,$info=NULL,GithubTree $parent=NULL) {
-    parent::__construct($repository,$sha,$info) ;
+    parent::__construct($repository,$sha,$info,$parent) ;
+    
   }
 }
 
 
 /**
- * Basically represents a directory in github.
+ * Represents a github directory.
  */
 class GithubTree extends GithubObject {
-  protected /*Map*<Sha!,GithubObject!>?*/ $objectMapCache = NULL ;
+  protected /*Map*<Sha!,GithubObject!>?*/ $objectMapCachedAtOnce = NULL ;
   
   public /*Map*<Sha!,GithubObject!>?*/ function getObjectMap() {
-    if (! isset($this->objectMapCache)) {
+    if (! isset($this->objectMapCachedAtOnce)) {
       $objectsinfo = 
-        $this->repository->getGithub()->getObjectApi()
+        $this->repository->getGithubClient()->getObjectApi()
           ->showTree($this->repository->getUsername(), 
                      $this->repository->getRepositoryName(), 
                      $this->sha);
+      //echo arrayMapToHTMLTable($objectsinfo,'---') ;
+      
       $objectmap = array() ;
       foreach($objectsinfo as $objectinfo) {
         $type = $objectinfo['type'] ;
@@ -239,9 +424,9 @@ class GithubTree extends GithubObject {
           assert('false') ;
         }
       }
-      $this->objectMapCache = $objectmap ;
+      $this->objectMapCachedAtOnce = $objectmap ;
     }
-    return $this->objectMapCache ;
+    return $this->objectMapCachedAtOnce ;
   }
   
   public /*List*<GithubObject!>?*/ function getObjectList() {
@@ -288,7 +473,7 @@ class GithubTree extends GithubObject {
   }
   
   public function __construct($repository,$sha,$info=NULL,GithubTree $parent=NULL) {
-    parent::__construct($repository,$sha,$info) ;
+    parent::__construct($repository,$sha,$info,$parent) ;
     $this->objectListCache = NULL ;
   }
   

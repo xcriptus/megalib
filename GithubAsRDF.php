@@ -20,6 +20,14 @@ class GithubAsRDF {
   }
   
   /**
+   * @return RDFTripleSet!
+   */
+  public function getTripleSet() {
+    return $this->tripleSet ;
+  }
+  
+  
+  /**
    * Add a repository to the set of triples.
    * @param GithubRepository $repository
    * @param Set*<String!*>? $branchesToFollow Names of the branches to follow.
@@ -28,6 +36,7 @@ class GithubAsRDF {
       GithubRepository $repository,
       $branchesToFollow=array('master')) {
     
+    //---- basic information ----
     $username = $repository->getUsername() ;
     $reponame = $repository->getRepositoryName() ;
     $sourceuri = $username.'/'.$reponame ; 
@@ -35,6 +44,14 @@ class GithubAsRDF {
     $this->tripleSet->addTriple('data',$sourceuri,'username',$username) ; 
     $this->tripleSet->addTriple('data',$sourceuri,'repositoryName',$reponame) ;
     
+    
+    //---- contributors -----
+    foreach ($repository->getContributors() as $contributor){
+      //echo "Adding contributor ".$contributor->getId().'</br>' ;
+      $contributoruri = $this->githubContributorAsTriples($contributor) ;
+      $this->tripleSet->addTriple('link',$sourceuri,'hasContributors',$contributoruri) ;
+    }
+    //---- branches -----
     if ($branchesToFollow) {
       foreach($branchesToFollow as $branchname) {
         /*GithubTree?*/ $tree = $repository->getBranchTree($branchname) ;
@@ -52,20 +69,38 @@ class GithubAsRDF {
   }
   
   /**
+   * Add a contributor to the triples
+   * @param GithubContributor! $contributor
+   * @return URI! the URI of the contributor
+   */
+  public function /*void*/githubContributorAsTriples(
+      GithubContributor $contributor) {
+    $sourceuri=$contributor->getId() ;
+    $type = 'contributor' ;
+    $this->tripleSet->addTriple('type',$sourceuri,'rdf:type',$type) ;
+    $this->tripleSet->addMapAsTriples('data',$sourceuri,$contributor->info) ;
+    return $sourceuri ;
+  }
+  
+  
+  /**
    * @param GithubTree $tree
    */
-  public function githubTreeAsTriples(GithubTree $tree ){
-    echo '<br/>#' ;
-    $sourceuri =$tree->getSha() ;
+  public function githubTreeAsTriples(GithubTree $tree){
+    echo '<li><b>'.$tree->getFullName().'</b></li>' ;
+    $sourceuri = $tree->getSha() ;
+    
     $this->tripleSet->addTriple('type',$sourceuri,'rdf:type','Tree') ;
-    if (isset($tree->info)) {
-      $this->tripleSet->addMapAsTriples('data', $sourceuri, $tree->info) ;
+    if ($tree->getInfo()!==null) {
+      $this->tripleSet->addMapAsTriples('data', $sourceuri, $tree->getInfo()) ;
     }
     foreach ($tree->getBlobList() as $blob) {
       $this->githubBlobAsTriples($blob) ;
+      $this->tripleSet->addTriple('link',$blob->getSha(),'parent',$sourceuri) ;
     }
     foreach ($tree->getTreeList($tree) as $subtree) {
       $this->githubTreeAsTriples($subtree) ;
+      $this->tripleSet->addTriple('link',$subtree->getSha(),'parent',$sourceuri) ;
     }
   }
   
@@ -74,11 +109,12 @@ class GithubAsRDF {
    * @param GithubBlob $blob
    */
   public function githubBlobAsTriples(GithubBlob $blob ){
-    echo '.' ;
+    echo '<li>'.$blob->getFullName().'</li>' ;
     $sourceuri =$blob->getSha() ;
+
     $this->tripleSet->addTriple('type',$sourceuri,'rdf:type','Blob') ;
-    if (isset($blob->info)) {
-      $this->tripleSet->addMapAsTriples('data', $sourceuri, $blob->info) ;
+    if ($blob->getInfo()!==null) {
+      $this->tripleSet->addMapAsTriples('data', $sourceuri, $blob->getInfo()) ;
     }
   }
   
