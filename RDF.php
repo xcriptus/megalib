@@ -60,6 +60,14 @@ class RDFTripleSet {
    */
   public $rdfConfiguration ;
   
+  
+  /**
+   * Return the configuration of this tripleset.
+   * @return RDFConfiguration!
+   */
+  public function getConfiguration() {
+    return $this->rdfConfiguration ;
+  }
     
   /*-------------------------------------------------------------------------
    *  Bulk interface.
@@ -119,6 +127,13 @@ class RDFTripleSet {
     }
   }
   
+  /**
+   * @param RDFTripleSet $tripleset
+   */
+  public function merge(RDFTripleSet $tripleset) {
+    $this->rdfConfiguration->addPrefixes($tripleset->getConfiguration()->getPrefixes()) ; 
+    $this->addTriples($tripleset->getTriples()) ;
+  }
   
   /*-------------------------------------------------------------------------
    *  Interfaces with ARC2 structures.
@@ -130,7 +145,7 @@ class RDFTripleSet {
    * @return Set*(RDFTriple!)!
    */
   public function getTriples() {
-    return $triples ;
+    return $this->triples ;
   }
   
   /**
@@ -141,6 +156,16 @@ class RDFTripleSet {
   public function getIndex() {
     return ARC2::getSimpleIndex($this->triples, false) ;
   }
+  
+  /**
+   * Add a list of triples.
+   * @param Set*(RDFTriple!)! $triples
+   * @return void
+   */
+  public function addTriples($triples) {
+    $this->addIndex(ARC2::getSimpleIndex($triples, false)) ;
+  }
+ 
   
   /**
    * Add an index to the existing triples.
@@ -317,6 +342,15 @@ class RDFTripleSet {
   }
 
   /**
+   * Add a triple (see the ARC2 structure).
+   * @param RDFTriple $triple The triple to add
+   * @return void
+   */
+  public function addRawTriple($triple) {
+    $this->triples[] = $triple ;
+  }
+  
+  /**
    * Add a triple of a given kind (data, link or type).
    * Link types must have type predicate as predicate.
    * TODO add support for indicating the Datatype, and language
@@ -353,7 +387,7 @@ class RDFTripleSet {
       default:
         assert(false) ;
     }
-    $this->triples[] = $triple ;
+    $this->addRawTriple($triple) ;
   }
 
   /**
@@ -596,7 +630,21 @@ class RDFConfiguration {
    */
   public function addPrefix($prefix,$url) {
     if (array_search($prefix,$this->arc2config['ns'])===false) {
-      $this->arc2config['ns'] = $prefixes ;
+      $this->arc2config['ns'][] = $prefix ;
+    }
+  }
+  
+  /**
+   * Add a list of prefixes. Ignore prefixes that are already defined
+   * (even with another value).
+   * @param String $prefix The prefix without : (for instance "rdf")
+   * @param Map(String!,URI!)! $prefixes The list of prefixes to add.
+   * @return void
+   */
+  
+  public function addPrefixes($prefixes) {
+    foreach($prefixes as $prefix => $url) {
+      $this->addPrefix($prefix,$url) ;
     }
   }
   
@@ -780,6 +828,23 @@ class RDFStore {
   // Support for Basic Querying
   //-------------------------------------------------------------------------------
   
+  
+  public function dumpToTripleSet() {
+    $conf = new RDFConfiguration($this->configuration->getPrefixes()) ;
+    $tripleset = new RDFTripleSet(null,null,$conf) ;
+    $rows = $this->selectQuery('SELECT ?s ?p ?o WHERE { ?s ?p ?o }') ;
+    foreach ($rows as $row) {
+      $triple = array(
+          's' => $row['s'],
+          's_type' => $row['s type'],
+          'p' => $row['p'],
+          'o' => $row['o'],
+          'o_type' => $row['o type'] ) ;
+      $tripleset->addRawTriple($triple) ;
+    }
+    return $tripleset ;
+  }
+  
   /**
    * Execute a 'select' query and returns selected rows. 
    * @see https://github.com/semsol/arc2/wiki/Using-ARC%27s-RDF-Store
@@ -916,6 +981,7 @@ class RDFStore {
     }
     return $result['t_count'] ;
   }
+  
   
   /**
    * Execute a 'insert' query and return the number of triples added.
@@ -1165,6 +1231,10 @@ class RDFStore {
     $this->currentResource->setStore($this->arc2store) ;
   }
 }
+
+
+
+
 
 
 

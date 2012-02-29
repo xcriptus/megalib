@@ -25,6 +25,47 @@ function testRDFConfiguration() {
   }
 }
 
+function testTemplate() {
+  echo "<h1>test Template</h1>" ;
+  $template = '
+  ?res
+  a rss:item ;
+  dc:title ?title ;
+  dc:creator ?creator ;
+  rss:description ?description ;
+  dc:date ?now .
+  ';
+  echo '<p>The triples below are generated thanks to the following template</p>' ;
+  echo htmlAsIs($template) ;
+
+  $a = array(
+      'res' => 'http://mega/res/1',
+      'title' => 'this is the title',
+      'creator' => 'ahmed',
+      'toto' => 'tt',
+      'description' => 'voici un exemple de texte qui ne decrit que lui meme',
+      'now' => date('Y-m-d', time())
+  ) ;
+  $b = array(
+      'res' => 'http://mega/res/2',
+      'title' => 'this is another title',
+      'creator' => 'bob',
+      'toto' => 'tt',
+      'description' => 'C est le deuxieme article',
+      'now' => date('Y-m-d', time())
+  ) ;
+
+  $a['link'] = $a['res'];
+
+  $tripleset = new RDFTripleSet() ;
+  $tripleset->addFromTemplate($template, array($a,$b)) ;
+  $tripleset2 = new RDFTripleSet() ;
+  $tripleset->merge($tripleset2) ;
+  echo $tripleset->toHTML() ;
+
+}
+
+
 function saveTripleSet($tripleset,$format,$filename) {
   echo "<p> Saving the tripleset into $filename (format:$format) ..." ;
   $r = $tripleset->save($format,$filename) ;
@@ -49,27 +90,7 @@ function testRDFAsGraphml($tripleset) {
   saveTripleSet($tripleset,'GraphML','output/testRDF1.graphml') ;
 }
 
-function testRDFStore() {
-  echo "<h1>Testing RDFStore</h1>";
-  
-  // Testing Store creation
-  $testdbaccount = new DatabaseAccount(RDF_TEST_DATABASE_NAME, RDF_TEST_DATABASE_USER, RDF_TEST_DATABASE_PASSWORD) ;
-  $configuration = new RDFStoreConfiguration(array(),$testdbaccount, 'test') ;
-  $store = new RDFStore($configuration,'') ;
-  
-  $count = $store->selectTheValue('SELECT count(?x) AS ?count WHERE { ?x ?y ?z }','count') ;
-  echo $count.' are triple(s) in the store.<br/>' ;
-  $store->reset() ;
-  echo 'The store has been emptied.<br/>' ;
-  
-  echo 'Loading '.ICPW2009_RDF.' ... ' ;
-  $n = $store->load(ICPW2009_RDF) ;
-  echo $n.' triples loaded.' ;
-  
-  $ser = ARC2::getTurtleSerializer();
-  
-  return $store ;
-}
+
   
 
 
@@ -86,57 +107,12 @@ function testRDFStoreIntrospector($store) {
 }
 
 
-
-function testTemplate() {
-  echo "<h1>test Template</h1>" ;
-  $template = '
-  ?res a rss:item ;
-     dc:title ?title ;
-     dc:creator ?creator ;
-     rss:description ?description ;
-     dc:date ?now .
-  ';
-                
-  $a = array(
-      'res' => 'http://mega/res/1',
-      'title' => 'this is the title',
-      'creator' => 'ahmed',
-      'toto' => 'tt',
-      'description' => 'voici un exemple de texte qui ne decrit que lui meme',
-      'now' => date('Y-m-d', time())      
-      ) ;
-  $b = array(
-      'res' => 'http://mega/res/2',
-      'title' => 'this is another title',
-      'creator' => 'bob',
-      'toto' => 'tt',
-      'description' => 'C est le deuxieme article',
-      'now' => date('Y-m-d', time())
-      ) ;
-       
-  $a['link'] = $a['res'];
-    
-  $tripleset = new RDFTripleSet() ;
-  $tripleset->addFromTemplate($template, array($a,$b)) ;
-  echo $tripleset->toHTML() ;
-  
-}
-
-
 testTemplate() ;
 
-if (1) {
-  testRDFConfiguration() ;
-  $tripleset = testRDFTripleSet() ;
-  testRDFAsGraphml($tripleset) ;
-}
-$store = testRDFStore() ;
-//echo htmlAsIs($store->getARC2Store()->dump()) ;
+testRDFConfiguration() ;
+$tripleset = testRDFTripleSet() ;
+testRDFAsGraphml($tripleset) ;
 
-testRDFStoreIntrospector($store) ;
-
-
-$store->startSparqlEndpoint() ;
 
 
 // function test() {
