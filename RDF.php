@@ -70,7 +70,7 @@ class RDFTripleSet {
   }
   
   /**
-   * Reset the tripleset and load a document.
+   * Load a document (after resetting the triple set).
    * @param URL corresponding to a local file or a remove file.
    * @see ARC2::getRDFParser()->parse for supported format.
    * @return the number of elements loaded or false if an error happened.
@@ -84,6 +84,34 @@ class RDFTripleSet {
     } else {
       $this->triples = $parser->getTriples() ;
       return count($this->triples);
+    }
+  }
+
+  /**
+   * Serialize the triple set in a given format. Return the resulting string or save the result into a file if 
+   * the $filename parameter is given. In this case return the number of byte written.
+   * @param 'HTML'|'GraphML'|'NTriples'|'Turtle'|'RDFXML'|'RDFJSON'|'MicroRDF'|'POSHRDF'|'RSS10' $format the serialization format
+   * @param String? $filename The file in which to save the result or null.
+   * @return Integer|false If no filename is specified return the string generated. 
+   * Otherwise return either the number of byte written or false in case of an error.
+   */
+  public function save($format,$filename=null) { 
+    switch ($format) {
+      case 'HTML':
+        $document = $this->toHTML() ;
+        break ;
+      case 'GraphML' : 
+        $gmlizer = new RDFAsGraphml() ;
+        $document = $gmlizer->rdfTripleSetAsGraphml($this) ;
+        break ;
+      default :
+        $serializer = ARC2::getSer($format,$this->rdfConfiguration->getARC2Config()) ;
+        $document = $serializer->getSerializedTriples($this->triples) ;
+    }
+    if (isset($filename)) {
+      return file_put_contents($filename, $document) ;
+    } else {
+      return $document ;
     }
   }
   
@@ -268,8 +296,8 @@ class RDFTripleSet {
    * @param unknown_type $map
    */
   public function addMapAsTriples($triplekind,$source,$map) {
-    foreach($map as $predicate => $value) {
-      $this->addTriple($triplekind,$source,$predicate,$map) ;
+    foreach($map as $property => $value) {
+      $this->addTriple($triplekind,$source,$property,$value) ;
     }
   }
   
@@ -534,9 +562,6 @@ class RDFConfiguration {
 
 
 
-
-
-
   
 /**
  * Configuration suitable for a RDF Store and Sparql Endpoint.
@@ -786,7 +811,7 @@ class RDFStore {
    * @param URL! $url
    * @return Integer! The number of triples added.
    */
-  public function loadDocument($url) {
+  public function load($url) {
     return $this->loadQuery('LOAD <'.$url.'>') ;
   }  
 
@@ -1110,7 +1135,7 @@ SELECT DISTINCT ?property ?sourcetype ?rangetype WHERE {
 
 
 /**
- *
+ * 
  */
 class RDFAsGraphml {
   
@@ -1119,12 +1144,27 @@ class RDFAsGraphml {
    */
   protected $rdfConfiguration ;
   
-  public function rdfTripleSetAsGraphml(RDFTripleSet $tripleset) {
+  
+  /**
+   * Return the graphml representation of the triple set either as the result or in a file..
+   * @param RDFTripleSet! $tripleset The set of triples.
+   * @param String? $filename The file in which to save the result or null.
+   * @return GraphmlString|Integer|false If no filename is specified return the string generated.
+   * Otherwise return either the number of byte written or false in case of an error.
+   */  
+  public function rdfTripleSetAsGraphml(RDFTripleSet $tripleset, $filename=null) {
     $this->rdfConfiguration = $tripleset->rdfConfiguration ; 
-    return $this->triplesAsGraphml($tripleset->triples);
+    return $this->rdfTriplesAsGraphml($tripleset->triples,$filename);
   }
   
-  public function triplesAsGraphml($triples) {
+  /**
+   * Return the graphml representation of the triples either as the result or in a file.
+   * @param Set*<RDFTriple!>! $triples The triples.
+   * @param String? $filename The file in which to save the result or null.
+   * @return GraphmlString|Integer|false If no filename is specified return the string generated.
+   * Otherwise return either the number of byte written or false in case of an error.
+   */
+  public function rdfTriplesAsGraphml($triples,$filename=null) {
     $g = new Graphml() ;
     foreach($triples as $triple) {
       $node1 = $triple['s'] ;
@@ -1157,8 +1197,15 @@ class RDFAsGraphml {
         die('unexpected type in triple: '.$otype) ;
       }
     }
-    return $g->graphToString() ;
+    $document = $g->graphToString() ;
+    if (isset($filename)) {
+      return file_put_contents($filename, $document) ;
+    } else {
+      return $document ;
+    }
   }
+  
+
   
   /**
    * @param RDFconfiguration? $configuration

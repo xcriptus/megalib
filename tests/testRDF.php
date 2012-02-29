@@ -1,4 +1,5 @@
 <?php
+define('DEBUG',0) ;
 echo 'If this page display errors then have a look in the corresponding config/configXXX.php file<br/>' ;
 echo 'Note that this page access the web</br>' ;
 require_once '../RDF.php';
@@ -24,22 +25,29 @@ function testRDFConfiguration() {
   }
 }
 
+function saveTripleSet($tripleset,$format,$filename) {
+  echo "<p> Saving the tripleset into $filename (format:$format) ..." ;
+  $r = $tripleset->save($format,$filename) ;
+  assert('$r!==false') ;
+  echo " $r bytes saved</p>" ; 
+}
+
 function testRDFTripleSet() {
   echo "<h1>Testing RDFTripleSet</h1>" ;
   $tripleset = new RDFTripleSet() ;
-  echo "loading ".ICPW2009_RDF." " ;
-  $r = $tripleset->load(ICPW2009_RDF) ;
-  echo " result: ".$r."</br>" ;
-  echo $tripleset->toHTML() ;
+  echo "<p>loading ".ICPW2009_RDF." ... " ;
+  $n = $tripleset->load(ICPW2009_RDF) ;
+  echo $n.' triples loaded.' ;
+  saveTripleSet($tripleset,'HTML','output/test.html') ;
+  saveTripleSet($tripleset,'Turtle','output/test.ttl') ;
+  saveTripleSet($tripleset,'RDFXML','output/test.rdf') ;  
   return $tripleset ; 
 }
 
 function testRDFAsGraphml($tripleset) {
   echo "<h1>Testing RDFAsGraphml</h1>";
-  $r2g = new RDFAsGraphml() ;
-  echo htmlAsIs($r2g->rdfTripleSetAsGraphml($tripleset)) ;
+  saveTripleSet($tripleset,'GraphML','output/test.graphml') ;
 }
-
 
 function testRDFStore() {
   echo "<h1>Testing RDFStore</h1>";
@@ -55,8 +63,10 @@ function testRDFStore() {
   echo 'The store has been emptied.<br/>' ;
   
   echo 'Loading '.ICPW2009_RDF.' ... ' ;
-  $n = $store->loadDocument(ICPW2009_RDF) ;
+  $n = $store->load(ICPW2009_RDF) ;
   echo $n.' triples loaded.' ;
+  
+  $ser = ARC2::getTurtleSerializer();
   
   return $store ;
 }
@@ -75,14 +85,16 @@ function testRDFStoreIntrospector($store) {
   }
 }
 
-
-testRDFConfiguration() ;
-$tripleset = testRDFTripleSet() ;
-testRDFAsGraphml($tripleset) ;
+if (1) {
+  testRDFConfiguration() ;
+  $tripleset = testRDFTripleSet() ;
+  testRDFAsGraphml($tripleset) ;
+}
 $store = testRDFStore() ;
+//echo htmlAsIs($store->getARC2Store()->dump()) ;
+
 testRDFStoreIntrospector($store) ;
 
-echo htmlAsIs(RDFAsGraphml::TriplesAsGraphml($triples)) ;
 
 $store->startSparqlEndpoint() ;
 
