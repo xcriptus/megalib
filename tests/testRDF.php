@@ -38,15 +38,15 @@ function testRDFTripleSet() {
   echo "<p>loading ".ICPW2009_RDF." ... " ;
   $n = $tripleset->load(ICPW2009_RDF) ;
   echo $n.' triples loaded.' ;
-  saveTripleSet($tripleset,'HTML','output/test.html') ;
-  saveTripleSet($tripleset,'Turtle','output/test.ttl') ;
-  saveTripleSet($tripleset,'RDFXML','output/test.rdf') ;  
+  saveTripleSet($tripleset,'HTML','output/testRDF1.html') ;
+  saveTripleSet($tripleset,'Turtle','output/testRDF1.ttl') ;
+  saveTripleSet($tripleset,'RDFXML','output/testRDF1.rdf') ;  
   return $tripleset ; 
 }
 
 function testRDFAsGraphml($tripleset) {
   echo "<h1>Testing RDFAsGraphml</h1>";
-  saveTripleSet($tripleset,'GraphML','output/test.graphml') ;
+  saveTripleSet($tripleset,'GraphML','output/testRDF1.graphml') ;
 }
 
 function testRDFStore() {
@@ -84,6 +84,46 @@ function testRDFStoreIntrospector($store) {
     echo homoArrayMapToHTMLTable($introspector->introspect($queryname)) ;
   }
 }
+
+
+
+function testTemplate() {
+  echo "<h1>test Template</h1>" ;
+  $template = '
+  ?res a rss:item ;
+     dc:title ?title ;
+     dc:creator ?creator ;
+     rss:description ?description ;
+     dc:date ?now .
+  ';
+                
+  $a = array(
+      'res' => 'http://mega/res/1',
+      'title' => 'this is the title',
+      'creator' => 'ahmed',
+      'toto' => 'tt',
+      'description' => 'voici un exemple de texte qui ne decrit que lui meme',
+      'now' => date('Y-m-d', time())      
+      ) ;
+  $b = array(
+      'res' => 'http://mega/res/2',
+      'title' => 'this is another title',
+      'creator' => 'bob',
+      'toto' => 'tt',
+      'description' => 'C est le deuxieme article',
+      'now' => date('Y-m-d', time())
+      ) ;
+       
+  $a['link'] = $a['res'];
+    
+  $tripleset = new RDFTripleSet() ;
+  $tripleset->addFromTemplate($template, array($a,$b)) ;
+  echo $tripleset->toHTML() ;
+  
+}
+
+
+testTemplate() ;
 
 if (1) {
   testRDFConfiguration() ;

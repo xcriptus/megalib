@@ -27,12 +27,12 @@ require_once 'Graph.php' ;
  * In arc2 triples are represented as the php structure specified below.
  *
  * @See https://github.com/semsol/arc2/wiki/Internal-Structures for the 
- * documentation of triple internal structure.
+ * documentation of triple and index internal structures.
  * 
  * type ResourceKind == 'uri'|'bnode'|'var' 
  * type ItemKind == ResourceKind | 'literal'
  * 
- * type RDFTriple == Map{ 
+ * type RDFTriple == Map{   // 
  *    's'          : String!  // the subject value (a URI, Bnode ID, or Variable)
  *    's_type'     : ResourceType!
  *    'p'          : String!  // the property URI (or a Variable)
@@ -41,6 +41,10 @@ require_once 'Graph.php' ;
  *    'o_datatype' : URI?
  *    'o_lang'     : String?   // a language identifier, e.g. ("en-us")
  *   }
+ *   
+ * type RDFIndex == ...
+ * 
+ * type TurtleTemplate == ... // see https://github.com/semsol/arc2/wiki/Turtle-Templates
  */   
 class RDFTripleSet {
 
@@ -56,7 +60,7 @@ class RDFTripleSet {
    */
   public $rdfConfiguration ;
   
-  
+    
   /*-------------------------------------------------------------------------
    *  Bulk interface.
   *-------------------------------------------------------------------------
@@ -114,6 +118,86 @@ class RDFTripleSet {
       return $document ;
     }
   }
+  
+  
+  /*-------------------------------------------------------------------------
+   *  Interfaces with ARC2 structures.
+   *-------------------------------------------------------------------------
+   */
+  
+  /**
+   * Return the list of all triples in this triple set.
+   * @return Set*(RDFTriple!)!
+   */
+  public function getTriples() {
+    return $triples ;
+  }
+  
+  /**
+   * Return the triples as an index structure.
+   * @See https://github.com/semsol/arc2/wiki/Internal-Structures
+   * @return RDFIndex! the index structure.
+   */
+  public function getIndex() {
+    return ARC2::getSimpleIndex($this->triples, false) ;
+  }
+  
+  /**
+   * Add an index to the existing triples.
+   * @param RDFIndex! the index structure to be added.
+   * @return void
+   */
+  public function addIndex($index) {
+    $this->triples = 
+      ARC2::getTriplesFromIndex(
+          ARC2::getMergedIndex(
+              ARC2::getSimpleIndex($this->triples,false),
+              $index)) ;      
+  }
+    
+  
+  
+  /*-------------------------------------------------------------------------
+   *  Creation from templates
+   *-------------------------------------------------------------------------
+   */
+  
+  /**
+   * Add a set of triples generated from a template and some values.
+   * This function a generalization of the arc2 function getFilledTemplate
+   * @see https://github.com/semsol/arc2/wiki/Turtle-Templates
+   * 
+   * Instead of calling the template parser for each map
+   * @param TurtleTemplate! $template The template in the turtle syntax where
+   * with some variables in the text. 
+   * @param Map(String,Any)|List*(Map(String,Any) $mapOrMaps The values that
+   * will be used as actual parameter to fill the variable in the templates.
+   * If a map is provided, then each variable in the template should be defined
+   * as a key of the map (if a variable cannot be bound, the corresponding triple
+   * will be ignored. On the other way around, if more pairs are given in the
+   * map than variable in the template, they will be ignore).
+   * If an array of maps is provided, then the template
+   * is repeated for each map in the array.
+   * @return void.
+   */
+  public function addFromTemplate($template,$mapOrMaps) {
+    $conf = $this->rdfConfiguration->getARC2Config()  ;
+    $parser = ARC2::getTurtleParser($conf);
+    $turtleHead = $parser->getTurtleHead() ;
+    
+    $parser->parse('',$turtleHead.$template) ;
+    // check if a simple map is given, and if so convert it to an array of map
+    if (!isset($mapOrMaps[0])) {
+      $mapOrMaps = array($mapOrMaps) ;
+    }
+    $index = array() ;
+    foreach($mapOrMaps as $map) {
+      $newindex = $parser->getSimpleIndex(0, $map);      
+      $index = ARC2::getMergedIndex($index,$newindex) ;      
+    }
+    $this->addIndex($index) ;
+  }
+  
   
   /*-------------------------------------------------------------------------
    *  Incremental interface. 
@@ -545,6 +629,8 @@ class RDFConfiguration {
         'foaf'      => 'http://xmlns.com/foaf/0.1/',
         'ical'      => 'http://www.w3.org/2002/12/cal/ical#',
         'dc'        => 'http://purl.org/dc/elements/1.1/',
+        'rss'       => 'http://purl.org/rss/1.0/',
+        'atom'      => 'http://www.w3.org/2005/Atom/',
         'dbpedia'   => 'http://dbpedia.org/resource/',
         'sdgperson' => 'http://data.semanticweb.org/person/',
         'sdgorg'    => 'http://data.semanticweb.org/organization/'        
