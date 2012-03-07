@@ -3,7 +3,8 @@
  * Basic function for FileSystem manipulations
  */
 
-require_once("Strings.php") ;
+require_once 'Strings.php' ;
+require_once 'Structures.php' ;
 
 function /*String!*/ fileExtension($url) {
   $dotpos = strrpos($url,'.') ;
@@ -90,8 +91,7 @@ function /*String!*/ addToPath($path,$path2) {
 }
 
 // regexpr should be of the form /xxx/
-function /*Set*<String!>?*/ listFileNames($url,
-                                          $typefilter="dir|file",
+function /*Set*<String!>?*/ listFileNames($url, $typefilter="dir|file",
                                           $nameregexpr=NULL,
                                           $ignoredot=TRUE,
                                           $prefixWithDirectory=TRUE) {
