@@ -90,6 +90,17 @@ class SimpleGraphAsRDF {
     
   }
   
+  
+  /**
+   * Save the triple set created with the graph in a rdf store
+   * @param RDFStore! $rdfstore the store to save the triples in
+   * @param URI! $namedgraph the name of the graph
+   * @return the number of triples added.
+   */
+  public function save($rdfstore,$namedgraph){
+    $n = $rdfstore->loadTripleSet($this->tripleSet,$namedgraph,false) ;
+    return $n ;
+  }
   /**
    * Create a converter of SimpleGraph to RDF. 
    */
