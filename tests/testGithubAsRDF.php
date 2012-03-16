@@ -19,7 +19,6 @@ function getRDFTestStore($storename) {
   $testdbaccount = new DatabaseAccount(RDF_TEST_DATABASE_NAME, RDF_TEST_DATABASE_USER, RDF_TEST_DATABASE_PASSWORD) ;
   $configuration = new RDFStoreConfiguration(array(),$testdbaccount, $storename) ;
   return new RDFStore($configuration,'') ;
-  
 }
 
 function testGithubAsRDF($account,$reponame) {
@@ -30,7 +29,8 @@ function testGithubAsRDF($account,$reponame) {
   
   // get the TripleSet
   echo '<p>Generation of the triple set</p>' ;
-  $githubasrdf = new GithubAsRDF('http://data.megaplanet.org/data/', 'http://data.megaplanet.org/schema/') ;
+  $githubasrdf = new GithubAsRDF('http://data.101companies.org/data/github', 
+                                 'http://data.101companies.org/schema/github') ;
   $githubasrdf->githubRepositoryAsTriples($repository) ;
   $tripleset = $githubasrdf->getTripleSet() ;
   
@@ -42,12 +42,12 @@ function testGithubAsRDF($account,$reponame) {
   // save it to a store
   echo '<p>Saving the triples to the '.$repoid.' RDF store</p>' ;  
   $store = getRDFTestStore($repoid) ;
-  $n = $store->loadTripleSet($tripleset, 'http://data.megaplanet.org/data/'.$repoid) ;
+  $n = $store->loadTripleSet($tripleset, 'http://data.101companies.org/data/'.$repoid) ;
   echo "<p>$n triples added</p>" ;
   
 }
 
-testGithubAsRDF('megaplanet','asop');
-//testGithubAsRDF('megaplanet','101implementations');
+//testGithubAsRDF('megaplanet','asop');
+testGithubAsRDF('megaplanet','101implementations');
 
 echo "<h1>End of tests</h1>" ;

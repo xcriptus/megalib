@@ -124,10 +124,10 @@ class Graph {
    * @param Mixed? $default
    */
   public function /*void*/ addAttributeType(
-      $kind,
-      $attname,
-      $type = 'string', 
-      $default = null ) {
+    $kind,
+    $attname,
+    $type = 'string', 
+    $default = null ) {
     $this->schema[$kind][$attname]=array();
     $this->schema[$kind][$attname]['name'] = $attname ;
     $this->schema[$kind][$attname]['type'] = $type ;

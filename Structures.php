@@ -9,7 +9,7 @@
  * @return Set*(Any)
  */
 function union($array1, $array2) {
-  var_dump(array_unique(array_merge($array1,$array2))) ;
+  //var_dump(array_unique(array_merge($array1,$array2))) ;
   return array_unique(array_merge($array1,$array2)) ;
 }
 
