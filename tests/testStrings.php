@@ -22,3 +22,5 @@ foreach($ids as $id) {
 }
 sort($segments) ;
 echo implode(' ',$segments) ;
+
+echo '<h1>End of tests</h1>' ;

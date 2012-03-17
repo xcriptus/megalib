@@ -2,6 +2,7 @@
 require_once ABSPATH_MEGALIB.'SimpleGraph.php' ;
 require_once ABSPATH_MEGALIB.'SimpleGraphAsRDF.php' ;
 require_once ABSPATH_MEGALIB.'HTML.php' ;
+require_once ABSPATH_MEGALIB.'Structures.php' ;
 
 
 
@@ -15,7 +16,7 @@ require_once ABSPATH_MEGALIB.'HTML.php' ;
  * @return SimpleGraph! return a simple graph.
  */
 function jsonGraphToSimpleGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
-  if (DEBUG) echo '<h2>jsonToSimpleGraph</h2>' ;
+  if (DEBUG) echo '<h2>jsonGraphToSimpleGraph</h2>' ;
 
   if (DEBUG>2) echo "<p>Loading the file $jsonUrl, $schemaUrl and $entityJsonMappingUrl</p>" ;
 
@@ -26,7 +27,7 @@ function jsonGraphToSimpleGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
   }
   $json = json_decode($jsonSource,true) ;
   if (! is_array($json)) {
-    if (DEBUG>2) var_dump($json) ;
+    if (DEBUG>10) var_dump($json) ;
     die("incorrect json value in $jsonUrl : $jsonSource") ;
   }
   // load the schema file
@@ -43,7 +44,7 @@ function jsonGraphToSimpleGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
   }
   $entityJsonMapping = json_decode($mappingSource,true) ;
   if (! is_array($entityJsonMapping)) {
-    if (DEBUG>2) var_dump($entityJsonMapping) ;
+    if (DEBUG>10) var_dump($entityJsonMapping) ;
     die("incorrect mapping in $entityJsonMappingUrl : $mappingSource") ;
   }
 
@@ -52,7 +53,7 @@ function jsonGraphToSimpleGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
   loadJsonGraphIntoSimpleGraph($graph,$json,$entityJsonMapping) ;
 
   // checking the constraint on the simple graph (referential constraints)
-  if (DEBUG) echo '<h1>Checking constraints</h1>' ;
+  if (DEBUG) echo '<h2>Checking constraints</h2>' ;
   $graph->checkConstraints() ;
   return $graph ;
 }
@@ -104,22 +105,39 @@ function loadJsonGraphIntoSimpleGraph($graph,$json,$extensionMap) {
  * @param SimpleGraph! $graph The graph object in which to add the instances.
  * The schema of the graph should be already loaded and it define what element
  * will be extracted from the json.
- * @param JSON! $jsonExtensionArray The extension for the given entity kind, represented as
- * an array of entities.
+ * @param JSON! $jsonExtensionMapOrArray The extension for the given entity kind, represented as
+ * an array of entities in which case the key is an attribute (defined in the schema)
+ * or a map of entities in which case the key of the map is added as an attribute.
  * @param EntityKind! $entitykind The kind of entities to load.
  */
-function loadJsonEntityExtensionIntoSimpleGraph($graph,$jsonExtensionArray, $entitykind) {
+function loadJsonEntityExtensionIntoSimpleGraph($graph,$jsonExtensionMapOrArray, $entitykind) {
   assert(isset($graph->SCHEMA));
   $schema = $graph->SCHEMA ;
 
   // get info about attributes of this type of entities
   $attributes = $schema->getAttributeDescriptions($entitykind) ;
   $key_attribute = $schema->getKeyAttribute($entitykind) ;
-  if (DEBUG >= 2) {
+  if (DEBUG >= 6) {
     echo "expected attributes are " ;
     print_r($attributes) ;
   }
-
+  
+  // accept two formats for the extension
+  // if the input is a map with key values then change it to an
+  // array with the key as an attribute (this is the format used in
+  // the remaining of the function).
+  if(is_string_map($jsonExtensionMapOrArray)) {
+    $jsonExtensionArray = array() ;
+    foreach($jsonExtensionMapOrArray as $key => $record) {
+      // add the key value as the key attribute
+      $record[$key_attribute] = $key ; 
+      $jsonExtensionArray[] = $record ;
+    }
+  } else {
+    $jsonExtensionArray = $jsonExtension ;
+  }
+  
+ 
   // for each entity in the file
   foreach ($jsonExtensionArray as $entity) {
 

@@ -23,4 +23,4 @@ echo '' ;
 
 
 
-echo '<h1>Ends of Tests</h1>' ;
+echo '<h1>END OF TESTS</h1>' ;

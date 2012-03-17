@@ -5,6 +5,7 @@ echo 'Note that this page access the web</br>' ;
 require_once '../RDF.php';
 require_once '../RDFAsGraph.php' ;
 require_once '../HTML.php';
+define('OUTPUT_DIR','data/generated/') ;
 
 define('ICPW2009_RDF','http://data.semanticweb.org/dumps/conferences/icpw-2009-complete.rdf') ;
 
@@ -67,12 +68,6 @@ function testTemplate() {
 }
 
 
-function saveTripleSet($tripleset,$format,$filename) {
-  echo "<p> Saving the tripleset into $filename (format:$format) ..." ;
-  $r = $tripleset->save($format,$filename) ;
-  assert('$r!==false') ;
-  echo " $r bytes saved</p>" ; 
-}
 
 function testRDFTripleSet() {
   echo "<h1>Testing RDFTripleSet</h1>" ;
@@ -80,15 +75,13 @@ function testRDFTripleSet() {
   echo "<p>loading ".ICPW2009_RDF." ... " ;
   $n = $tripleset->load(ICPW2009_RDF) ;
   echo $n.' triples loaded.' ;
-  saveTripleSet($tripleset,'HTML','output/testRDF1.html') ;
-  saveTripleSet($tripleset,'Turtle','output/testRDF1.ttl') ;
-  saveTripleSet($tripleset,'RDFXML','output/testRDF1.rdf') ;  
+  $tripleset->saveFiles('HTML,Turtle,RDFXML',OUTPUT_DIR.'testRDF1') ;
   return $tripleset ; 
 }
 
 function testRDFAsGraphml($tripleset) {
   echo "<h1>Testing RDFAsGraphml</h1>";
-  saveTripleSet($tripleset,'GraphML','output/testRDF1.graphml') ;
+  $tripleset->saveFiles('GraphML',OUTPUT_DIR.'testRDF1') ;
 }
 
 
@@ -127,3 +120,5 @@ testRDFAsGraphml($tripleset) ;
 //         'soo:perspectiveRepository! soo:name! rdf:type! soo:perspectiveOwner! soo:classFragmentExcluded* soo:classFragmentIncluded* ~soo:classFragmentPerspective*')) ;
 //   }
 // }
+
+echo '<h1>End of tests</h1>' ;

@@ -330,7 +330,7 @@ class Graphml extends Graph {
     $out = '' ;
     foreach($this->schema as $kind=>$attdef) {
       foreach($attdef as $attname => $attributeinfo) {
-        if (DEBUG) {
+        if (DEBUG>15) {
           var_dump($attdef) ;
         }
         $out .= $indent.'<key id="'.$kind.".".$attributeinfo['name'].'"'

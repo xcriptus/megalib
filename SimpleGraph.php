@@ -291,7 +291,7 @@ class SimpleGraph {
               $targets = $entityinfo[$attributename]  ;
               foreach ($targets as $target) {
                 if (! isset($this->DATA[$targettype][$target])) {
-                  if (DEBUG) echo "<li><b>Undefined reference target:</b> ".$entitykey." --".$attributename.':'.$targettype.'--> '.$target ;
+                  if (DEBUG>3) echo "<li><b>Undefined reference target:</b> ".$entitykey." --".$attributename.':'.$targettype.'--> '.$target ;
                   $this->addGhostEntity($targettype,$target) ;
                   $ghostsAdded[$targettype][] = $target ;
                 }

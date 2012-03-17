@@ -5,15 +5,9 @@ require_once '../HTML.php' ;
 require_once '../Github.php' ;
 require_once '../GithubAsRDF.php' ;
 require_once '../Graph.php' ;
+define('OUTPUT_DIR','data/generated/') ;
 
-define('OUTPUT_DIR','output/') ;
 
-function saveTripleSet($tripleset,$format,$filename) {
-  echo "<p> Saving the tripleset into $filename (format:$format) ..." ;
-  $r = $tripleset->save($format,$filename) ;
-  assert('$r!==false') ;
-  echo " $r bytes saved</p>" ;
-}
 
 function getRDFTestStore($storename) {
   $testdbaccount = new DatabaseAccount(RDF_TEST_DATABASE_NAME, RDF_TEST_DATABASE_USER, RDF_TEST_DATABASE_PASSWORD) ;
@@ -35,9 +29,8 @@ function testGithubAsRDF($account,$reponame) {
   $tripleset = $githubasrdf->getTripleSet() ;
   
   // save the TripleSet in different files with different format
-  saveTripleSet($tripleset,'HTML',"output/$repoid.html") ;
-  saveTripleSet($tripleset,'Turtle',"output/$repoid.ttl") ;
-  saveTripleSet($tripleset,'GraphML',"output/$repoid.graphml") ;
+  echo '<p>Saving the triples to the files'.OUTPUT_DIR.$repoid.'.xxx</p>' ;
+  $tripleset->saveFiles('HTML,Turtle,GraphML',OUTPUT_DIR.$repoid) ;
   
   // save it to a store
   echo '<p>Saving the triples to the '.$repoid.' RDF store</p>' ;  

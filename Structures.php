@@ -2,6 +2,42 @@
 
 
 /**
+ * Indicates if the parameter is an empty array  or with only integer as keys
+ * @param Any $x the parameter to test
+ * @return boolean false if this is not an array or if there is at lease one not integer key
+ */
+function is_int_map($x) {
+  if (is_array($x)) {
+    foreach ($x as $key => $value) {
+      if (!is_int($key)) {
+        return false ;
+      } 
+    }
+    return true ;
+  } else {
+    return false ;
+  }
+}
+
+/**
+ * Indicates if the parameter is an empty array or with only string as keys
+ * @param Any $x the parameter to test
+ * @return boolean false if this is not an array or if there is at lease one not string key
+ */
+function is_string_map($x) {
+  if (is_array($x)) {
+    foreach ($x as $key => $value) {
+      if (!is_string($key)) {
+        return false ;
+      }
+    }
+    return true ;
+  } else {
+    return false ;
+  }
+}
+
+/**
  * Merge flat arrays and remove duplicates. Does not work with nested arrays 
  * because it uses array_unique. 
  * @param List*(Any) $array2

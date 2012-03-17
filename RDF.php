@@ -8,7 +8,8 @@
  */
 require_once 'config/configRDF.php' ;
 require_once 'Database.php' ;
-require_once 'Graph.php' ;
+require_once 'RDFAsGraph.php' ;  // required for the save method
+
 
 
 /**
@@ -45,8 +46,14 @@ require_once 'Graph.php' ;
  * type RDFIndex == ...
  * 
  * type TurtleTemplate == ... // see https://github.com/semsol/arc2/wiki/Turtle-Templates
+ * 
+ * type RDFOutputFileFormat == 'HTML'|'GraphML'|'NTriples'|'Turtle'|'RDFXML'|'RDFJSON'|'MicroRDF'|'POSHRDF'|'RSS10'
  */   
 class RDFTripleSet {
+  
+  
+
+  
 
   /**
    * @var Set*(RDFTriple!)!
@@ -100,14 +107,30 @@ class RDFTripleSet {
   }
 
   /**
+   * @var Constant defining the supported file format for the save function
+   */
+  public $FILE_FORMATS = array(
+      'HTML' => '.html',
+      'GraphML' => '.graphml',
+      'NTriples' => '.nt',
+      'Turtle' => '.ttl',
+      'RDFXML' => '.rdf',
+      'RDFJSON' => '.json',
+      'MicroRDF' => '.micrordf',  // is that correct?
+      'POSHRDF' => '.poshrdf',    // is that correct?
+      'RSS10' => '.rss'
+  ) ;
+  
+  /**
    * Serialize the triple set in a given format. Return the resulting string or save the result into a file if 
-   * the $filename parameter is given. In this case return the number of byte written.
-   * @param 'HTML'|'GraphML'|'NTriples'|'Turtle'|'RDFXML'|'RDFJSON'|'MicroRDF'|'POSHRDF'|'RSS10' $format the serialization format
-   * @param String? $filename The file in which to save the result or null.
+   * the $corefilename parameter is given (add the extension). In this case return the number of byte written.
+   * @param RDFOutputFileFormat! $format the serialization format
+   * @param String? $corefilename The filename WITHOUT extension in which to save the result or null.
+   * @param String? $extension The extension of the file if the default extension is not wanted. Should start with .
    * @return Integer|false If no filename is specified return the string generated. 
    * Otherwise return either the number of byte written or false in case of an error.
    */
-  public function save($format,$filename=null) { 
+  public function saveFile($format,$corefilename=null,$extension=null) { 
     switch ($format) {
       case 'HTML':
         $document = $this->toHTML() ;
@@ -120,11 +143,32 @@ class RDFTripleSet {
         $serializer = ARC2::getSer($format,$this->rdfConfiguration->getARC2Config()) ;
         $document = $serializer->getSerializedTriples($this->triples) ;
     }
-    if (isset($filename)) {
+    if (isset($corefilename)) {
+      $extension = isset($extension) ? $extension : ($this->FILE_FORMATS[$format]) ;
+      $filename = $corefilename.$extension ;
       return file_put_contents($filename, $document) ;
     } else {
       return $document ;
     }
+  }
+  
+  /**
+   * Serialize the triple set in various files with given formats. 
+   * @param Seq(RDFOutputFileFormat!,',') $formats a sequence of RDFOutputFileFormat separated by ,
+   * @param String! $corefilename The file in which to save the result or null.
+   * @return Set*[String] the list formats that were not saved because of some error(s)
+   */
+  public function saveFiles($formats,$corefilename) {
+    $formatnotsaved = array();
+    foreach( explode(',',$formats) as $format ) {
+      $format=trim($format) ;
+      if ($format!='') {
+        if ($this->saveFile($format,$corefilename)===false) {
+          $formatnotsaved[]=$format ;
+        }
+      }
+    }
+    return $formatnotsaved ;
   }
   
   /**
