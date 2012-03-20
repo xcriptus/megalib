@@ -49,16 +49,6 @@ function union($array1, $array2) {
   return array_unique(array_merge($array1,$array2)) ;
 }
 
-
-/**
- * The second array is append at the end of the first one.
- * @param List*(Any) $array1 the array to modify 
- * @param List*(Any) $array2 the list to append
- * @return non. This is an in place modification of array1
- */
-function array_append(&$array1,$array2) {
-  array_splice($array1, count($array1), 0, $array2) ;
-}
 /**
  * Return all the possible keys that are used in the different rows.
  * @param List*(String!,Any!)! $arrayMap

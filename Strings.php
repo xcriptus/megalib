@@ -1,7 +1,22 @@
 <?php
-/*
- * String helpers
-*/
+
+/**
+ * Return a string representation of the value interpreted as a boolean and possibly null.
+ * @param Any $value A boolean or null or in fact any value
+ * @param Seq(String!,',') $strings a sequence of strings separated by , where the first one
+ * is used for 'false', the second one for 'true' and the third one if exist for 'null'.
+ * If the third one doesn't exist the 'false' value will be taken.
+ * Default to 'false,true,null'.
+ * @return String! One of the values indicated as parameter $strings
+ */
+function boolStr($value,$strings="false,true,null") {
+  $strs=explode(",",$strings);
+  return 
+    $value===null 
+      ? (isset($strs[2])?$strs[2]:$strs[0])
+      : ($value ?$strs[1]:$strs[0]) ;
+}
+
 function startsWith($haystack, $needle){
   return substr($haystack, 0, strlen($needle)) === $needle;
 }
@@ -15,7 +30,45 @@ function prefixIfNeeded($str, $prefix) {
   return startsWith($str,$prefix) ? $str : $prefix . $str ;
 }
 
-
+/**
+ * Compose two strings according by a given mode.
+ * @param String! $s1
+ * @param String! $s2
+ * @param $mode
+ * '1,2' means is $s1 and $s2 with the separator in between if necessaryc $s1 is not empty
+ * '1>2' means $s1 if not empty otherwise $s2
+ * '1 (2?)' means $s1 ($s2) if 2!=1, 1 if 2==1
+ * othewise 1 is replaced by $s1 and 2 by $s2
+ * @param String! $separator used as a separator in the mode '1,2'. Default to ' '.
+ * @return String!
+ */
+function format12($s1,$s2,$mode="1,2",$separator=' ') {
+  switch ($mode) {
+    case '1':
+      return $s1 ;
+      break ;
+    case '2' :
+      return $s1 ;
+      break ;
+    case "1,2":
+      return strlen($s1)===0 ? $s1.$separator.$s2 : $s2 ;
+      break ;
+    case "1>2":
+      return strlen($s1)===0 ? $s1 : $s2 ;
+      break ;
+    case '1 (2?)':
+      if ($s1===$s2) {
+        return $s1 ;
+      } else {
+        return $s1.' ('.$s2.')' ;
+      }
+      break ;
+    default:
+      $r = str_replace('1',$s1,$mode) ;
+    $r = str_replace('2',$s2,$mode) ;
+    return $r ;
+  }
+}
 /**
  * Remove comments and replace them by a given string.
  * @param String! $expr The string to clean.
