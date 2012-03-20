@@ -309,70 +309,7 @@ function linkInformation($link) {
   }    
 }
 
-/*
 
-  
-mysqldump --user='megaplan' --password='nvZ2UqFz67CgKx' --databases 'megaplan_MASTER' >tmp/db.sql
-
-Database connection information
-  FILE CONTENT
-    configuration.php
-      public $db = 'megaplan_MASTER';
-      public $password = 'zzzz'
-      public $user = 'megaplan';
-    multisites/xxx/configuration.php
-      public $db = 'megaplan_MASTER';
-      public $password = 'zzzz'
-      public $user = 'megaplan';
-    administrator/components/com_multisites/backup_on_install/configuration.php
-      var $user = 'megaplan_MASTER';
-      var $db = 'megaplan_MASTER';
-    administrator/components/com_multisites/backup/configuration.php
-      var $user = 'megaplan_MASTER';
-      var $db = 'megaplan_MASTER';
-  
-  DATABASE
-    INSERT INTO `cants_fabrik_connections` 
-    (`id`, `host`, `user`, `password`, `database`, `description`, `published`, `checked_out`, `checked_out_time`, `default`, `params`) VALUES
-    (1, 'localhost', 'megaplan', 'nvZ2UqFz67CgKx', 'megaplan_MASTER', 'site database', 1, 0, NULL, 1, '');
-
-Root path
-  FILE CONTENT
-    configuration.php
-      /home/megaplan/public_html/JOOMLA_MASTER/tmp
-      /home/megaplan/public_html/JOOMLA_MASTER/logs
-    multisites/config_multisites.php
-      /home/megaplan/public_html/JOOMLA_MASTER
-    
-    multisites/config_templates.php
-    multisites/xxx/config_multisites.php
-      /home/megaplan/public_html/xxx
-      /home/megaplan/public_html/JOOMLA_MASTER/multisites/xxx
-      /home/megaplan/public_html/JOOMLA_MASTER/multisites/xxx/cache'
-    multisites/xxx/configuration.php
-      /home/megaplan/public_html/JOOMLA_MASTER/tmp
-      /home/megaplan/public_html/JOOMLA_MASTER/logs
-    multisites/xxx/index.php
-      /home/megaplan/public_html/JOOMLA_MASTER/index.php
-    multisites/xxx/index2.php
-      /home/megaplan/public_html/JOOMLA_MASTER/index2.php
-    multisites/xxx/installation/index.php
-      /home/megaplan/public_html/JOOMLA_MASTER/installation/index.php
-    
-    administrator/.htaccess
-    
-    administrator/components/com_akeeba/backup/akeeba.backend.log
-    
-    administrator/components/com_multisites/backup/configuration.php
-    administrator/components/com_multisites/backup_on_install/configuration.php
-    administrator/components/com_multisites/backup_on_install/configuration.php.old
-    administrator/components/com_multisites/models/info/data.php
-    
-    installation_to_delete/sql/joomla.s02
-    installation_to_delete/sql/joomla.sql
-
-
- */
 
 
 /**
