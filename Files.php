@@ -304,7 +304,7 @@ function linkInformation($link) {
     $realpath = realpath($r['targetPath']) ;
     $r['realTargetPath'] = is_string($realpath) ? $realpath : null  ;
     $r['isBroken'] = !is_string($realpath) ;
-    $r['isRealTarget'] = ($r['$targetPath'] === $r['$realTargetPath']) ;
+    $r['isRealTarget'] = ($r['targetPath'] === $r['realTargetPath']) ;
     return $r ;
   }    
 }
