@@ -17,6 +17,28 @@ function boolStr($value,$strings="false,true,null") {
       : ($value ?$strs[1]:$strs[0]) ;
 }
 
+
+function rangesExpression($expression){
+  $ranges=explode(',',$expression) ;
+  $values = array() ;
+  foreach($ranges as $range) {
+    if ($range!='') {
+      $bounds=explode('-',$range) ;
+      switch (count($bounds)) {
+        case 1:
+          $values[] = intval($bounds[0]);
+          break ;
+        case 2:
+          $values = union($values,range(intval($bounds[0]),intval($bounds[1]))) ;
+          break ;
+        default:
+      }
+    }
+  }
+  sort($values) ;
+  return $values ;
+}
+
 function startsWith($haystack, $needle){
   return substr($haystack, 0, strlen($needle)) === $needle;
 }
