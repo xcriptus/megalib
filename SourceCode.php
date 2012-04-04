@@ -53,13 +53,14 @@ class SourceCode {
   protected $highlightedAsSimpleXML ;
   
   /**
-   * @var GeSHI?
+   * @var GeSHI? the geshi object used for highlighting. Computed on demand.
    */
   protected $geshi;
   
   
   /**
-   * @return GeSHI!
+   * Get a geshi object for this source. This function is for internal use.
+   * @return GeSHI! The geshi object associated with the source. 
    */
   protected function getGeSHI() {
     if (!isset($this->geshi)) {
@@ -73,24 +74,36 @@ class SourceCode {
     return $this->geshi ;
   }
 
+  /**
+   * Return the source as a raw html string (no line numbers, no higlighting).
+   * @return HTML!
+   */
   public function getRawHTML() {
     return htmlAsIs($this->source) ;
   }
   
   /**
-   *
+   * @Return CSS!
    */
-  public function getHighlightingStyle($lines='',$style='background:#FFAAEE;') {
+  public function getHighlightingCSS($lines='',$style='background:#FFAAEE;') {
     $css = $this->getGeSHI()->get_stylesheet();
     $idprefix='#'.$this->sourceId.'-' ;
     $ids = $idprefix.implode(','.$idprefix,rangesExpression($lines)) ;
     if ($ids!='') {
-      $css .= $ids. ' { '.$style.' }' ;      
+      $css .= $ids. ' { '.$style.' }' ;
     }
-    return '<html><head><title>Code</title><style type="text/css"><!--'.$css.'--></style></head>' ;
+    return $css ;
+  }
+  
+  public function getHighlightingHeader($lines='',$style='background:#FFAAEE;') {
+    return '<html><head><title>Code</title><style type="text/css"><!--'
+           .$this->getHighlightingCSS($lines,$style)
+           .'--></style></head>' ;
   }
     
   /**
+   * An source code highlighted. This HTML code is based on some CSS that should be included
+   * before in the header for instance.
    * @return HTML?
    */
   public function getHighlightedHTML() {
@@ -102,7 +115,13 @@ class SourceCode {
     return $this->highlighted ;    
   }
   
-
+  public function getLines() {
+    return explode("\n",$this->source) ;
+  }
+  
+  public function getNLOC() {
+    return count($this->getLines()) ;
+  }
   
   /**
    * @return SimpleXMLElement
@@ -149,6 +168,27 @@ class SourceCode {
     } else {
       $this->sourceId = SourceCode::getNewSourceId() ;
     } 
+  }
+  
+  public static function generateHighlightedSource($file,$language,$directory,$fragmentSpecs=null) {
+    $text = file_get_contents($file) ;
+    $source = new SourceCode($text,$language) ;
+    $htmlBody = $source->getHighlightedHTML() ;
+    $outputfilename = $directory.'/'.basename($file) ;
+    
+    // generate the main file
+    $simpleHeader = $source->getHighlightingHeader() ;
+    $n = file_put_contents($outputfilename.'.html',$simpleHeader.$htmlBody) ;
+    
+    if (isset($fragmentSpecs)) {
+      // generate a file for each fragmentSpec
+      foreach($fragmentSpecs as $fragmentName => $fragmentSpec) {
+        $header = $source->getHighlightingHeader($fragmentSpec,'background:#ffffaa ;') ;
+        $n = file_put_contents($outputfilename.'__'.$fragmentName.'.html',$header.$htmlBody) ;
+      }
+    }
+    
+    return $n ;
   }
     
 }
