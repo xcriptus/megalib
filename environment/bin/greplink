@@ -1,0 +1,16 @@
+#!/bin/bash
+if [ "$#" != 2 ]
+then
+  echo "usage: $0 <rootDirectory> <unixPathRegexpr>"
+  exit 1
+fi
+ROOTDIR=${1?Root directory to search within}
+SEARCHED=${2?Searched string as a unix path refexpr (that is with *) }
+if [ -d "${ROOTDIR?}" ]
+then
+  find ${ROOTDIR?} -lname "${SEARCHED?}" -printf '%p\t%l\t%M\t%u\n'
+  exit 0
+else
+  echo "${ROOTDIR?} is not a directory" 
+  exit 2
+fi

@@ -1,0 +1,22 @@
+#!/bin/bash
+if [ "$#" != 3 ]
+then
+  echo "usage: $0 files|lines <rootDirectory> <perlRegexpr>"
+  exit 1
+fi
+MODE=${1?Mode: either "files" or "lines"}
+ROOTDIR=${2?Root directory to search within}
+SEARCHED=${3?Searched string}
+if [ "$MODE" == "files" ]
+then
+  OPTION='--files-with-matches'
+fi
+if [ -d "${ROOTDIR?}" ]
+then
+  find -P $ROOTDIR 2> /dev/null \
+    | xargs grep $OPTION --perl-regexp "$SEARCHED"  2>> /dev/null
+  exit 0
+else
+  echo "${ROOTDIR?} is not a directory"
+  exit 2
+fi

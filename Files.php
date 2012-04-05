@@ -553,25 +553,28 @@ function getRelativePath( $path, $compareTo ) {
 
 /**
  * This function is realized by a system process. TODO document it. 
+ * @param String! $rootDirectory the directory in which to search the string
+ * @param RegExpr! $pattern the perl regexpr used by the grep command
+ * @param 'files'|'lines' $mode controling the output of the function. 
+ * If 'files' is specified only filenames of files that contains the pattern
+ * are return in a list. 
+ * In the 'lines' mode then a XXX. TODO
  */
 
 function grepDirectory($rootDirectory,$pattern,$mode='files') {
+  assert('$mode="files"') ;
   // get the real directory
   $directory = makePathAbsolute($rootDirectory,null,true) ;
   if ($directory === null) {
     return null ;
   }
-  // note that the order of parameters is different to accomodate the default value in php
-  $cmd = escapeshellcmd(SYSTEM_GREPDIR_CMD).' '
-          .escapeshellarg($mode).' '.escapeshellarg($directory).' '.escapeshellarg($pattern) ;
-  if (DEBUG>5) echo "Executing $cmd ..." ;
-  exec($cmd,$output,$exitcode) ;
-  $n = count($output) ;
-  if ($output[$n-1]==='-OK-') {
-    $output[$n-1] = null ;
-    return $output ;
+  $out = systemGetOutput(ENV_GREPDIR_CMD,array($mode,$directory,$pattern),$errcode,'lines',"\n") ;
+  if (isset($out)) {
+    // TODO deal with other modes 
+    return $out ;
   } else {
     return null ;
   }
+  
 }
 
