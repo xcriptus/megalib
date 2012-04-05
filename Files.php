@@ -6,6 +6,7 @@
 require_once 'Strings.php' ;
 require_once 'Structures.php' ;
 require_once 'Environment.php' ;
+require_once 'HTML.php' ;
 
 
 /**
@@ -26,6 +27,35 @@ function isRelativePath($url) {
   return !isAbsolutePath($url) ;
 }
 
+/**
+ * If the path is absolute, let's it untouched. Otherwise concatenate the base path
+ * (or current directory if not specified) and the path. If the option makeItReal is 
+ * selected then the path is replaced by the real path with the php function realpath.
+ * Return null in case of error.
+ * @param String! $path a path either relative or absolute
+ * @param String? $path base path to add to a relative path. If not specified the
+ * base is the current ditectory.
+ * @return String? An absolute path corresponding to the path or null in case of error.
+ */
+function makePathAbsolute($path,$base=null,$makeItReal=false) {
+  if (isRelativePath($path)) {
+    // this is a relative path. Adds the base to it.
+    if (! isset($base)) {
+      $base = getcwd() ;
+      if ($base === false) {
+        return null ;
+      }
+    }
+    $path = addToPath($base,$path) ;
+  }
+  if ($makeItReal===true) {
+    $path = realpath($path) ;
+    if ($path === false) {
+      return null ;
+    }
+  }
+  return $path ;
+}
 
 /**
  * Return the extension of an URL (the last par after .)
@@ -171,7 +201,7 @@ function addToPath($path,$path2) {
  */
 function /*Set*<String!>?*/ listFileNames(
     $directory, 
-    $typeFilter="dir|file|link",
+    $typeFilter="dir|file|link|error",
     $nameRegExpr=NULL,
     $ignoreDotFiles=TRUE,
     $prefixWithDirectory=TRUE) {
@@ -181,7 +211,14 @@ function /*Set*<String!>?*/ listFileNames(
     // this is a readable directory:
     // process each directory item
     while (($file = readdir($dh)) !== false) {
-      $type = filetype(addToPath($directory,$file)) ;
+      $filepath = addToPath($directory,$file) ;
+      // the filetype generates a warning for a broken link so use @
+      @ $type = filetype($filepath) ;
+      // a broken link returns false. Not obvious to know which other cases
+      // false is returned. But we therefore use the type "unknown".
+      if ($type===false) {
+        $type="error" ;
+      }
       $selected = $file!=='.' 
                   && $file!=='..'
                   && in_array($type,$allowedtypes) 
@@ -203,7 +240,7 @@ function /*Set*<String!>?*/ listFileNames(
  * If this not a readable directory, it returns null. The non readable sub directories are not
  * explored, but otherwise the whole subtree is explored indepedently from filters.
  * @param String! $directory the root directory where to start
- * @param Seq('dir','file','link','|')? $typeFilter the type of items to select separated by |
+ * @param Seq('dir','file','link','error','|')? $typeFilter the type of items to select separated by |
  * if various types are accepted. By default all types are accepted.
  * @param RegExpr? $nameRegExpr if not null a regular expression that will be used as
  * a filter on the item name. The matching is done only on the file name, without the path.
@@ -216,13 +253,13 @@ function /*Set*<String!>?*/ listFileNames(
  */
 function listAllFileNames(
     $root,
-    $typeFilter="dir|file|link",
+    $typeFilter="dir|file|link|error",
     $nameRegExpr=NULL,
     $ignoreDotFiles=TRUE,
     $prefixWithDirectory=TRUE,
     $followLinks=false) {
   $results = array() ;
-  if (DEBUG>10) echo "<li>exploring '$root'..." ;
+  if (DEBUG>100) echo "<li>exploring '$root'..." ;
   // get subdirectories because they should be explored anyway
   $subdirectories = listFileNames($root,'dir',null,null,true) ;
   if ($subdirectories === null) {
@@ -250,7 +287,11 @@ function listAllFileNames(
 }
 
 /**
- * Compute the information about a link.
+ * Compute the information about a link. Note that if the link is broken or
+ * in case of another error, then only the 'link' field will be returned. 
+ * In fact it seems that there is no way to make the difference between 
+ * a broken link and another error. Moreover broken link cannot be removed.
+ * 
  * type LinkInfo! == Map(
  *   'link' => String!,
  *   'linkParent' => String?, 
@@ -264,11 +305,11 @@ function listAllFileNames(
  *   'isBroken' => Boolean?,
  *   'realTargetPath' => String?
  * )
- * 'link' is the value being analyzed. If this is not a link then all other
- * value are unset. So the way to test this is to check if count == 1
+ * 'link' is the value being analyzed. If this is not a link or the link is broken
+ * then all other value are unset. So the way to test this is to check if count == 1
  * 'linkParent' the directory containing the link
  * 'realLinkParent' the real path of the parent directory
- * 'isRealLink' indicates if the link (not its value!) given correspond to its real path.
+ * 'isRealLink' indicates if the link (not its value!) given corresponds to its real path.
  * 'realLinkPath' is the real and absolute location of the link after potential link resolution.
  * 'targetValue' is the direct value of the link without any computation.
  * 'isRelativeTarget' indicates if the target value is a relative path
@@ -278,33 +319,41 @@ function listAllFileNames(
  * path of the link computed in the context of the original link. For instance a link
  * 'realTargetPath' the absolute path to the real target. 
  * ../link -> value  corresponds to ../value target path.
- * 'isBroken' indicates if the link corresponds to an existing file
+ * 'isBroken' indicates if the link is broken. In fact this value may not be computed
+ * in case of broken link because some error poping out before.
  * 
  * @param String! $link the path to inspect
  * @return LinkInfo! A map with the properties defined above. If only one property is
- * defined (this will be 'link') then the parameter is not a link.
+ * defined (this will be 'link') then the parameter is not a link or is broken.
  */
 function linkInformation($link) {
   $r['link']=$link ;
-  if (!is_link($link)) {
+  if (@ !is_link($link)) {
+    $r['isBroken'] = true ;
     return $r ;
   } else {
     $r['linkParent'] = dirname($link) ;
     $r['realLinkParent'] = realpath($r['linkParent']);
     $r['realLinkPath'] = addToPath($r['realLinkParent'],basename($link)) ;
     $r['isRealLink'] = ($link === $r['realLinkPath']) ;
-    $target=readlink($link) ;
-    $r['targetValue'] = is_string($target) ? $target : null ;
-    $r['isRelativeTarget'] = isRelativePath($target) ;
-    if ($r['isRelativeTarget']) {
-      $r['targetPath'] = addToPath(parentDirectory($link),$r['targetValue']) ;
+    
+    @ $target=readlink($link) ;
+    if($target===false) {
+      $r['isBroken'] = true ;
     } else {
-      $r['targetPath'] = $r['targetValue'] ;
+       $r['targetValue'] = $target ;
+       $r['isRelativeTarget'] = isRelativePath($target) ;
+       $r['targetPath'] = makePathAbsolute($target,$r['linkParent']) ;
+       $realpath = realpath($r['targetPath']) ;
+       if (isset($r['targetPath']) && $realpath!==false) {
+         $r['realTargetPath'] = $realpath ;
+         $r['isBroken'] = false ;
+         $r['isRealTarget'] = ($r['targetValue'] === $r['realTargetPath']) ;
+       } else {
+         $r['isBroken'] = true ;
+       }
     }
-    $realpath = realpath($r['targetPath']) ;
-    $r['realTargetPath'] = is_string($realpath) ? $realpath : null  ;
-    $r['isBroken'] = !is_string($realpath) ;
-    $r['isRealTarget'] = ($r['targetPath'] === $r['realTargetPath']) ;
+    // var_dump($r) ;
     return $r ;
   }    
 }
@@ -328,7 +377,7 @@ function formatPath($path,$realPathMode="detail") {
     if ($realPathMode==='real') {
       $r = $real ;
     } else {
-      if ($real===$path) {
+      if ($real===$path || !$real) {
         $r = $path ;
       } else {
         $r = $path .' ('.$real.')' ;
@@ -351,13 +400,14 @@ function formatPath($path,$realPathMode="detail") {
 function formatLinkInformation($linkInfo,$realPathMode="detail") {
   $formats=array('simple'=>'1','real'=>'2','detail'=>'1 (2?)') ;
   $format=$formats[$realPathMode] ;
-  
-  $r = format12($linkInfo['link'],$linkInfo['realLinkPath'],$format) ;
+  $real = isset($linkInfo['realLinkPath']) ? $linkInfo['realLinkPath'] : "" ;
+  $r = format12($linkInfo['link'],$real,$format) ;
   if (count($linkInfo)<2) {
-    return $r . " is not a link" ;
+    return $r . " is not a valid link" ;
   } else {
     $r .= ' -> '. ($linkInfo['isBroken']?'BROKEN ':'') ;
-    $r .= format12($linkInfo['targetValue'],$linkInfo['realTargetPath'],$format) ;
+    $real = isset($linkInfo['realTargetPath']) ? $linkInfo['realTargetPath'] : "" ;
+    $r .= format12($linkInfo['targetValue'],$real,$format) ;
     return $r ;
   }
 }
@@ -424,7 +474,7 @@ function listAllLinksWithInfo(
     $nameRegExpr=NULL,
     $ignoreDotFiles=TRUE    
     ) {
-  $links = listAllFileNames($root,'link',$nameRegExpr,$ignoreDotFiles,true)  ;
+  $links = listAllFileNames($root,'link|error',$nameRegExpr,$ignoreDotFiles,true)  ;
   $selectedLinks = array() ;
   foreach($links as $link) {
     $info = linkInformation($link) ;
@@ -502,17 +552,26 @@ function getRelativePath( $path, $compareTo ) {
 }
 
 /**
- *
+ * This function is realized by a system process. TODO document it. 
  */
 
 function grepDirectory($rootDirectory,$pattern,$mode='files') {
+  // get the real directory
+  $directory = makePathAbsolute($rootDirectory,null,true) ;
+  if ($directory === null) {
+    return null ;
+  }
   // note that the order of parameters is different to accomodate the default value in php
-  $cmd = SYSTEM_GREPDIR_CMD.' '
-          .escapeshellarg($mode).' '.escapeshellarg($rootDirectory).' '.escapeshellarg($pattern) ;
+  $cmd = escapeshellcmd(SYSTEM_GREPDIR_CMD).' '
+          .escapeshellarg($mode).' '.escapeshellarg($directory).' '.escapeshellarg($pattern) ;
   if (DEBUG>5) echo "Executing $cmd ..." ;
   exec($cmd,$output,$exitcode) ;
-  if (DEBUG>5) echo " exit code $exitcode" ;
-  if (DEBUG>5) echo " returned ".count($output).' elements' ;
-  return $output ;
+  $n = count($output) ;
+  if ($output[$n-1]==='-OK-') {
+    $output[$n-1] = null ;
+    return $output ;
+  } else {
+    return null ;
+  }
 }
 
