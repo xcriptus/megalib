@@ -1,14 +1,22 @@
 <?php
+require_once 'Strings.php' ;
 require_once 'Structures.php' ;
 
 
 /**
  * Return a html string keeping the format of the existing string.
- * @param String! $string
+ * For convinence if the passed parameter is a boolean or the null value
+ * then display the corresponding value.
+ * @param String|Boolean|null $value
  * @return HTML!
  */
-function htmlAsIs($string) {
-  return '<pre>'.htmlentities($string).'</pre>' ;
+function htmlAsIs($value) {
+  if (is_bool($value)) {
+    $value = boolStr($value) ;
+  } else if ($value ===null) {
+    $value = "null" ;
+  }
+  return '<pre>'.htmlentities($value).'</pre>' ;
 }
     
 /*
