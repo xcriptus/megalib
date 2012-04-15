@@ -1,6 +1,6 @@
 <?php
 define('DEBUG',0) ;
-require_once '../Graph.php' ;
+require_once '../GraphML.php' ;
 
 function buildGraph1() {
   $g = new Graphml() ;
