@@ -58,17 +58,18 @@ function makePathAbsolute($path,$base=null,$makeItReal=false) {
 }
 
 /**
- * Return the extension of an URL (the last par after .)
+ * Return the extension of an URL (the last part after .)
  * TODO testing
  * @param String! $url
  * @return string the extension without dot?
  */
 function fileExtension($url) {
-  $dotpos = strrpos($url,'.') ;
+  $name=basename($url) ;
+  $dotpos = strrpos($name,'.') ;
   if ($dotpos===false) {
     $extension = "" ;
   } else {
-    $extension = substr($url,$dotpos+1) ;
+    $extension = substr($name,$dotpos+1) ;
   }
   return $extension ;
 }
@@ -285,6 +286,48 @@ function listAllFileNames(
     return $result ;
   }
 }
+
+
+/**
+ * @param unknown_type $filenames
+ */
+function extensionFrequencies($filenames){
+  $distrib = array() ;
+  foreach ($filenames as $filename) {
+    $extension=fileExtension($filename) ;
+    if (isset($distrib[$extension]) ){
+      $distrib[$extension]++ ; 
+    } else {
+      //echo $extension." " ;
+      $distrib[$extension] = 1 ;
+    }
+      
+  } 
+  return $distrib ;
+}
+
+/** 
+ * 
+ * file 
+ *   'name' => String!,
+ *   'path' => String!,
+ *   'extension' => String!,
+ *   'isHidden' => Boolean!,
+ *   'size' => Integer>=0!,
+ *   'lineNb' => Integer>=0?
+ *    
+ * directory = Map (
+ *   'name' => String!,
+ *   'path' => String!,
+ *   'extension' => String!,
+ *   'isHidden' => String!,
+ *   'depth'=>Integer>=0!,
+ *   'cumulatedSize' => Integer>=0!,
+ *   'cumulatedLineNb' => I 
+ */
+
+
+
 
 /**
  * Compute the information about a link. Note that if the link is broken or
