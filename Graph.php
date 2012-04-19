@@ -3,69 +3,142 @@
 require_once 'Structures.php';
 
 /**
- * Graph support.
- * Helper to create an attributed graph than can latter be used to generate graphml
- * or dot structure. The main benefit of using this class is that declaration of nodes,
+ * (Nested)graph with nodes, edges, and a schema formed by typed attributes both on 
+ * nodes, edges or the top level graph.
+ * In the current version nodes can be declared inside of a parent node but this is not
+ * the case for edges (although graphml support this).
+ * Node that the class can work with or without edge id. If no id are provided for an
+ * edge then its default to the node pair.
+ * This class can be seen as a helper to create an attributed graph than can latter be used 
+ * to generate graphml or graphviz structure. 
+ * The main benefit of using this class is that declaration of nodes,
  * edges, attributes or nested nodes can come in any sort of order, elements being created
  * transparently on the first occurrence. It is in particular possible to define a node 
  * and then separately different of its attributes. 
  * Similarily nested nodes can be created in an arbirary order. 
- * @author jeanmariefavre
- * @status draft
+ * 
+ * The structure of the graphs are defined as follow.
+ * TODO: refine this description.
+ * 
+ * 
+ * 
+ * ----- attribute --------
+ * Attributes can be defined on different kind of elements. Standard elements
+ * are 'node', 'edge' and 'graph' but implementation might add others.
+ *   type ElementKind='node'|'edge'|'graph'|...
+ *   type AttributeId==String! 
+ *   type AtrributeName==String!
+ *   type AttributeType==String!
+ *   type AttributeValues==Map*(AttributeId!,Mixed!)!
+ * 
+ * ----- schema ------------
+ * - Note that 'meta' on schema is used to accomodate graph models
+ * with more complex definitions of attribute types. This is the
+ * case for instance for graphml and yed.
+ * - Note that id is expected to be unique in the scope of ElementKind (and not
+ * necessarily on the global scope). That is, two attributes "name" can both be 
+ * declared on nodes and edges without being confused.
+ * - By contrast to id, the attribute name is an arbitrary string.
+ *  
+ *   type Schema==Map*(ElementKind!,AttributeDefinition!)!
+ *   type AttributeDefinition==Map*(AttributeId!,AttributeInfo!)!
+ *   type MetaAttributes==Map*(String!,String!)!
+ *   type AttributeInfo==Map{ 'kind'  => ElementKind!,
+ *                            'id'    => AttributeId!,
+ *                            'type'  => AttributeType!,
+ *                            'name'  => AttributeName!
+ *                            'meta'  => MetaAttributes!,
+ *                            'default' => Mixed? }
+ *                            
+ *                            
+ * ----- nodes  ----
+ *   type NodeId==String! 
+ *   
+ * ----- edges -----  
+ *   type EdgeId==String!
+ *   type NodeIdPair==String!     // Separated by a tab (used as default id)
+ *   type EdgeInfo==Map{ 'source' => NodeId!,
+ *                       'target' => NodeId!,
+ *                       'attributes' => AttributeValues!
+ *                       'meta' => MetaAttributes! }                           
  */
 class Graph {
 
   /**
-   * ----- node and edge ----
-   * type NodeId==String! 
-   * type NodeIdPair==String!     // Separated by a tab
-   * 
-   * ----- attribute --------
-   * type AttributeId==String! 
-   * type AttributeValues==Map*(AttributeId!,Mixed!)!
-   * type AttributeType=='string'|'double'|'xml'
-   * 
-   * ----- schema ------------
-   * type Schema==Map*('node'|'edge', Map*(AttributeId!,AttributeInfo)! )!
-   * type AttributeInfo==Map{ 'name'  => AttributeId!,
-   *                          'type'  => AttributeType!,
-   *                          'default' => Mixed? }
+   * @var String the name of the top level graph
    */
   
   protected $graphName = 'G' ;
+  /**
+   * @var AttributeValues
+   */
+  protected $graphAttributes = array() ;
+  
   protected $edgeDefault = 'directed' ;
   
   /**
-   * @var Map*<NodeId!,AttributeValues!>! The set of all nodes with
+   * @var Map*(NodeId!,AttributeValues!)! The set of all nodes with
    * their attributes. If a node have no attribute, the attribute map
    * is simply empty.
    */
   protected $nodes = array() ;
   
   /**
-   * @var Map*<NodeId!,NodeId!>! The parent of a node if any. If a node is
+   * @var Map*(NodeId!,NodeId!)! The parent of a node if any. If a node is
    * a root, then its id will not appear in this list. This structure allows
    * to represent nested graphs.
    */
   protected $parents = array() ;
   
   /**
-   * @var Map*<NodeIdPair!,AttributeValues!>! The edges and their attributes.
-   * Edge ids are represented as node id pairs. If an edge have no attribute,
-   * then the attribute map is simple empty.
+   * @var Map*(EdgeId!,EdgeInfo)! The edges and the corresponding information.
    */
-  protected $edges = array() ;
+  protected $edgeMap = array() ;
+  
+  
   
   /**
    * @var Schema! The schema of a graph listing the attributes definitions
-   * of both nodes and edges.
+   * of both nodes, edges and graph.
    */
   protected $schema = array() ;
   
-  
-  
   /*----------------------------------------------------------------
-   * Accessors
+   * Accessors for the schema
+  *----------------------------------------------------------------
+  */
+  
+  
+  /**
+   * Return the information about an attribute if it exists or null otherwise.
+   * @param ElementKind! $elementKind
+   * @param AttributeId! $id
+   * @return AttributeInfo? the information about the attribute if has been defined.
+   * Null otherwise.
+   */
+  public function getAttributeInfo($elementKind,$id) {
+    @ $info = $this->schema[$elementKind][$id] ;
+    return  $info;
+  }
+  
+   /**
+   * Return the type of an attribute if it exist or null otherwise.
+   * @param ElementKind! $elementKind
+   * @param AttributeId! $id
+   * @return AttributeInfo? the information about the attribute if has been defined.
+   * Null otherwise.
+   */
+  public function getAttributeType($elementKind,$id) {
+    $info = $this->getAttributeInfo($elementKind,$id) ;
+    if (isset($info)) {
+      return $info['type'] ;$this->schema[$elementKind][$id] ;
+    } else {
+      return null ;
+    }
+  }
+      
+  /*----------------------------------------------------------------
+   * Accessors for the graph data
   *----------------------------------------------------------------
   */
   
@@ -108,6 +181,38 @@ class Graph {
     return array_keys($this->parents,$nodeid) ;
   }
 
+  
+  public function getEdges() {
+    return array_keys($this->edgeMap) ;
+  }
+  
+  /**
+   * The source of a given edge or null if the edge does not exist.
+   * @param EdgeId $edgeid
+   * @return NodeId? the source node or null
+   */
+  public function getEdgeSource($edgeid) {
+    if (isset($this->edgeMap[$edgeid])) {
+      return $this->edgeMap[$edgeid]['source'] ;
+    } else {
+      return null ;
+    }
+  }
+  
+  
+  /**
+   * The target of a given edge or null if the edge does not exist.
+   * @param EdgeId $edgeid
+   * @return NodeId? the target node or null
+   */
+  public function getEdgeTarget($edgeid) {
+    if (isset($this->edgeMap[$edgeid])) {
+      return $this->edgeMap[$edgeid]['target'] ;
+    } else {
+      return null ;
+    }
+  }  
+  
   /*----------------------------------------------------------------
    * Attribute management
    *----------------------------------------------------------------
@@ -118,38 +223,48 @@ class Graph {
    * case of missing attribute definitions, but since this process is
    * based on type inference it may be better to declare explicitely
    * the attributes.
-   * @param 'node'|'edge' $kind
-   * @param AttributeId! $attname
-   * @param Type? $type
-   * @param Mixed? $default
+   * @param ElementKind $kind The kind of element on which the attribute is defined
+   * @param AttributeId! $id The id of the attribute. Should be unique for a given $kind
+   * @param Type? $type The type of the attribute. Default to string.
+   * @param AttributeName? $name The name of the attribute. If not given then it will be
+   * set to the same value as $id.
+   * @param Mixed? $default a default value if provided.
+   * @param MetaAttributes? $meta Some meta attributes with their values if necessary. 
+   * Default to an empty map, that is no meta attributes defined.
+   * @return void
    */
-  public function /*void*/ addAttributeType(
-    $kind,
-    $attname,
-    $type = 'string', 
-    $default = null ) {
-    $this->schema[$kind][$attname]=array();
-    $this->schema[$kind][$attname]['name'] = $attname ;
-    $this->schema[$kind][$attname]['type'] = $type ;
+  public function addAttributeType($kind,$id,$type='string',$name=null,$default=null,$meta=array()){
+    $this->schema[$kind][$id]=array();
+    $this->schema[$kind][$id]['kind'] = $kind ;
+    $this->schema[$kind][$id]['id'] = $id ;
+    $this->schema[$kind][$id]['type'] = $type ;
+    $this->schema[$kind][$id]['name'] = isset($name) ? $name : $id ;
     if (isset($default)) {
-      $this->schema[$kind][$attname]['default'] = $default ;
-    }   
+      $this->schema[$kind][$id]['default'] = $default ;
+    }
+    $this->schema[$kind][$id]['meta'] = $meta ;
   }
   
   protected function /*String!*/ inferTypeFromValue($value) {
     // This can be more sophisticated if necessary such as
-    // recognizing number in string. Is it necessary?
+    // recognizing number in string. Is it really necessary?
     return typeOf($value) ;
   }
   
-  protected function /*void*/ addAttributeTypesIfNecessary(
-      /*'node'|'edge'*/$kind,
-      /*AttributeValues!*/$attributeValues ) {
-    foreach($attributeValues as $attname=>$value) {
-      if (! isset($this->schema[$kind][$attname])) {
-        $this->schema[$kind][$attname] = array() ;
+  /**
+   * Given a set of attributes values, add their definitions on a given element kind if
+   * they are not already defined. In this case the type of the attribute is infered
+   * from the actual value of the attribute. 
+   * @param ElementKind! $kind
+   * @param AttributeValues! $attributeValues
+   * @return void
+   */
+  protected function addAttributeTypesIfNecessary($kind,$attributeValues ) {
+    foreach($attributeValues as $attid=>$value) {
+      if (! isset($this->schema[$kind][$attid])) {
+        $this->schema[$kind][$attid] = array() ;        
         $type = $this->inferTypeFromValue($value) ;
-        $this->addAttributeType($kind,$attname,$type) ;
+        $this->addAttributeType($kind,$attid,$type) ;
       }
     }
   }
@@ -189,9 +304,7 @@ class Graph {
      }
   }
 
-  
-  
-  
+   
   
   /*----------------------------------------------------------------
    * Edge management
@@ -220,7 +333,14 @@ class Graph {
   }
   
   /*
-   * Add an edge with some edge attributes if specified. Note that repeated 
+   * Add an edge with some edge attributes if specified. 
+   * XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TO BE UPDATED
+   *  *   type EdgeInfo==Map{ 'source' => NodeId!,
+ *                       'target' => NodeId!,
+ *                       'attributes' => AttributeValues!
+ *                       'meta' => MetaAttributes! }                           
+
+   * Note that repeated 
    * edge addition with the same node id pairs will be recorded but the output is
    * implementation dependent. It may considered as a single edge or multiple edge.
    * Note that the source and target node are added (with no attributes) if not existing.
@@ -229,13 +349,13 @@ class Graph {
    * @param NodeId! $sourceid
    * @param NodeId! $targetid
    * @param AttributeValues? $attributeValues attributes of the edge if any. 
+   * @param EdgeId? if provided this is a unique edge id. Otherwise the id will be formed by
+   * the sourceid and targetid concatenation.
    * Default to no attribute.
+   * @param MetaAttributes 
    * @return void
    */
-  public function /*void*/ addEdge(
-      /**/ $sourceid, 
-      /*NodeId!*/ $targetid, 
-      /*AttributeValues?*/ $attributeValues = array() ) {
+  public function /*void*/ addEdge($sourceid,$targetid,$attributeValues=array(),$edgeid = null,$meta=array()){
     $attvals = $attributeValues ;     
     $this->addAttributeTypesIfNecessary('edge',$attvals) ;
     if (! isset($this->nodes[$sourceid])) {
@@ -243,10 +363,25 @@ class Graph {
     }
     if (! isset($this->nodes[$targetid])) {
       $this->addNode($targetid) ;
-    }    
-    $pair = $this->nodeIdPair($sourceid,$targetid) ;
-    // TODO check whether we want to have id for edges as well
-    $this->edges[$pair] = (isset($attvals) ? $attvals : array() ) ;
+    }
+    if (!isset($edgeid)) {    
+      $edgeid=$this->nodeIdPair($sourceid,$targetid) ;
+    }
+    if (!isset($this->edgeMap[$edgeid])) {
+      $this->edgeMap[$edgeid] = array() ;
+    }
+    $this->edgeMap[$edgeid]['source'] = $sourceid ;
+    $this->edgeMap[$edgeid]['target'] = $targetid ;
+    
+    
+    $this->edgeMap[$edgeid]['attributes'] = 
+      isset($this->edgeMap[$edgeid]['attributes'])
+        ? array_merge($this->edgeMap[$edgeid]['attributes'],$attributeValues)
+        : $attributeValues ;
+    $this->edgeMap[$edgeid]['meta'] =
+      isset($this->edgeMap[$edgeid]['meta'])
+        ? array_merge($this->edgeMap[$edgeid]['meta'],$meta)
+        : $meta ;
   }
 
   
@@ -260,10 +395,22 @@ class Graph {
    * @param String! $graphname
    * @return void
    */
-  public function setGraphName( $graphname) {
+  public function setGraphName($graphname) {
     $this->graphName = $graphname ;
   }
   
+  /**
+   * Add the attributes to the graph and if they are not defined add their infered type as well
+   * @param AttributeValues $attvals
+   * @return void
+   */
+  public function addGraphAttributes($attvals) {
+    $this->addAttributeTypesIfNecessary('graph',$attvals) ;
+    if (isset($this->graphAttributes)) {
+      $attvals = array_merge($attvals,$this->graphAttributes) ;
+    }
+    $this->graphAttributes = $attvals ;
+  }
   
   public function __construct($graphname = null) {
     if (isset($graphname)) {
@@ -273,16 +420,4 @@ class Graph {
 }
 
 
-
-
-
-
-
-
-
-
-
-class DotGraph extends Graph {
-  
-}
 
