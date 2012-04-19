@@ -52,6 +52,14 @@ function prefixIfNeeded($str, $prefix) {
   return startsWith($str,$prefix) ? $str : $prefix . $str ;
 }
 
+function withoutOptionalPrefix($str, $prefix) {
+  return startsWith($str,$prefix) ? substr($str,strlen($prefix)) : $str  ;
+}
+
+function withoutOptionalSuffix($str, $suffix) {
+  return endsWith($str,$suffix) ? substr($str,0,strlen($str)-strlen($suffix)) : $str  ;
+}
+
 /**
  * Compose two strings according by a given mode.
  * @param String! $s1
@@ -109,9 +117,6 @@ function removeComments($expr,$commentRegExpr=C_LINE_COMMENT_REGEXPR,$replacemen
 }
 
 
-function withoutOptionalPrefix($str, $prefix) {
-  return startsWith($str,$prefix) ? substr($str,strlen($prefix)) : $str  ;
-}
 
 // from http://php.net/manual/en/function.strtr.php
 $_TRANSLATE['removeDiacritics'] = array(
