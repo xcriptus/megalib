@@ -1,7 +1,6 @@
 <?
 /**
  * Basic support for CSV files.
- * @author jeanmariefavre
  * WARNING, table rows and columns start as 1, but the header is a 
  * sequence (starting at 0).
  * TODO. Currently all the file is readed. This is ok for the header, 

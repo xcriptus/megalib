@@ -4,7 +4,8 @@ require_once 'Structures.php';
 
 /**
  * (Nested)graph with nodes, edges, and a schema formed by typed attributes both on 
- * nodes, edges or the top level graph.
+ * nodes, edges or the top level graph. This structure is a generalization of graph
+ * structures used for graph visualization tools sur as GraphML/Yed or GraphViz. 
  * In the current version nodes can be declared inside of a parent node but this is not
  * the case for edges (although graphml support this).
  * Node that the class can work with or without edge id. If no id are provided for an
@@ -105,8 +106,8 @@ class Graph {
   
   /*----------------------------------------------------------------
    * Accessors for the schema
-  *----------------------------------------------------------------
-  */
+   *----------------------------------------------------------------
+   */
   
   
   /**
@@ -136,12 +137,20 @@ class Graph {
       return null ;
     }
   }
-      
-  /*----------------------------------------------------------------
-   * Accessors for the graph data
-  *----------------------------------------------------------------
-  */
+
+  /**
+   * Returh the schema of the graph.
+   * @return Schema!
+   */
+  public function getSchema() {
+    return $this->schema ;
+  }
   
+  /*----------------------------------------------------------------
+   * Accessors for nodes
+   *----------------------------------------------------------------
+   */
+    
   /**
    * Get the attribute values of a node or null if the node does not exist.
    * @param NodeId! $nodeid
@@ -181,6 +190,10 @@ class Graph {
     return array_keys($this->parents,$nodeid) ;
   }
 
+  /*----------------------------------------------------------------
+   * Accessors for Edges
+  *----------------------------------------------------------------
+  */
   
   public function getEdges() {
     return array_keys($this->edgeMap) ;
@@ -212,6 +225,46 @@ class Graph {
       return null ;
     }
   }  
+  
+  /**
+   * Get the attribute values of an edge or null if the edge does not exist.
+   * @param EdgeId! $edgeid
+   * @return AttributeValues?
+   */
+  public function getEdgeAttributes($edgeid) {
+      if (isset($this->edgeMap[$edgeid])) {
+      return $this->edgeMap[$edgeid]['attributes'] ;
+    } else {
+      return null ;
+    } 
+  }
+  
+  /*----------------------------------------------------------------
+   * Accessors for the graph
+   *----------------------------------------------------------------
+   */
+  
+  
+  /**
+   * Get the name of the graph
+   * @return string
+   */
+  public function getGraphName() {
+    return $this->graphName ;
+  }
+  
+  /**
+   * Get the attributes of the graph
+   * @return string
+   */
+  public function getGraphAttributes() {
+    return $this->graphAttributes ;
+  }
+  
+  public function getEdgeDefault() {
+    return $this->edgeDefault ;
+  }
+  
   
   /*----------------------------------------------------------------
    * Attribute management
@@ -412,11 +465,95 @@ class Graph {
     $this->graphAttributes = $attvals ;
   }
   
+  
+  
   public function __construct($graphname = null) {
     if (isset($graphname)) {
       $this->setGraphName($graphname) ;
     }
   }
+}
+
+
+/**
+ * Serialize a graph in as a string or a file. 
+ * The abstract class should be refined for the different formats.
+ */
+abstract class GraphWriter {
+  
+  /**
+   * @var Graph the graph to be writen.
+   */
+  protected $g ;
+  
+  /**
+   * Output a node representation.
+   * Should be implemented by subclasses. 
+   * @param GraphString! $nodeid
+   * @param String? optional indentation
+   * @return GraphString! The representation of the node.
+   */
+  protected abstract function nodeToGraphString($nodeid,$indent='') ;
+  
+  /**
+   * Output an edge representation.
+   * @param EdgeId! $edgeid
+   * @param String? optional indentation
+   * @return GraphString! The representation of the edge.
+   */
+  protected abstract function edgeToGraphString($edgeid,$indent='') ;
+    
+  /**
+   * Output the header of the graph.
+   * Should be implemented by subclasses. 
+   * @return GraphString!
+   */
+  protected abstract function headerToGraphString() ;
+
+  /**
+   * Output the footer of the graph.
+   * Should be implemented by subclasses.
+   * @return GraphString!
+   */
+  protected abstract function footerToGraphString() ;
+  
+  /**
+   * Serialize a graph. This function output 
+   * (1) the header
+   * (2) all root nodes
+   * (3) all edges
+   * (4) the footer
+   * If this is not appropriated the function could be overloaded
+   * in subclasses.
+   * @return GraphString! a string representing the whole graph.
+   */
+  public function /*GraphString!*/ graphToGraphString() {
+    $str = $this->headerToGraphString() ;
+    foreach($this->g->getRootNodes() as $nodeid) {
+      $str .= $this->nodeToGraphString($nodeid) ;
+    }
+    foreach($this->g->getEdges() as $edgeid) {
+      $str .= $this->edgeToGraphString($edgeid) ;
+    }
+    $str .= $this->footerToGraphString() ;
+    return $str ;
+  }
+  
+  /**
+   * Save a graph in a graphml file.
+   * @param String! $filename the name of the file to write into.
+   * @result void.
+   */
+  public function /*void*/ graphToGraphFile($filename) {
+    $str = $this->graphToGraphString() ;
+    file_put_contents($filename,$str) ;
+  }
+
+  
+  public function __construct(Graph $graph) {
+    $this->g = $graph ;
+  }
+  
 }
 
 

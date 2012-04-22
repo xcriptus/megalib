@@ -1,13 +1,12 @@
 <?php
-require_once '../Strings.php' ;
-require_once '../SourceCode.php' ;
-require_once '../YEd.php' ;
+require_once 'Strings.php' ;
+require_once 'SourceCode.php' ;
+require_once 'YEd.php' ;
 
 class YEdGraphBrowserGenerator {
   
   /**
-   * @var Graph (in fact GraphMLReader which is a subclass).
-   * The graph for which to produce the area map
+   * @var Graph The graph for which to produce the area map
    */
   protected $graph;
   /**
@@ -55,7 +54,8 @@ class YEdGraphBrowserGenerator {
         $this->sourceFileDirectory.'/'.$filename,
         $language,
         $this->targetDirectory,
-        $fragments) ;
+        $fragments,
+        "L") ;
   }
 
   protected function generateAllHighlightedSourceFilesAndTheirFragments() {
@@ -205,7 +205,8 @@ class YEdGraphBrowserGenerator {
       die("YEdGraphBrowser: cannot read YEdGraphFile ".
           $this->yedGraphFullFileName) ;
     }
-    $this->graph = new GraphMLReader($yedgraphxml) ;
+    $graphMLReader = new GraphMLReader($yedgraphxml) ;
+    $this->graph = $graphMLReader->getGraph() ;
     
     $this->generateAll();
   

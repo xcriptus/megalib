@@ -47,7 +47,7 @@ require_once 'RDFAsGraph.php' ;  // required for the save method
  * 
  * type TurtleTemplate == ... // see https://github.com/semsol/arc2/wiki/Turtle-Templates
  * 
- * type RDFOutputFileFormat == 'HTML'|'GraphML'|'NTriples'|'Turtle'|'RDFXML'|'RDFJSON'|'MicroRDF'|'POSHRDF'|'RSS10'
+ * type RDFOutputFileFormat == 'HTML'|'GraphML'|'Graphviz'|'NTriples'|'Turtle'|'RDFXML'|'RDFJSON'|'MicroRDF'|'POSHRDF'|'RSS10'
  */   
 class RDFTripleSet {
   
@@ -112,6 +112,7 @@ class RDFTripleSet {
   public $FILE_FORMATS = array(
       'HTML' => '.html',
       'GraphML' => '.graphml',
+      'Graphviz' => '.dot',
       'NTriples' => '.nt',
       'Turtle' => '.ttl',
       'RDFXML' => '.rdf',
@@ -136,8 +137,12 @@ class RDFTripleSet {
         $document = $this->toHTML() ;
         break ;
       case 'GraphML' : 
-        $gmlizer = new RDFAsGraphml() ;
-        $document = $gmlizer->rdfTripleSetAsGraphml($this) ;
+        $gmlizer = new RDFAsGraphML() ;
+        $document = $gmlizer->rdfTripleSetAsGraphML($this) ;
+        break ;
+      case 'Graphviz' :
+        $gmlizer = new RDFAsGraphviz() ;
+        $document = $gmlizer->rdfTripleSetAsGraphviz($this) ;
         break ;
       default :
         $serializer = ARC2::getSer($format,$this->rdfConfiguration->getARC2Config()) ;

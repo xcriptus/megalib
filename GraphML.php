@@ -33,7 +33,7 @@ require_once 'Graph.php' ;
 
 
 
-class GraphML extends Graph {
+class GraphMLWriter extends GraphWriter {
 
   //----------------------------------------------------------------------------
   //------ GraphML Writter -----------------------------------------------------
@@ -89,7 +89,7 @@ class GraphML extends Graph {
    * @param AttributeType $typename
    * @return GraphMLString! A graphml string as stated above.
    */
-  protected function attributeTypeToGraphMLTypeAttributePair($typename) {
+  protected function attributeTypeToGraphTypeAttributePair($typename) {
     if ($this->isStandardType($typename)) {
       return 'attr.type="'.$this->standardTypeMapping[$typename].'"' ;
     } elseif ($this->isYEdType($typename)) {
@@ -108,7 +108,7 @@ class GraphML extends Graph {
    * @param AttributeType $type
    * @return GraphMLString! the string corresponding to the value
    */
-  protected function attributeValueToGraphMLString($value,$type) {
+  protected function attributeValueToGraphString($value,$type) {
     if ($type=='string' && $value!="") {
       return '<![CDATA['.$value.']]>' ;
     } else {
@@ -122,11 +122,11 @@ class GraphML extends Graph {
    * @param String! $indent
    * @return GraphMLString! the key XML element.
    */
-  protected function attributeDefinitionToGraphMLString($attributeInfo,$indent='') {
+  protected function attributeDefinitionToGraphString($attributeInfo,$indent='') {
     $out = $indent.'<key id="'.$attributeInfo['id']
-                      .' for="'.$attributeInfo['kind'].'"' ;
+                      .'" for="'.$attributeInfo['kind'].'"' ;
     $type = $attributeInfo['type'] ;
-    $out .= ' '.$this->attributeTypeToGraphMLTypeAttributePair($type) ;
+    $out .= ' '.$this->attributeTypeToGraphTypeAttributePair($type) ;
     // only attribute with a standard type seems to have the attr.name defined. 
     // In this case print it otherwise totally ignore it.
     if ($this->isStandardType($type)) {
@@ -135,7 +135,7 @@ class GraphML extends Graph {
     if (isset($attributeInfo['default'])) {
       $out .= ">\n" ;
       $out .= $indent.'  <default>' ;
-      $out .= $this->attributeValueToGraphMLString($attributeInfo  ['default'],$type) ;
+      $out .= $this->attributeValueToGraphString($attributeInfo  ['default'],$type) ;
       $out .= '</default>'."\n" ;
       $out .= $indent."</key>" ;
     } else {
@@ -149,11 +149,11 @@ class GraphML extends Graph {
    * @param String? optional indentation
    * @return GraphMLString! a list of "key" XML elements.
    */
-  protected function schemaToGraphMLString($indent='') {
+  protected function schemaToGraphString($indent='') {
     $out = '' ;
-    foreach($this->schema as $kind=>$attdef) {
+    foreach($this->g->getSchema() as $kind=>$attdef) {
       foreach($attdef as $attname => $attributeinfo) {
-        $out .= $this->attributeDefinitionToGraphMLString($attributeinfo,$indent)."\n" ;
+        $out .= $this->attributeDefinitionToGraphString($attributeinfo,$indent)."\n" ;
       }
     }
     return $out ;
@@ -168,38 +168,39 @@ class GraphML extends Graph {
    * @param String? optional indentation
    * @return GraphMLString! a series of "data" WML elements.
    */
-  protected function attributeMapToGraphMLString($kind,$attvalues,$indent='') {
+  protected function attributeMapToGraphString($kind,$attvalues,$indent='') {
     $out = '' ;
     foreach ($attvalues as $attid => $value) {
       $out .= $indent.'  <data key="'.$attid.'">' ;
-      $type = $this->getAttributeType($kind,$attid) ;
-      $out .= $this->attributeValueToGraphMLString($value,$type) ;
+      $type = $this->g->getAttributeType($kind,$attid) ;
+      $out .= $this->attributeValueToGraphString($value,$type) ;
       $out .= '</data>'."\n" ;
     }
     return $out ;
   }
 
   /**
-   * Represents a node in graphml.
-   * @param GraphMLString! $nodeid
+   * Output a node representation.
+   * Should be implemented by subclasses. 
+   * @param GraphString! $nodeid
    * @param String? optional indentation
-   * @return NodeId! a <node> element with the attribute definitions and potentially the subgraph.
+   * @return GraphMSString! A <node> element with its attributes, and subnodes if any.
    */
-  protected function nodeToGraphMLString($nodeid,$indent='') {
+  protected function nodeToGraphString($nodeid,$indent='') {
     $out = $indent.'    <node id="'.$nodeid.'"' ;
-    $attmap = $this->getNodeAttributes($nodeid) ;
-    $children = $this->getNodeChildren($nodeid) ;
+    $attmap = $this->g->getNodeAttributes($nodeid) ;
+    $children = $this->g->getNodeChildren($nodeid) ;
     if (count($attmap)==0 && count($children)==0) {
       $out .= "/>\n" ;
     } else {
       $out .= ">\n" ;
       if (count($attmap)!=0) {
-        $out .= $this->attributeMapToGraphMLString('node',$attmap,$indent.'    ') ;
+        $out .= $this->attributeMapToGraphString('node',$attmap,$indent.'    ') ;
       }
       if (count($children)!=0) {
         $out .= $indent.'      <graph id="'.$nodeid.self::NESTED_GRAPH_SUFFIX.'">'."\n" ;
         foreach ($children as $child) {
-          $out .= $this->nodeToGraphMLString($child,$indent.'    ') ;
+          $out .= $this->nodeToGraphString($child,$indent.'    ') ;
         }
         $out .= $indent."      </graph>\n" ;
       }
@@ -209,75 +210,68 @@ class GraphML extends Graph {
   }
 
   /**
-   * Represents an edge in graphml.
-   * @param NodeId! $sourceid
-   * @param NodeId! $targetid
+   * Output an edge representation.
+   * @param EdgeId! $edgeid
    * @param String? optional indentation
    * @return GraphMLString! a <edge> element with potentially the list of edge attributes.
    */
-  protected function edgeToGraphMLString($edgeid,$indent='') {
-    $sourceid = $this->getEdgeSource($edgeid) ;
-    $targetid = $this->getEdgeTarget($edgeid) ;
-    $attributes = $this->edgeMap[$edgeid]['attributes'] ;
+  protected function edgeToGraphString($edgeid,$indent='') {
+    $sourceid = $this->g->getEdgeSource($edgeid) ;
+    $targetid = $this->g->getEdgeTarget($edgeid) ;
+    $attributes = $this->g->getEdgeAttributes($edgeid) ;
     $out = $indent.'    <edge id="'.$edgeid.'" source="'.$sourceid.'" target="'.$targetid.'"' ;
     if (count($attributes) == 0) {
       echo "" ;
       $out .=  "/>\n" ;
     } else {
       $out .= ">\n" ;
-      $out .= $this->attributeMapToGraphMLString('edge',$attributes,$indent.'     ') ;
+      $out .= $this->attributeMapToGraphString('edge',$attributes,$indent.'     ') ;
       $out .= $indent."    </edge>\n" ;
     }
     return $out ;
   }
 
-
-
-  /**
-   * Represents a graph in graphml.
-   * @return GraphMLString! a <graph> element with all nodes and edges.
-   */
-  public function /*GraphMLString!*/ graphToGraphMLString() {
+  protected function headerToGraphString() {
     $str = self::GRAPH_HEADER ;
     $str .= "\n  <!-- Graph schema -->\n" ;
-    $str .= $this->schemaToGraphMLString('  ') ;
+    $str .= $this->schemaToGraphString('  ') ;
     $str .= "\n  <!-- Graph data -->\n" ;
-    $str .= '  <graph id="'.$this->graphName
-    .'" edgedefault="'.$this->edgeDefault."\">\n" ;
-    foreach($this->getRootNodes() as $nodeid) {
-      $str .= $this->nodeToGraphMLString($nodeid) ;
-    }
-    foreach($this->edgeMap as $edgeid => $edgeinfo) {
-      $str .= $this->edgeToGraphMLString($edgeid) ;
-    }
-    $str .= "  </graph>\n" ;
+    $str .= '  <graph id="'.$this->g->getGraphName()
+    .'" edgedefault="'.$this->g->getEdgeDefault()."\">\n" ;
+    return $str ;
+  }
+ 
+  protected function footerToGraphString() {
+    $str = " </graph>\n" ;
     $str .= self::GRAPH_FOOTER ;
     return $str ;
   }
 
   /**
-   * Save a graph in a graphml file.
-   * @param String! $filename the name of the file to write into.
-   * @result void.
+   * @param Graph $graph The graph to be serialized
    */
-  public function /*void*/ graphToGraphMLFile($filename) {
-    $str = $this->graphToGraphMLString() ;
-    file_put_contents( $filename,$str) ;
-  }
-
-  public function __construct($graphname = null) {
-    parent::__construct($graphname) ;
+  public function __construct(Graph $graph) {
+    parent::__construct($graph) ;
   }
 
 }
 
 
-class GraphMLReader extends GraphML {
+class GraphMLReader {
+  
+  /**
+   * @var Graph ;
+   */
+  protected $g ;
   /**
    * @var SimpleXML the GraphML structure in XML
    */
   protected $simpleXML ;
 
+  
+  public function getGraph() {
+    return $this->g ;
+  }
   //--- deals with schema definition, that is keys ---
   protected function processKeysFromXML($document) {
     foreach($document->key as $key) {
@@ -307,13 +301,13 @@ class GraphMLReader extends GraphML {
       $default = null ;
     }
     // if it has been impossible to find the type then do not put the definition at all
-    $this->addAttributeType($kind,$attid,$type,$attname,$default) ;
+    $this->g->addAttributeType($kind,$attid,$type,$attname,$default) ;
   }
   
   //-- deals with top level
   protected function processTopLevelGraphFromXML($graph) {
     $graphid=(string) $graph['id'] ;
-    $this->setGraphName($graphid) ;
+    $this->g->setGraphName($graphid) ;
     $this->processGraphFromXML($graph,null) ;
   }
   
@@ -323,7 +317,7 @@ class GraphMLReader extends GraphML {
     $attributes = $this->processDataFromXML('graph',$graph) ;
     if (count($attributes)>=1) {
       if ($parentnodeid===null){
-        $this->addGraphAttributes($attributes) ;
+        $this->g->addGraphAttributes($attributes) ;
       } else {
         die('Graph: in the current version of Graph, and its implementation of GraphML,'
             . ' attributes values are not supported on subgraphs') ;
@@ -341,7 +335,7 @@ class GraphMLReader extends GraphML {
     $attributes = array() ;
     foreach($nodeOrEdgeOrGraph->data as $data) {
       $key=(String) $data['key'] ;
-      $attributeType=$this->getAttributeType($kind, $key) ;
+      $attributeType=$this->g->getAttributeType($kind, $key) ;
       switch ($attributeType) {
         case 'string' :
           $value = (String) $data ;
@@ -374,7 +368,7 @@ class GraphMLReader extends GraphML {
   protected function processNodeFromXML($node,$parentnodeid=null) {
     $nodeid = (string)$node['id'] ;
     $attributes = $this->processDataFromXML('node',$node) ;
-    $this->addNode($nodeid,$attributes,$parentnodeid) ;
+    $this->g->addNode($nodeid,$attributes,$parentnodeid) ;
     foreach($node->graph as $subgraph) {
       $this->processGraphFromXML($subgraph,$nodeid) ;
     }
@@ -385,13 +379,13 @@ class GraphMLReader extends GraphML {
     $source = (string) $edge['source'] ;
     $target = (string) $edge['target'] ; 
     $attributes = $this->processDataFromXML('edge',$edge) ;
-    $this->addEdge($source,$target,$attributes,$id) ;    
+    $this->g->addEdge($source,$target,$attributes,$id) ;    
   }
   /**
    * @param GraphML $graphmlString
    */
   public function __construct($graphmlString) {
-    parent::__construct() ;
+    $this->g = new Graph() ;
     // return $simpleXML->xpath('//span[@class="'.$classname.'"]') ;
     $this->document = simplexml_load_string($graphmlString) ;
     if ($this->document===false) {
@@ -399,7 +393,6 @@ class GraphMLReader extends GraphML {
     } else {
       $this->processKeysFromXML($this->document) ;
       $this->processGraphFromXML($this->document->graph) ;
-      
     }
   }
 }

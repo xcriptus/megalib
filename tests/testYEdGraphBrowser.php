@@ -3,9 +3,7 @@ require_once '../YEdGraphBrowser.php' ;
 
 define('ROOTDIR','../../101dev/sandbox/m12/implementations/xsdClasses') ;
 define('TARGETDIR',ROOTDIR.'/docs') ;
-define('YEDGRAPH','xsdClassesArtefactView.megal.graphml') ;
-define('YEDGRAPHFULLNAME',ROOTDIR.'/'.YEDGRAPH) ;
-define('IMAGEHTML',TARGETDIR.'/'.YEDGRAPH.'.html') ;
+define('YEDGRAPHFULLNAME',ROOTDIR.'/xsdClassesArtefactView.megal.graphml') ;
 $sourceFileDirectory = ROOTDIR.'/repo' ;
 $SourceDefinitions = array(
     array('Company.xsd','xml', array('Company'=>'4-11', 'Department'=>'13-20', 'Employee'=>'22-28')),
@@ -13,9 +11,14 @@ $SourceDefinitions = array(
     array('ACMECorp.xml','xml'),
     array('ACMECorpCut.xml','xml'),
     array('CompanyXSD2CS.bat','batch'),
-    array('Demo.cs','csharp'),
+    array('Demo.cs','csharp', array('CutAcmeCorp'=>'38-43')),
     array('Operations.cs','csharp'),
     array('Serialization.cs','csharp')
 );
 
-$generator = new YEdGraphBrowserGenerator(YEDGRAPHFULLNAME,$sourceFileDirectory,$SourceDefinitions,TARGETDIR) ;
+$generator = 
+  new YEdGraphBrowserGenerator(
+       YEDGRAPHFULLNAME,
+       $sourceFileDirectory,
+       $SourceDefinitions,
+       TARGETDIR) ;

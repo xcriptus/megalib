@@ -3,7 +3,6 @@
 /** 
  * Basic classes to give simplified access to Relational Database.
  * Contains also an DatabaseInterospector allowing to discover the schema of the db.
- * @author jeanmariefavre
  */
 
 require_once('Logger.php') ;
