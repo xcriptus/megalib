@@ -164,15 +164,15 @@ class SourceCode {
     $this->source = $text ;
     $this->language = $language ;
     if (isset($sourceid)) {
-      $this->sourceId=$sourcedid ;
+      $this->sourceId=$sourceid ;
     } else {
       $this->sourceId = SourceCode::getNewSourceId() ;
     } 
   }
   
-  public static function generateHighlightedSource($file,$language,$directory,$fragmentSpecs=null) {
+  public static function generateHighlightedSource($file,$language,$directory,$fragmentSpecs=null,$sourceid=null) {
     $text = file_get_contents($file) ;
-    $source = new SourceCode($text,$language) ;
+    $source = new SourceCode($text,$language,$sourceid) ;
     $htmlBody = $source->getHighlightedHTML() ;
     $outputfilename = $directory.'/'.basename($file) ;
     

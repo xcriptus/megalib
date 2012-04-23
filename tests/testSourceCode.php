@@ -1,11 +1,7 @@
 <?php
 require_once '../SourceCode.php' ;
-echo "<h2>Testing SourceCode::generateHighlightedSource</h2>" ;
-echo "Results go to data/generated/*" ;
-SourceCode::generateHighlightedSource('data/input/Company.xsd', 'xml', 'data/generated',
-    array('Company'=>'4-11', 'Department'=>'13-20', 'Employee'=>'22-28')) ;
-SourceCode::generateHighlightedSource('data/input/Company.cs', 'csharp', 'data/generated',
-    array('Company'=>'25-51', 'Department'=>'59-110', 'Employee'=>'118-155')) ;
+
+//echo "Results go to data/generated/*" ;
 
 echo "<h2>Testing other elements</h2>" ;
 
