@@ -1,15 +1,15 @@
 <?php
 
-require_once 'Graph.php' ;
+require_once 'NAGraph.php' ;
 
 /**
  * GraphML structure.
  * @see http://graphml.graphdrawing.org/ for the graphml format
  * @see http://www.yworks.com/products/yed/ of the yed free graphml editor
  * Note that GraphML enable to have subgraph inside node. This level is not
- * modeled in the Graph class. Nodes and edges in the subgraphs are directly
+ * modeled in the NAGraph class: nodes (and edges TODO) in the subgraphs are directly
  * own by the parent nodes. Moreover, in graphml it is possible to add attrbutes
- * on these subgraphs. These attributes are not supported with Graph. This
+ * on these subgraphs. These attributes are not supported with NAGraph. This
  * means that subgraph attributes values are lost (but toplevel graph values
  * are supported).
  * 
@@ -20,10 +20,10 @@ require_once 'Graph.php' ;
  *    type YedAttributeTypes==resources|portgraphics|portgeometry|portuserdata|nodegraphics|edgegraphics
  * 
  * In graphml attributes types are defined via the key XML element.
- * GraphML 'id' attributes are naturally mapped to 'id' in Graph AttributeInfo.
+ * GraphML 'id' attributes are naturally mapped to 'id' in NAGraph AttributeInfo.
  * GraphML 'for' attributes are mapped to ElementKind.
  * In GraphML attribute declarations are global 
- * but this does not cause a problem as in Graph 'id' is 
+ * but this does not cause a problem as in NAGraph 'id' is 
  * supposed to be unique in the context of a given ElementKind 
  * (which is more restrictive).
  * Either  yfiles.type 
@@ -33,7 +33,7 @@ require_once 'Graph.php' ;
 
 
 
-class GraphMLWriter extends GraphWriter {
+class GraphMLWriter extends NAGraphWriter {
 
   //----------------------------------------------------------------------------
   //------ GraphML Writter -----------------------------------------------------
@@ -184,7 +184,7 @@ class GraphMLWriter extends GraphWriter {
    * Should be implemented by subclasses. 
    * @param GraphString! $nodeid
    * @param String? optional indentation
-   * @return GraphMSString! A <node> element with its attributes, and subnodes if any.
+   * @return GraphMLString! A <node> element with its attributes, and subnodes if any.
    */
   protected function nodeToGraphString($nodeid,$indent='') {
     $out = $indent.'    <node id="'.$nodeid.'"' ;
@@ -248,9 +248,9 @@ class GraphMLWriter extends GraphWriter {
   }
 
   /**
-   * @param Graph $graph The graph to be serialized
+   * @param NAGraph $graph The graph to be serialized
    */
-  public function __construct(Graph $graph) {
+  public function __construct(NAGraph $graph) {
     parent::__construct($graph) ;
   }
 
@@ -260,7 +260,7 @@ class GraphMLWriter extends GraphWriter {
 class GraphMLReader {
   
   /**
-   * @var Graph ;
+   * @var NAGraph ;
    */
   protected $g ;
   /**
@@ -319,7 +319,7 @@ class GraphMLReader {
       if ($parentnodeid===null){
         $this->g->addGraphAttributes($attributes) ;
       } else {
-        die('Graph: in the current version of Graph, and its implementation of GraphML,'
+        die('GraphML: in the current version of Graph, and its implementation of GraphML,'
             . ' attributes values are not supported on subgraphs') ;
       }
     }
@@ -385,7 +385,7 @@ class GraphMLReader {
    * @param GraphML $graphmlString
    */
   public function __construct($graphmlString) {
-    $this->g = new Graph() ;
+    $this->g = new NAGraph() ;
     // return $simpleXML->xpath('//span[@class="'.$classname.'"]') ;
     $this->document = simplexml_load_string($graphmlString) ;
     if ($this->document===false) {

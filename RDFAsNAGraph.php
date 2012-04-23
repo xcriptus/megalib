@@ -1,12 +1,12 @@
 <?php
 
 require_once 'RDF.php' ;
-require_once 'Graph.php' ;
+require_once 'NAGraph.php' ;
 
 /**
- * Converter from RDF to Graph
+ * Converter from RDF to NAGraph
  */
-class RDFAsGraph {
+class RDFAsNAGraph {
   
 
   /**
@@ -16,9 +16,9 @@ class RDFAsGraph {
 
 
   /**
-   * Return a Graph from a RDFTripleSet.
+   * Return a NAGraph from a RDFTripleSet.
    * @param RDFTripleSet! $tripleset The triple set.
-   * @return Graph? The graph generated or null in case of error.
+   * @return NAGraph? The graph generated or null in case of error.
    */
   public function rdfTripleSetAsGraph(RDFTripleSet $tripleset) {
     $this->rdfConfiguration = $tripleset->rdfConfiguration ;
@@ -26,12 +26,12 @@ class RDFAsGraph {
   }
 
   /**
-   * Return a Graph from a set of RTDTriples.
+   * Return a NAGraph from a set of RTDTriples.
    * @param Set*<RDFTriple!>! $triples The set of triples to convert.
-   * @return Graph? The graph generated or null in case of error.
+   * @return NAGraph? The graph generated or null in case of error.
    */
   public function rdfTriplesAsGraph($triples) {
-    $g = new Graph() ;
+    $g = new NAGraph() ;
     foreach($triples as $triple) {
       $node1 = $triple['s'] ;
       $node1id = $this->rdfConfiguration->prefixed($node1) ;

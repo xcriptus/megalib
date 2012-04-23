@@ -85,7 +85,7 @@ class YEdHTML {
  * in the palette directory ((e.g. yWorks\yEd\palette) as a regular
  * graphml file.
  */
-class YedPalette extends Graph {
+class YedPalette extends NAGraph {
 
 }
 

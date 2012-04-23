@@ -1,20 +1,20 @@
 <?php
-require_once ABSPATH_MEGALIB.'SimpleGraph.php' ;
-require_once ABSPATH_MEGALIB.'SimpleGraphAsRDF.php' ;
+require_once ABSPATH_MEGALIB.'ERGraph.php' ;
+require_once ABSPATH_MEGALIB.'ERGraphAsRDF.php' ;
 require_once ABSPATH_MEGALIB.'HTML.php' ;
 require_once ABSPATH_MEGALIB.'Structures.php' ;
 
 
 /**
- * Convert JSONGraph to a SimpleGraph
+ * Convert JSONGraph to a ERGraph
  * @param URL! $jsonUrl URL or filename of the JSON file to convert
  * @param String! $schemaFile URL or Filename of the schema use to direct the conversion
  * @param String! $entityJsonMappingFile URL or filename containing the map from entity kind to json
  * tag. This should be a json file.
- * @return SimpleGraph! return a simple graph.
+ * @return ERGraph! return a simple graph.
  */
-function jsonGraphToSimpleGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
-  if (DEBUG) echo '<h2>jsonGraphToSimpleGraph</h2>' ;
+function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
+  if (DEBUG) echo '<h2>jsonGraphToERGraph</h2>' ;
 
   if (DEBUG>2) echo "<p>Loading the file $jsonUrl, $schemaUrl and $entityJsonMappingUrl</p>" ;
 
@@ -33,7 +33,7 @@ function jsonGraphToSimpleGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
   if ($schemaSource === false){
     die("cannot open $schemaUrl") ;
   }
-  $schema = new SimpleSchema($schemaSource) ;
+  $schema = new ERSchema($schemaSource) ;
 
   // load the mapping file
   $mappingSource = file_get_contents($entityJsonMappingUrl) ;
@@ -47,8 +47,8 @@ function jsonGraphToSimpleGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
   }
 
   // create the graph
-  $graph = new SimpleGraph($schema) ;
-  loadJsonGraphIntoSimpleGraph($graph,$json,$entityJsonMapping) ;
+  $graph = new ERGraph($schema) ;
+  loadJsonGraphIntoERGraph($graph,$json,$entityJsonMapping) ;
 
   // checking the constraint on the simple graph (referential constraints)
   if (DEBUG) echo '<h2>Checking constraints</h2>' ;
@@ -59,7 +59,7 @@ function jsonGraphToSimpleGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
 
 
 
-// type EntityKind == String!  (entity kinds defined in the SimpleSchema)
+// type EntityKind == String!  (entity kinds defined in the ERSchema)
 // Here feature, language, etc.
 
 /**
@@ -72,8 +72,8 @@ function makeEntityId($entityKind,$keyValueOfEntity) {
 }
 
 /**
- * Load the information from a json representation into a SimpleGraph structure.
- * @param SimpleGraph! $graph  The target graph where the information will
+ * Load the information from a json representation into a ERGraph structure.
+ * @param ERGraph! $graph  The target graph where the information will
  * be load. The schema should be already loaded into the graph (that is
  * $graph->SCHEMA should be set).
  * @param JSON! $json the json structure to convert with the top level being
@@ -86,13 +86,13 @@ function makeEntityId($entityKind,$keyValueOfEntity) {
  * This is not necessarily simply a "s" at the because of some irregularities in naming
  * such as "categories" => "category".
  */
-function loadJsonGraphIntoSimpleGraph($graph,$json,$extensionMap) {
+function loadJsonGraphIntoERGraph($graph,$json,$extensionMap) {
   assert(isset($graph->SCHEMA));
   // for each entity kind defined in the schema, load the corresponding extension
   foreach (  $graph->SCHEMA->getEntityKinds() as $entitykind ) {
     $jsonExtensionTag = $extensionMap[$entitykind] ;
     if (DEBUG>1) echo "<li>Loading '$entitykind' extension from top-level tag '$jsonExtensionTag':<br/>".count($json[$jsonExtensionTag])." json entities found." ;
-    loadJsonEntityExtensionIntoSimpleGraph($graph,$json[$jsonExtensionTag],$entitykind) ;
+    loadJsonEntityExtensionIntoERGraph($graph,$json[$jsonExtensionTag],$entitykind) ;
     if (DEBUG>1) echo '</br>'.count($graph->DATA[$entitykind])." ".$entitykind."(s) in the resulting graph</li>" ;
   }
 }
@@ -100,7 +100,7 @@ function loadJsonGraphIntoSimpleGraph($graph,$json,$extensionMap) {
 
 /**
  * Extract
- * @param SimpleGraph! $graph The graph object in which to add the instances.
+ * @param ERGraph! $graph The graph object in which to add the instances.
  * The schema of the graph should be already loaded. 
  * The schema defines define what element will be extracted from the json.
  * @param JSON! $jsonExtensionMapOrArray The extension for the given entity kind, represented as
@@ -108,7 +108,7 @@ function loadJsonGraphIntoSimpleGraph($graph,$json,$extensionMap) {
  * or a map of entities in which case the key of the map is added as an attribute.
  * @param EntityKind! $entitykind The kind of entities to load.
  */
-function loadJsonEntityExtensionIntoSimpleGraph($graph,$jsonExtensionMapOrArray, $entitykind) {
+function loadJsonEntityExtensionIntoERGraph($graph,$jsonExtensionMapOrArray, $entitykind) {
   assert(isset($graph->SCHEMA));
   $schema = $graph->SCHEMA ;
 

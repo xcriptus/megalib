@@ -3,7 +3,7 @@
 require_once 'Structures.php';
 
 /**
- * (Nested)graph with nodes, edges, and a schema formed by typed attributes both on 
+ * Nested Attributed Graph with nodes, edges, and a schema formed by typed attributes both on 
  * nodes, edges or the top level graph. This structure is a generalization of graph
  * structures used for graph visualization tools sur as GraphML/Yed or GraphViz. 
  * In the current version nodes can be declared inside of a parent node but this is not
@@ -63,7 +63,7 @@ require_once 'Structures.php';
  *                       'attributes' => AttributeValues!
  *                       'meta' => MetaAttributes! }                           
  */
-class Graph {
+class NAGraph {
 
   /**
    * @var String the name of the top level graph
@@ -479,7 +479,7 @@ class Graph {
  * Serialize a graph in as a string or a file. 
  * The abstract class should be refined for the different formats.
  */
-abstract class GraphWriter {
+abstract class NAGraphWriter {
   
   /**
    * @var Graph the graph to be writen.
@@ -550,7 +550,7 @@ abstract class GraphWriter {
   }
 
   
-  public function __construct(Graph $graph) {
+  public function __construct(NAGraph $graph) {
     $this->g = $graph ;
   }
   

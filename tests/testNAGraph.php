@@ -1,12 +1,12 @@
 <?php
 define('DEBUG',0) ;
 require_once '../HTML.php' ;
-require_once '../Graph.php' ;
+require_once '../NAGraph.php' ;
 require_once '../GraphML.php' ;
 require_once '../Graphviz.php' ;
 
 function buildGraph1() {
-  $g = new Graph() ;
+  $g = new NAGraph() ;
   $g->addAttributeType("edge","k1","string","distance","10") ; 
   $g->addNode("mali",array("name"=>"Mali","climate"=>"Hot"),"africa") ;
   $g->addNode("lyon",array("name"=>"Lyon"),'france') ;

@@ -6,7 +6,7 @@ require_once 'YEd.php' ;
 class YEdGraphBrowserGenerator {
   
   /**
-   * @var Graph The graph for which to produce the area map
+   * @var NAGraph The graph for which to produce the area map
    */
   protected $graph;
   /**

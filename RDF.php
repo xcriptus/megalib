@@ -8,7 +8,7 @@
  */
 require_once 'config/configRDF.php' ;
 require_once 'Database.php' ;
-require_once 'RDFAsGraph.php' ;  // required for the save method TODO: change this with registering plugin
+require_once 'RDFAsNAGraph.php' ;  // required for the save method TODO: change this with registering plugin
 require_once 'GraphML.php' ;  // required for the save method  TODO: change this with registering plugin
 require_once 'Graphviz.php' ;  // required for the save method TODO: change this with registering plugin
 
@@ -141,13 +141,13 @@ class RDFTripleSet {
         $document = $this->toHTML() ;
         break ;
       case 'GraphML' : // TODO: change this with registering plugin
-        $grapher = new RDFAsGraph($this->getConfiguration()) ;
+        $grapher = new RDFAsNAGraph($this->getConfiguration()) ;
         $graph = $grapher->rdfTripleSetAsGraph($this) ;
         $graphmlwriter = new GraphMLWriter($graph) ;
         $document = $graphmlwriter->graphToGraphString($this) ;
         break ;
       case 'Graphviz' : // TODO: change this with registering plugin
-        $grapher = new RDFAsGraph($this->getConfiguration()) ;
+        $grapher = new RDFAsNAGraph($this->getConfiguration()) ;
         $graph = $grapher->rdfTripleSetAsGraph($this) ;
         $graphmlwriter = new GraphvizWriter($graph) ;
         $document = $graphmlwriter->graphToGraphString($this) ;
@@ -1151,7 +1151,7 @@ class RDFStore {
 
 
   
-  // TODO the syntax should be merged/unified with the SimpleGraph schema format
+  // TODO the syntax should be merged/unified with the ERGraph schema format
   // The value returned depends on the cardinality
   //   prop?  => String?
   //   prop!  => String!

@@ -1,12 +1,12 @@
 <?php
 
-require_once 'Graph.php' ;
+require_once 'NAGraph.php' ;
 
 /**
  * Graphviz structure.
  */
 
-class GraphvizWriter extends GraphWriter {
+class GraphvizWriter extends NAGraphWriter {
   
   protected function quote($nodeid) {
     return '"'.str_replace('"', '\"', $nodeid).'"' ;
@@ -75,7 +75,7 @@ class GraphvizWriter extends GraphWriter {
     return $str ;
   }
   
-  public function __construct(Graph $graph) {
+  public function __construct(NAGraph $graph) {
     parent::__construct($graph) ;
   }
 
