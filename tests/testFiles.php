@@ -62,7 +62,6 @@ function testListFileNameFunctions($funname,$dir) {
   echo implode('<br/>',$items) ;
 }
 
-
 function testListAllLinksWithInfo($dir) {
   echo "<h2>Testing listAllLinksWithInfo</h2>" ;
   var_dump(listAllLinksWithInfo($dir)) ;
