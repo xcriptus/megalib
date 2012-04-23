@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+    <key id="k1" for="edge" attr.name="distance" attr.type="string">
+    <default>10</default>
+  </key>
+  <key id="name" for="node" attr.name="name" attr.type="string"/>
+  <key id="climate" for="node" attr.name="climate" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <node id="africa">
+      <graph id="africa-subgraph">
+        <node id="mali">
+          <data key="name">Mali</data>
+          <data key="climate">Hot</data>
+          <graph id="mali-subgraph">
+            <node id="bamako"/>
+          </graph>
+        </node>
+      </graph>
+    </node>
+    <node id="europe">
+      <graph id="europe-subgraph">
+        <node id="france">
+          <graph id="france-subgraph">
+            <node id="lyon">
+              <data key="climate">Continental</data>
+              <data key="name">Lyon</data>
+            </node>
+          </graph>
+        </node>
+        <node id="germany">
+          <graph id="germany-subgraph">
+            <node id="koblenz"/>
+          </graph>
+        </node>
+      </graph>
+    </node>
+    <edge source="africa" target="europe"/>
+    <edge source="mali" target="mali"/>
+    <edge source="mali" target="france">
+       <data key="k1">890</data>
+    </edge>
+    <edge source="bamako" target="lyon"/>
+  </graph>
+</graphml>

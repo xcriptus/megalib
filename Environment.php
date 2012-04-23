@@ -1,5 +1,5 @@
-<?php
-require_once('config/configEnvironment.php') ;
+<?php defined('_MEGALIB') or die("No direct access") ;
+require_once('configs/Environment.config.php') ;
 require_once('Strings.php') ;
 
 /**
@@ -44,7 +44,7 @@ function systemGetOutput($command,$parameters,&$exitcode,$mode='lines',$separato
   if (DEBUG>5) echo "Executing $cmd ..." ;
   exec($cmd,$output,$exitcode) ;
   $n = count($output) ;
-  if ($output[$n-1]==='-OK-') {
+  if ($n>=1 && $output[$n-1]==='-OK-') {
     unset($output[$n-1]) ;
     switch ($mode) {
       case 'string':

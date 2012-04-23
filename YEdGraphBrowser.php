@@ -1,4 +1,4 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 require_once 'Strings.php' ;
 require_once 'SourceCode.php' ;
 require_once 'YEd.php' ;

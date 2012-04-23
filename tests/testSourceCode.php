@@ -1,4 +1,6 @@
 <?php
+require_once 'main.config.local.php' ;
+
 require_once '../SourceCode.php' ;
 
 //echo "Results go to data/generated/*" ;

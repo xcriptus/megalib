@@ -1,6 +1,7 @@
 <?php
-define('DEBUG',0) ;
-echo 'If this page display errors then have a look in the corresponding config/configXXX.php file<br/>' ;
+require_once 'main.config.local.php' ;
+
+echo 'If this page display errors then have a look in the corresponding configs/configXXX.php file<br/>' ;
 echo 'Note that this page access the web</br>' ;
 require_once '../RDF.php';
 require_once '../HTML.php';

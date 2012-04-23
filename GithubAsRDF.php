@@ -1,4 +1,4 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 /**
  * RDF representation of Github.
  * Assume that the ARC2 library is installed (see github.com/semsol/arc2)

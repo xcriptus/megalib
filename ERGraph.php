@@ -1,4 +1,4 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 /**
  * Basic support for Entity Relationship (ER) Graphs with explicit ER schema.
  */

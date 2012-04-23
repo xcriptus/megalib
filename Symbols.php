@@ -1,12 +1,14 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 
 /**
  * Count identifiers occurrence in a text.
+ * Identifiers are segments that are between nonIdRegExpr (see below).
+ * No processing is done on these identifiers.
  * Does not apply any kind of lexical analysis to avoid comments, strings, etc.
  * @param String $text The text to analyse.
  * @param RegExpr? $nonIdRegexpr non ids segments that will be ignored.
  * Default to /[^a-zA-Z_]+/
- * @return
+ * @return Map(String!,Integer>0!)! The frequency map of each identifiers.
  */
 function extractIds($text,$nonIdRegexpr='/[^a-zA-Z_]+/') {
   $onlyids = trim(preg_replace($nonIdRegexpr,' ',$text)) ;

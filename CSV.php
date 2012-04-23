@@ -1,4 +1,4 @@
-<?
+<?php defined('_MEGALIB') or die("No direct access") ;
 /**
  * Basic support for CSV files.
  * WARNING, table rows and columns start as 1, but the header is a 

@@ -1,4 +1,4 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 require_once ABSPATH_MEGALIB.'ERGraph.php' ;
 require_once ABSPATH_MEGALIB.'ERGraphAsRDF.php' ;
 require_once ABSPATH_MEGALIB.'HTML.php' ;

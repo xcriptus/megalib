@@ -1,4 +1,5 @@
 logs/*
 tests/data/generated/*
-config/localConfig*
+*config.local*
+tests/*config.local*
 local/*

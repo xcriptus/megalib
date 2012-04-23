@@ -1,5 +1,5 @@
-<?php
-require_once 'config/configSourceCode.php';
+<?php defined('_MEGALIB') or die("No direct access") ;
+require_once 'configs/SourceCode.config.php';
 require_once 'HTML.php' ;
 require_once 'Strings.php' ;
 

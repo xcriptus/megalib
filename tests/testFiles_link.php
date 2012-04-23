@@ -1,6 +1,7 @@
 <?php
+require_once 'main.config.local.php' ;
+
 error_reporting(E_ALL);
-define('DEBUG',12) ;
 
 echo "<h1>Usage: parameters: ?dir=...directory...&expr=...expr...</h1>" ;
 echo "<h2>This program will not work on windows because of the absence of symbolic links</h2>" ;

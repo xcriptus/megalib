@@ -1,4 +1,4 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 /**
  * RDF support. Provides helpers for arc2 rdf store.
  */
@@ -6,7 +6,7 @@
 /**
  * See the content of the file below to configure your system and use this library.
  */
-require_once 'config/configRDF.php' ;
+require_once 'configs/RDF.config.php' ;
 require_once 'Database.php' ;
 require_once 'RDFAsNAGraph.php' ;  // required for the save method TODO: change this with registering plugin
 require_once 'GraphML.php' ;  // required for the save method  TODO: change this with registering plugin

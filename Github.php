@@ -1,4 +1,4 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 /**
  * Basic interface for accessing Github in an oo style rather than api procedural style
  * This interface is based on the php-github-api available from github.
@@ -11,7 +11,7 @@
 /**
  * See the content of the file below to configure your system and use this library.
  */
-require_once 'config/configGithub.php' ;
+require_once 'configs/Github.config.php' ;
 require_once 'Files.php' ;
 
 
@@ -477,4 +477,43 @@ class GithubTree extends GithubObject {
     $this->objectListCache = NULL ;
   }
   
+}
+
+
+/**
+ * @author jmfavre
+ *
+ */
+class GithubFile {
+  /**
+   * @var HTML $html a html representation of the file with syntax coloring
+   */
+  protected $html ;
+  
+  protected $name ;
+  
+  public function getHighlighted() {
+    return $this->html ;
+  }
+  public function __construct($url) {
+    $this->name = $url ;
+    $file = file_get_contents($url) ;
+    if ($file === false) {
+      $this->html = null ;
+    } else {
+      $this->html = $file ;
+    }
+  }
+}
+
+
+function getFile($url) {
+  
+  $ch = curl_init($url);
+  curl_setopt($ch, CURLOPT_HEADER, 0);
+  $fp = fopen("data/generated/example_homepage.txt", "w");
+  curl_setopt($ch, CURLOPT_FILE, $fp);  
+  curl_exec($ch);
+  curl_close($ch);
+  fclose($fp);
 }

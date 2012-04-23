@@ -1,7 +1,7 @@
 <?php
+require_once 'main.config.local.php' ;
 require_once '../HTML.php' ;
 require_once '../ERGraph.php' ;
-define('DEBUG',1) ;
 
 $ER_SCHEMA_EXAMPLE = '
 // Some example of comments

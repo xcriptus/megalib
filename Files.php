@@ -1,4 +1,4 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 /*
  * Basic function for FileSystem manipulations
  */

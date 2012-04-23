@@ -1,10 +1,11 @@
 <?php
-define("DEBUG",0) ;
-echo 'If this page display errors then have a look in the corresponding config/configXXX.php file<br/>' ;
+require_once 'main.config.local.php' ;
+
+echo 'If this page display errors then have a look in the corresponding configs/configXXX.php file<br/>' ;
 require_once '../HTML.php' ;
 require_once '../Github.php' ;
 require_once '../GithubAsRDF.php' ;
-require_once '../Graph.php' ;
+require_once '../NAGraph.php' ;
 define('OUTPUT_DIR','data/generated/') ;
 
 
@@ -30,7 +31,7 @@ function testGithubAsRDF($account,$reponame) {
   
   // save the TripleSet in different files with different format
   echo '<p>Saving the triples to the files'.OUTPUT_DIR.$repoid.'.xxx</p>' ;
-  $tripleset->saveFiles('HTML,Turtle,GraphML',OUTPUT_DIR.$repoid) ;
+  $tripleset->saveFiles('HTML,Turtle,GraphML,Graphviz',OUTPUT_DIR.$repoid) ;
   
   // save it to a store
   echo '<p>Saving the triples to the '.$repoid.' RDF store</p>' ;  
@@ -40,7 +41,7 @@ function testGithubAsRDF($account,$reponame) {
   
 }
 
-//testGithubAsRDF('megaplanet','asop');
-testGithubAsRDF('megaplanet','101implementations');
+testGithubAsRDF('megaplanet','asop');
+//testGithubAsRDF('megaplanet','101implementations');
 
-echo "<h1>End of tests</h1>" ;
+echo "<h1>END OF TESTS</h1>" ;

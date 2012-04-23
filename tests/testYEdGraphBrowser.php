@@ -1,4 +1,6 @@
 <?php
+require_once 'main.config.local.php' ;
+
 require_once '../YEdGraphBrowser.php' ;
 
 define('ROOTDIR','../../101dev/sandbox/m12/implementations/xsdClasses') ;

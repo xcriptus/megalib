@@ -1,6 +1,7 @@
 <?php
+require_once 'main.config.local.php' ;
+
 require_once '../Files.php' ;
-define ('DEBUG',1) ;
 testIsAbsolutePath() ;
 testGetRelativePath() ;
 testListFileNameFunctions('listFileNames','..') ;

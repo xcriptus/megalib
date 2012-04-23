@@ -1,5 +1,6 @@
 <?php
-define('DEBUG',10) ;
+require_once 'main.config.local.php' ;
+
 require_once '../Strings.php' ;
 require_once '../Files.php' ;
 

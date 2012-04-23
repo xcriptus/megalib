@@ -1,8 +1,10 @@
 <?php
+require_once 'main.config.local.php' ;
+
 require_once '../GraphML.php' ;
 require_once '../HTML.php' ;
-define('DEBUG','6') ;
- $file = 'data/input/countries.graphml' ;
+
+$file = 'data/input/countries.graphml' ;
 $file = 'data/input/mgl1.graphml' ;
 $xml = file_get_contents($file) ;
 $graphmlReader = new GraphMLReader($xml) ;

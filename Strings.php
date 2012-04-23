@@ -1,4 +1,4 @@
-<?php
+<?php defined('_MEGALIB') or die("No direct access") ;
 
 /**
  * Return a string representation of the value interpreted as a boolean and possibly null.
