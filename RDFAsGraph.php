@@ -4,9 +4,9 @@ require_once 'RDF.php' ;
 require_once 'Graph.php' ;
 
 /**
- * Converter from RDF to Graphml
+ * Converter from RDF to Graph
  */
-class RDFAsGraphml {
+class RDFAsGraph {
   
 
   /**
@@ -16,26 +16,22 @@ class RDFAsGraphml {
 
 
   /**
-   * Return the graphml representation of the triple set either as the result or in a file..
-   * @param RDFTripleSet! $tripleset The set of triples.
-   * @param String? $filename The file in which to save the result or null.
-   * @return GraphmlString|Integer|false If no filename is specified return the string generated.
-   * Otherwise return either the number of byte written or false in case of an error.
+   * Return a Graph from a RDFTripleSet.
+   * @param RDFTripleSet! $tripleset The triple set.
+   * @return Graph? The graph generated or null in case of error.
    */
-  public function rdfTripleSetAsGraphml(RDFTripleSet $tripleset, $filename=null) {
+  public function rdfTripleSetAsGraph(RDFTripleSet $tripleset) {
     $this->rdfConfiguration = $tripleset->rdfConfiguration ;
-    return $this->rdfTriplesAsGraphml($tripleset->triples,$filename);
+    return $this->rdfTriplesAsGraph($tripleset->triples);
   }
 
   /**
-   * Return the graphml representation of the triples either as the result or in a file.
-   * @param Set*<RDFTriple!>! $triples The triples.
-   * @param String? $filename The file in which to save the result or null.
-   * @return GraphmlString|Integer|false If no filename is specified return the string generated.
-   * Otherwise return either the number of byte written or false in case of an error.
+   * Return a Graph from a set of RTDTriples.
+   * @param Set*<RDFTriple!>! $triples The set of triples to convert.
+   * @return Graph? The graph generated or null in case of error.
    */
-  public function rdfTriplesAsGraphml($triples,$filename=null) {
-    $g = new Graphml() ;
+  public function rdfTriplesAsGraph($triples) {
+    $g = new Graph() ;
     foreach($triples as $triple) {
       $node1 = $triple['s'] ;
       $node1id = $this->rdfConfiguration->prefixed($node1) ;
@@ -67,12 +63,7 @@ class RDFAsGraphml {
         die('unexpected type in triple: '.$otype) ;
       }
     }
-    $document = $g->graphToString() ;
-    if (isset($filename)) {
-      return file_put_contents($filename, $document) ;
-    } else {
-      return $document ;
-    }
+    return $g ;
   }
 
 

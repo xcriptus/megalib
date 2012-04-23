@@ -31,7 +31,7 @@ function testRDFStore() {
   
   
   $tripleset = $store->dumpToTripleSet() ;
-  $tripleset->saveFiles('HTML,Turtle,GraphML',OUTPUT_DIR.'ICPW2009') ;
+  $tripleset->saveFiles('HTML,Turtle,GraphML,Graphviz',OUTPUT_DIR.'ICPW2009') ;
   
   return $store ;
 

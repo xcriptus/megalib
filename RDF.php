@@ -8,16 +8,20 @@
  */
 require_once 'config/configRDF.php' ;
 require_once 'Database.php' ;
-require_once 'RDFAsGraph.php' ;  // required for the save method
+require_once 'RDFAsGraph.php' ;  // required for the save method TODO: change this with registering plugin
+require_once 'GraphML.php' ;  // required for the save method  TODO: change this with registering plugin
+require_once 'Graphviz.php' ;  // required for the save method TODO: change this with registering plugin
+
 
 
 
 /**
- * Helper class to create arc2 triples as defined in https://github.com/semsol/arc2/wiki/Internal-Structures .
+ * Helper class to create arc2 triples as defined in the internal structures section
+ * @see https://github.com/semsol/arc2/wiki/Internal-Structures .
  * This class helps in the burden of creating arc2 RDF triples with 
  * always specifying prefixes, datatypes, etc.  
  * with default current values for both data prefix and schema prefix.
- * These are public properties that can be accessed directly.
+ * These public properties can be accessed directly.
  * This class also provide a method to load a document at once (load)
  * as well as some helper functions.
  * 
@@ -33,14 +37,14 @@ require_once 'RDFAsGraph.php' ;  // required for the save method
  * type ResourceKind == 'uri'|'bnode'|'var' 
  * type ItemKind == ResourceKind | 'literal'
  * 
- * type RDFTriple == Map{   // 
- *    's'          : String!  // the subject value (a URI, Bnode ID, or Variable)
+ * type RDFTriple == Map{          // 
+ *    's'          : String!       // the subject value (a URI, Bnode ID, or Variable)
  *    's_type'     : ResourceType!
- *    'p'          : String!  // the property URI (or a Variable)
- *    'o'          : String!  // the subject value (see below)
+ *    'p'          : String!       // the property URI (or a Variable)
+ *    'o'          : String!       // the subject value (see below)
  *    'o_type'     : ItemKind!
  *    'o_datatype' : URI?
- *    'o_lang'     : String?   // a language identifier, e.g. ("en-us")
+ *    'o_lang'     : String?       // a language identifier, e.g. ("en-us")
  *   }
  *   
  * type RDFIndex == ...
@@ -111,8 +115,8 @@ class RDFTripleSet {
    */
   public $FILE_FORMATS = array(
       'HTML' => '.html',
-      'GraphML' => '.graphml',
-      'Graphviz' => '.dot',
+      'GraphML' => '.graphml', // TODO: change this with registering plugin
+      'Graphviz' => '.dot',    // TODO: change this with registering plugin
       'NTriples' => '.nt',
       'Turtle' => '.ttl',
       'RDFXML' => '.rdf',
@@ -136,15 +140,18 @@ class RDFTripleSet {
       case 'HTML':
         $document = $this->toHTML() ;
         break ;
-      case 'GraphML' : 
-        $gmlizer = new RDFAsGraphML() ;
-        $document = $gmlizer->rdfTripleSetAsGraphML($this) ;
+      case 'GraphML' : // TODO: change this with registering plugin
+        $grapher = new RDFAsGraph($this->getConfiguration()) ;
+        $graph = $grapher->rdfTripleSetAsGraph($this) ;
+        $graphmlwriter = new GraphMLWriter($graph) ;
+        $document = $graphmlwriter->graphToGraphString($this) ;
         break ;
-      case 'Graphviz' :
-        $gmlizer = new RDFAsGraphviz() ;
-        $document = $gmlizer->rdfTripleSetAsGraphviz($this) ;
-        break ;
-      default :
+      case 'Graphviz' : // TODO: change this with registering plugin
+        $grapher = new RDFAsGraph($this->getConfiguration()) ;
+        $graph = $grapher->rdfTripleSetAsGraph($this) ;
+        $graphmlwriter = new GraphvizWriter($graph) ;
+        $document = $graphmlwriter->graphToGraphString($this) ;
+        break ;      default :
         $serializer = ARC2::getSer($format,$this->rdfConfiguration->getARC2Config()) ;
         $document = $serializer->getSerializedTriples($this->triples) ;
     }
@@ -898,7 +905,7 @@ class RDFStore {
    * Execute a 'select' query and returns selected rows. 
    * @see https://github.com/semsol/arc2/wiki/Using-ARC%27s-RDF-Store
    * @param String! $query A 'select' query.
-   * @return List*(String*,String*>)! rows
+   * @return List*(String*,String*)! rows
    */
   public function selectQuery($query) {
     $this->log('RDFStore:executeQuery '.$query) ;

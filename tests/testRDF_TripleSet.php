@@ -69,20 +69,24 @@ function testTemplate() {
 
 
 
-function testRDFTripleSet() {
+function testLoadSaveFilesRDFTripleSet() {
   echo "<h1>Testing RDFTripleSet</h1>" ;
   $tripleset = new RDFTripleSet() ;
   echo "<p>loading ".ICPW2009_RDF." ... " ;
   $n = $tripleset->load(ICPW2009_RDF) ;
-  echo $n.' triples loaded.' ;
-  $tripleset->saveFiles('HTML,Turtle,RDFXML',OUTPUT_DIR.'testRDF1') ;
+  if ($n === false) {
+    die("failed to load ".ICPW2009_RDF) ;
+  } else {
+    echo $n.' triples loaded.' ;
+  }
+  $formats='HTML,Turtle,RDFXML,GraphML,Graphviz' ;
+  $outputcorefile = OUTPUT_DIR.'testRDF1' ;
+  echo "<p>saving the triples in $outputcorefile with the formats: $formats" ;
+  $tripleset->saveFiles('HTML,Turtle,RDFXML,GraphML,Graphviz',$outputcorefile) ;
   return $tripleset ; 
 }
 
-function testRDFAsGraphml($tripleset) {
-  echo "<h1>Testing RDFAsGraphml</h1>";
-  $tripleset->saveFiles('GraphML',OUTPUT_DIR.'testRDF1') ;
-}
+
 
 
   
@@ -104,8 +108,7 @@ function testRDFStoreIntrospector($store) {
 testTemplate() ;
 
 testRDFConfiguration() ;
-$tripleset = testRDFTripleSet() ;
-testRDFAsGraphml($tripleset) ;
+testLoadSaveFilesRDFTripleSet() ;
 
 
 

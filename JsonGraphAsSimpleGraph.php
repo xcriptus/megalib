@@ -5,10 +5,8 @@ require_once ABSPATH_MEGALIB.'HTML.php' ;
 require_once ABSPATH_MEGALIB.'Structures.php' ;
 
 
-
-
 /**
- * Convert JSON to a simpleGraph
+ * Convert JSONGraph to a SimpleGraph
  * @param URL! $jsonUrl URL or filename of the JSON file to convert
  * @param String! $schemaFile URL or Filename of the schema use to direct the conversion
  * @param String! $entityJsonMappingFile URL or filename containing the map from entity kind to json
@@ -103,8 +101,8 @@ function loadJsonGraphIntoSimpleGraph($graph,$json,$extensionMap) {
 /**
  * Extract
  * @param SimpleGraph! $graph The graph object in which to add the instances.
- * The schema of the graph should be already loaded and it define what element
- * will be extracted from the json.
+ * The schema of the graph should be already loaded. 
+ * The schema defines define what element will be extracted from the json.
  * @param JSON! $jsonExtensionMapOrArray The extension for the given entity kind, represented as
  * an array of entities in which case the key is an attribute (defined in the schema)
  * or a map of entities in which case the key of the map is added as an attribute.
