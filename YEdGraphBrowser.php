@@ -100,60 +100,87 @@ class YEdGraphBrowserGenerator {
   //---- generate Yed Graph Map Files and copy the image
 
   /**
-   * Get the image areas from the Yed Generated export. 
-   * @return ImageAreas
+   * Get the image area map from the Yed Generated export. 
+   * @return ImageAreaMap! 
    */
-  protected function getOriginalImageAreas() {
+  protected function getOriginalImageAreaMap() {
     $exportedHtmFile = $this->getYedGraphExportedHtmlFullFileName() ;
     $exportedHtml = file_get_contents($exportedHtmFile) ;
     if ($exportedHtml === false) {
       die ("YEdGraphBrowser: cannot find exported file $exportedHtmFile.".
            "The YEdGraph should be exported as HTML ImageMap (use Ctrl-E)") ;
     }
-    return YEdHTML::getImageAreas($exportedHtml) ;
+    return YEdHTML::getImageAreaMap($exportedHtml) ;
   }
   
   /**
-   * @return ImageAreas
+   * Add some elements to each area and add $mapid__ as a prefix
+   * to each id of areas.
+   * ExtendedImageAreas == ImageAreas + Map{
+   *     "graphKind" => 'node'|'edge',
+   *     "target"    => String!,
+   *     "urlKind"   => 'local'|'absolute',
+   *     "tooltip"   => String!
+   *   }
+   * @return ExtendedImageAreas
    */ 
   
-  protected function processImageAreas() {
-    $areas = $this->getOriginalImageAreas() ;
+  protected function getEnhancedImageAreaMap($mapid) {
+    $areas = $this->getOriginalImageAreaMap() ;
     // process each image area in order to
     // (1) set the target of the url to the appropriate value
     // (2) if the id of a zone starts with 'e' then this it is an edge so create an url
-    $newzones = array() ;
-    foreach($areas as $area) {
-      $newzone = $area ;
-      $newzone['target']=$this->targetFrameName ;
-      if ($newzone["href"]==="") {
-        unset($newzone["href"]) ;
+    $newmap = array() ;
+    foreach($areas as $id => $area) {
+      $newid = $mapid.'__'.$id ;
+      $newarea = $area ;
+      $newarea['target']=$this->targetFrameName ;
+      if ($newarea["href"]==="") {
+        unset($newarea["href"]) ;
       }
-      if (startsWith($newzone['id'],'e')) {
-        $newzone["href"]=$newzone['id'].'.html' ;
+      if (startsWith($id,'e')) {
+        $newarea["href"]=$id.'.html' ;
+        $newarea["graphKind"] = 'edge' ;
+      } else {
+        $newarea["graphKind"] = 'node' ;
       }
-      $newzones[] = $newzone ;
+      $newarea["tooltip"] = "$id is a <b>".$newarea["graphKind"].'</b>' ;
+      $newarea["id"] = $newid ;
+      $newmap[$newid] = $newarea ;
     }
-    return $newzones ;
+    
+    return $newmap ;
   }
   
-  protected function generateYEdGraphAsHtmlAndCopyImage() {
-    $areas = $this->processImageAreas() ;
-    
-    $yedGraphAsHTML = $this->getYedGraphCoreName().'map.html' ;
-    $yedGraphImage=$this->getYedGraphCoreName().'.png' ;
-    echo "generate $yedGraphAsHTML<br/>" ;
+  protected function generateJsonMap($mapid,$areamap,$image,$outputFilename) {
+    echo "generate $outputFilename<br/>" ;
+    $html = YEdHTML::imageAreaMapAsJson($mapid,$areamap) ;
+    file_put_contents($this->targetDirectory.'/'.$outputFilename,$html) ;
+  }
+  
+  protected function generateHtmlMap($mapid,$areamap,$image,$outputFilename) {
+    echo "generate $outputFilename<br/>" ;
     // create the html image map + the reference to the image
-    $mapid='map' ;
-    $htmlmap = YEdHTML::imageAreasAsHTMLMap($mapid,$areas) ;
+    $htmlmap = YEdHTML::imageAreaMapAsHTML($mapid,$areamap) ;
     $html='
     <html>
     '.$htmlmap.'
-    <img src="'.$yedGraphImage.'" usemap="#'.$mapid.'" />
+    <img src="'.$image.'" usemap="#'.$mapid.'" />
     </html>
     ' ;
-    file_put_contents($this->targetDirectory.'/'.$yedGraphAsHTML,$html) ;
+    file_put_contents($this->targetDirectory.'/'.$outputFilename,$html) ;
+  }
+  
+  protected function generateMapsAndCopyImage() {
+    $mapid = 'map' ;
+    $areamap = $this->getEnhancedImageAreaMap($mapid) ;
+    $areaMapAsHTML = $this->getYedGraphCoreName().'.map.html' ;
+    $areaMapAsJson = $this->getYedGraphCoreName().'.map.json' ;
+    $yedGraphImage = $this->getYedGraphCoreName().'.png' ;
     
+    $this->generateHtmlMap($mapid,$areamap,$yedGraphImage,$areaMapAsHTML) ;
+    $this->generateJsonMap($mapid,$areamap,$yedGraphImage,$areaMapAsJson) ;
+       
     // copy the image into the target directory
     echo "generate $yedGraphImage</br>" ;
     copy($this->getYedGraphExportedImageFullFileName(),$this->targetDirectory.'/'.$yedGraphImage); 
@@ -189,7 +216,7 @@ class YEdGraphBrowserGenerator {
   protected function generateAll() {
     $this->generateAllHighlightedSourceFilesAndTheirFragments() ;
     $this->processAllEdges() ;
-    $this->generateYEdGraphAsHtmlAndCopyImage() ;
+    $this->generateMapsAndCopyImage() ;
     $this->generateGlobalFiles() ;
   }
   
