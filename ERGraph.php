@@ -1,17 +1,18 @@
 <?php
 /**
- * Simple typed graph based on an explicit entity-relationship schema representation.
+ * Basic support for Entity Relationship (ER) Graphs with explicit ER schema.
  */
 
 require_once 'Strings.php' ;
 
 /**
- * A very simple hand-craft schema structure with an little ad-hoc textual language for
- * fast experimentation and scripting. 
+ * A very simple hand-craft entity-relationship schema structure with an little 
+ * ad-hoc textual language for fast experimentation and scripting. 
  * Should be improved but in the mean time...
  * 
- * Here is an example of schema definition with 4 types of entities (feature,implementation,...)
- * and various attributes definitions with the following tags
+ * Here is an example of schema definition with 4 types of entities 
+ * (feature,implementation,...) and various attributes definitions with 
+ * the following tags
  * 
  * feature {
  *   name:string@;description:string?;implementations:implementation*abstract
@@ -25,6 +26,8 @@ require_once 'Strings.php' ;
  * language{name:string@;implementations:implementation*}
  * technology{name:string@;implementations:implementation*}
  * 
+ * 
+ * The syntax of the language is here
  * 
  * SchemaExpression ::= ( EntityKind '{' AttributeSetExpression '}' )*
  * AttributeSetExpression ::=  | AttributeSetExpression ';' AttributeExpression
@@ -40,7 +43,7 @@ require_once 'Strings.php' ;
  * In the latter case the value is a list of keys of the target entity type.
  * 
  */
-class SimpleSchema {
+class ERSchema {
 
   protected $defaultAttributeType = 'string' ;
   
@@ -220,14 +223,16 @@ class SimpleSchema {
 
 
 /**
- * A simple graph based on some nested array structure and with a explicit schema definition.
+ * A simple Entity/Relationship (ER) Graph based on an explicit schema definition. .
  * The structure of the graph is directly exposed in a white box manner:
  * Map*<EntityKind!,Map<EntityId!,Map!<AttributeName!,Mixed>!)!)!
+ * That is for each entity kind, gor a given entity id, and a given attribute
+ * the structure return either a scalar value or a list of references to other entities.
  */
-class SimpleGraph {
+class ERGraph {
   
   /**
-   * @var SimpleSchema! Schema of the graph. This schema defines the type of entities as well
+   * @var Schema! Schema of the graph. This schema defines the type of entities as well
    * as the type of attributes and references.
    */
   public $SCHEMA ;
@@ -316,7 +321,7 @@ class SimpleGraph {
   
   /**
    * Construct an empty graph with a given schema.
-   * @param SimpleSchema! $schema
+   * @param Schema! $schema
    */
   public function __construct($schema) {
     $this->DATA = array() ;

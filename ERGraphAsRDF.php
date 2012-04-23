@@ -1,13 +1,13 @@
 <?php
 
 require_once 'RDF.php' ;
-require_once 'SimpleGraph.php' ;
+require_once 'ERGraph.php' ;
 
 /**
- * Converter for SimpleGraph to RDF Triples
+ * Converter for ERGraph to RDF Triples
  *
  */
-class SimpleGraphAsRDF {
+class ERGraphAsRDF {
   protected /*RDFTripleSet!*/ $tripleSet ;
   
   /**
@@ -28,7 +28,7 @@ class SimpleGraphAsRDF {
   
   /**
    * Add the given graph to the triple set using the prefixes specified.
-   * @param SimpleGraph! $graph
+   * @param ERGraph! $graph
    * @param URI!|Map(EntityKind!,URI!)! $dataprefixes Prefix(es) to build URIs for
    * entities. If $dataprefixes is a string, then all kinds of entities will use
    * the same schema. Otherwise a prefix should be given for each entity kind in
@@ -40,7 +40,7 @@ class SimpleGraphAsRDF {
    * value http://data.mydomain.org/schema# 
    * @return void 
    */
-  public function addSimpleGraph(SimpleGraph $graph, $dataprefixes,$ontologyprefix) {
+  public function addERGraph(ERGraph $graph, $dataprefixes,$ontologyprefix) {
     
     echo( isset($this->tripletSet)) ;
     // set the default schema prefix
@@ -102,7 +102,7 @@ class SimpleGraphAsRDF {
     return $n ;
   }
   /**
-   * Create a converter of SimpleGraph to RDF. 
+   * Create a converter of ERGraph to RDF. 
    */
   public function __construct() {
     $this->tripleSet = new RDFTripleSet() ;

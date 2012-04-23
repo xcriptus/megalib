@@ -1,8 +1,9 @@
 <?php
-require_once '../SimpleGraph.php' ;
+require_once '../HTML.php' ;
+require_once '../ERGraph.php' ;
 define('DEBUG',1) ;
 
-$SCHEMA_EXAMPLE = '
+$ER_SCHEMA_EXAMPLE = '
 // Some example of comments
 feature {
   name:string@ ;         // @ means key
@@ -34,17 +35,27 @@ technology {
 }
 ' ;
 
-echo '<h1>Loading an example of schema</h1>' ;
-$schema = new SimpleSchema($SCHEMA_EXAMPLE) ;
-echo '<p>This schema defines the following entity kinds: ' ;
+echo '<h2>An example of Entity-Relationship Schema</h2>' ;
+echo htmlAsIs($ER_SCHEMA_EXAMPLE) ;
+
+echo '<h2>Loading this schema</h2>' ;
+$schema = new ERSchema($ER_SCHEMA_EXAMPLE) ;
+echo '<p>This entity-relationship schema defines the following entity kinds: ' ;
 echo implode(' ',$schema->getEntityKinds()) ;
 
-echo '<h1>Creating a simple graph with this schema</h1>' ;
-$graph = new SimpleGraph($schema) ;
-$graph->DATA['technology']['J2E']['name']='J2E' ;
-$graph->DATA['technology']['J2E']['summary']='J2E is oracle platform for Java Entreprise Edition' ;
-$graph->DATA['technology']['J2E']['implementations']=array('simple101j2e','advanced101j2e') ;
-echo '<h1>Checking the constraints on the graph</h1>' ;
+echo '<h2>Creating a simple graph using this schema with the following code</h2>' ;
+$code = '
+  $graph = new ERGraph($schema) ;
+  $graph->DATA["technology"]["J2E"]["name"]="J2E" ;
+  $graph->DATA["technology"]["J2E"]["summary"]="J2E is oracle platform for Java Entreprise Edition" ;
+  $graph->DATA["technology"]["J2E"]["implementations"]=array("simple101j2e","advanced101j2e") ;
+' ;
+echo htmlAsIs($code) ;
+eval($code) ;
+
+echo "done" ;
+
+echo '<h2>Checking the constraints on the graph above</h2>' ;
 echo '<p>Two references are not defined in the graph</p>.' ;
 echo '<p>ghost entities added are :' ;
 print_r($graph->checkReferentialConstraints()) ;
