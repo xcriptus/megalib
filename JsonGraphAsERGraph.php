@@ -9,8 +9,8 @@ require_once ABSPATH_MEGALIB.'Structures.php' ;
  * Convert JSONGraph to a ERGraph
  * @param URL! $jsonUrl URL or filename of the JSON file to convert
  * @param String! $schemaFile URL or Filename of the schema use to direct the conversion
- * @param String! $entityJsonMappingFile URL or filename containing the map from entity kind to json
- * tag. This should be a json file.
+ * @param String? $entityJsonMappingFile URL or filename containing the map from entity kind
+ * to json tag. This should be a json file.
  * @return ERGraph! return a simple graph.
  */
 function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
@@ -67,9 +67,11 @@ function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
  * @param unknown_type $keyValueOfEntity
  * @return string
  */
-function makeEntityId($entityKind,$keyValueOfEntity) {
-  return $entityKind.'/'.strtolower($keyValueOfEntity) ;
-}
+/* function makeEntityId($entityKind,$keyValueOfEntity) {
+  // return $entityKind.'/'.strtolower($keyValueOfEntity) ;
+  return $keyValueOfEntity ;
+  
+} */
 
 /**
  * Load the information from a json representation into a ERGraph structure.
@@ -93,7 +95,7 @@ function loadJsonGraphIntoERGraph($graph,$json,$extensionMap) {
     $jsonExtensionTag = $extensionMap[$entitykind] ;
     if (DEBUG>1) echo "<li>Loading '$entitykind' extension from top-level tag '$jsonExtensionTag':<br/>".count($json[$jsonExtensionTag])." json entities found." ;
     loadJsonEntityExtensionIntoERGraph($graph,$json[$jsonExtensionTag],$entitykind) ;
-    if (DEBUG>1) echo '</br>'.count($graph->DATA[$entitykind])." ".$entitykind."(s) in the resulting graph</li>" ;
+    if (DEBUG>10) echo '</br>'.count($graph->DATA[$entitykind])." ".$entitykind."(s) in the resulting graph</li>" ;
   }
 }
 
@@ -141,7 +143,7 @@ function loadJsonEntityExtensionIntoERGraph($graph,$jsonExtensionMapOrArray, $en
 
     // create the record for the entity
     $key_value = $entity[$key_attribute] ;
-    $entity_id = makeEntityId($entitykind,$key_value) ;
+    $entity_id = $key_value ;
     $graph->DATA[$entitykind][$entity_id] = array() ;
 
     // process each attribute in the schema depending on its characteristics
@@ -164,18 +166,28 @@ function loadJsonEntityExtensionIntoERGraph($graph,$jsonExtensionMapOrArray, $en
           if (isset($entity[$attribute])) {
             $graph->DATA[$entitykind][$entity_id][$attribute]=array() ;
             foreach($entity[$attribute] as $reference) {
-              // here we deal with various format of references.
-              // simplest form: a reference is just a string
+              // here we deal with various formats of references.
+              
               if (is_string($reference)) {
-                $referencedEntityId = makeEntityId($type,$reference) ;
+                // (1)------ simplest form: a reference is just a string
+                // the type is infered from the declared attribute type
+                // the id is the string
+                $referencedEntityId = array('type'=>$type,'id'=>$reference) ;
+              
               } elseif (is_array($reference)) {
-                // this is an array, so we assume that the name is used as a key.
-                // TODO this should be generalized
-                $referencedEntityId = makeEntityId($type,$reference["name"]) ;
+                // (2)------ a reference is in the form of an array
+                
+                if (isset($reference['type'])) {
+                  $referencetype = $reference['type'] ;
+                } else {
+                  $referencetype = $type ;
+                }
+                // We assume that the name is used as a key TODO this should be generalized
+                $referencedEntityId = array('type'=>$referencetype,'id'=>$reference["name"]) ;
+                
               } else {
                 die("Unexpected reference in json file for the attribute '$attribute' of entity '$entityid' of type '$entitykind'") ;
               }
-              // here we eliminate the 'name' level which is boring and useless in the json model
               $graph->DATA[$entitykind][$entity_id][$attribute][]=$referencedEntityId ;
             }
           }

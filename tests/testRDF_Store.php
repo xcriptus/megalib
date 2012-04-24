@@ -14,7 +14,7 @@ define('OUTPUT_DIR','data/generated/') ;
 
 
 function testRDFStore() {
-  echo "<h1>Testing RDFStore</h1>";
+  echo "<h2>Testing RDFStore</h2>";
   
   // Testing Store creation
   $testdbaccount = new DatabaseAccount(RDF_TEST_DATABASE_NAME, RDF_TEST_DATABASE_USER, RDF_TEST_DATABASE_PASSWORD) ;
@@ -26,13 +26,22 @@ function testRDFStore() {
   $store->reset() ;
   echo 'The store has been emptied.<br/>' ;
   
-  echo 'Loading '.ICPW2009_RDF.' ... ' ;
+  echo '<li>Loading '.ICPW2009_RDF.' ... ' ;
   $n = $store->load(ICPW2009_RDF) ;
-  echo $n.' triples loaded.' ;
+  echo $n.' triples loaded.</li>' ;
   
   
-  $tripleset = $store->dumpToTripleSet() ;
-  $tripleset->saveFiles('HTML,Turtle,GraphML,Graphviz',OUTPUT_DIR.'ICPW2009') ;
+  $query = 'CONSTRUCT {?s rdfs:label ?o} WHERE {?s rdfs:label ?o}' ;
+  echo '<li>query '.$query.' ... ' ;
+  $tripleset = $store->constructQuery($query) ;
+  
+  
+  $corefilename = OUTPUT_DIR.'ICPW2009' ;
+  $formats = 'HTML,Turtle,GraphML,Graphviz' ;
+  echo "<li> saving TripletSet as $corefilename with formats $formats " ;
+   // $tripleset = $store->dumpToTripleSet() ;
+  $tripleset->saveFiles('HTML,Turtle,GraphML,Graphviz',$corefilename) ;
+  echo " done</li>" ;
   
   return $store ;
 

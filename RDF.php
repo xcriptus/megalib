@@ -521,7 +521,8 @@ class RDFTripleSet {
   
   
   /**
-   * FIXME check what to do if no prefix are given as parameters. This may provoke errors if used.
+   * FIXME check what to do if no prefix are given as parameters. 
+   * This may provoke errors if used.
    * @param String? $dataPrefix
    * @param String? $schemaPrefix
    * @param RDFConfiguration? $configuration  a RDFConfiguration used for its prefixes.
@@ -537,6 +538,10 @@ class RDFTripleSet {
     }
   }
 }
+
+
+
+
 
 
 
@@ -885,6 +890,12 @@ class RDFStore {
   //-------------------------------------------------------------------------------
   
   
+  /**
+   * Dump the full store to TripleSet. Note that the information about named
+   * graph is not present in the restult so the dump is not the exact state of 
+   * the store. 
+   * @return RDFTripleSet
+   */
   public function dumpToTripleSet() {
     $conf = new RDFConfiguration($this->configuration->getPrefixes()) ;
     $tripleset = new RDFTripleSet(null,null,$conf) ;
@@ -901,10 +912,25 @@ class RDFStore {
     return $tripleset ;
   }
   
+  
+  /**
+   * Execute a 'construct' query and returns a tripleset
+   * @param SparqlConstructQuery $query A 'Construct' query.
+   * @return RDFTripleSet The resulting triplet set.
+   */
+  public function constructQuery($query) {
+    $this->log('RDFStore:constructQuery '.$query) ;
+    $rdfindex = $this->getARC2Store()->query($query,'raw') ;
+    $tripleset = new RDFTripleSet(null,null,$this->configuration) ;
+    $this->checkErrors("Error executing SPARQL query $query") ;
+    $tripleset->addIndex($rdfindex) ;
+    return $tripleset ;
+  }
+  
   /**
    * Execute a 'select' query and returns selected rows. 
    * @see https://github.com/semsol/arc2/wiki/Using-ARC%27s-RDF-Store
-   * @param String! $query A 'select' query.
+   * @param SparqlSelectQuery! $query A 'select' query.
    * @return List*(String*,String*)! rows
    */
   public function selectQuery($query) {
@@ -917,7 +943,7 @@ class RDFStore {
   /**
    * Return the value selected by a sparql query. The query must return
    * only one row and the variable is selected by the second parameter.
-   * @param String! $query A select query returning only one row.
+   * @param SparqlSelectQuery! $query A select query returning only one row.
    * @param String! $variablename A variable name that appear in the result.
    * @return Mixed $value
    */
@@ -929,7 +955,7 @@ class RDFStore {
   
   /**
    * Return the list of values in the column produced by a select query.
-   * @param String! $query A select query.
+   * @param SparqlSelectQuery! $query A select query.
    * @param String! $variablename A variable name that appear in the result.
    * @param Boolean? $distinct Indicates whether to remove duplicates or not.
    * No duplicate removal by default.
@@ -946,7 +972,7 @@ class RDFStore {
 
   /**
    * Execute a 'ask' query and returns a boolean value.
-   * @param String! $query A 'ask' query.
+   * @param SparqlAskQuery! $query A 'ask' query.
    * @see https://github.com/semsol/arc2/wiki/Using-ARC%27s-RDF-Store
    * @return Boolean!
    */

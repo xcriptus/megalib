@@ -1,0 +1,24 @@
+{
+  "Continents" :  
+  "Countries" :
+} 
+
+
+Continent {
+  name:string@ ;
+  population:integer? ;
+  color:string?
+}
+
+Countries {
+  name:string@ ;
+  domain:string? ;
+  continent:Continent*
+}
+
+Flight {
+  number:string@ ;
+  origin:Country* ;
+  destination:Country
+}
+  

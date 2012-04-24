@@ -31,7 +31,9 @@ technology {
   name:string@ ;
   summary:string! ;
   description:string? ;
-  implementations:implementation*
+  implementations:implementation* ;
+  technologies:technology*;
+  whatever:Entity*
 }
 ' ;
 
@@ -48,7 +50,17 @@ $code = '
   $graph = new ERGraph($schema) ;
   $graph->DATA["technology"]["J2E"]["name"]="J2E" ;
   $graph->DATA["technology"]["J2E"]["summary"]="J2E is oracle platform for Java Entreprise Edition" ;
-  $graph->DATA["technology"]["J2E"]["implementations"]=array("simple101j2e","advanced101j2e") ;
+  $graph->DATA["technology"]["J2E"]["implementations"]=array(
+    array("type"=>"implementation","id"=>"simple101j2e"),
+    array("type"=>"implementation","id"=>"RefToNonExistingImplementation") ) ;
+  $graph->DATA["technology"]["J2E"]["whatever"]=array(
+    array("type"=>"implementation","id"=>"simple101j2e"),
+    array("type"=>"language","id"=>"RefToNonExistingLanguage")) ;
+  $graph->DATA["implementation"]["simple101j2e"]["technologies"]=array(array("type"=>"technology","id"=>"J2E")) ;
+  $graph->DATA["implementation"]["simple101j2e"]["name"]="simple101j2e" ;
+  $graph->DATA["implementation"]["simple101j2e"]["languages"]=array(array("type"=>"language","id"=>"RefToNonExistingLanguage")) ;
+  $graph->DATA["implementation"]["simple101j2e"]["summary"]="test is the summary" ;  
+  $graph->DATA["implementation"]["simple101j2e"]["motivation"]="this is the motivation" ;  
 ' ;
 echo htmlAsIs($code) ;
 eval($code) ;
@@ -56,8 +68,11 @@ eval($code) ;
 echo "done" ;
 
 echo '<h2>Checking the constraints on the graph above</h2>' ;
-echo '<p>Two references are not defined in the graph</p>.' ;
-echo '<p>ghost entities added are :' ;
-print_r($graph->checkReferentialConstraints()) ;
-echo '<h1>END OF TESTS</h1>' ;
+$ghostEntities = $graph->checkReferentialConstraints() ;
+echo '<p>Ghost entities added are</p>' ;
+echo arrayMapToHTMLTable($ghostEntities) ;
+echo '<h2>Checking the constraints on the graph above</h2>' ;
+$ghostEntities = $graph->checkReferentialConstraints() ;
+echo '<p>Ghost entities added are</p>' ;
+echo arrayMapToHTMLTable($ghostEntities) ;
 
