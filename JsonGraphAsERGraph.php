@@ -8,42 +8,46 @@ require_once ABSPATH_MEGALIB.'Structures.php' ;
 /**
  * Convert JSONGraph to a ERGraph
  * @param URL! $jsonUrl URL or filename of the JSON file to convert
- * @param String! $schemaFile URL or Filename of the schema use to direct the conversion
- * @param String? $entityJsonMappingFile URL or filename containing the map from entity kind
- * to json tag. This should be a json file.
+ * @param String! $schemaUrl URL or Filename of the schema use to direct the conversion
+ * @param String? $entityJsonMappingUrl URL or filename containing the map from entity kind
+ * to json tag. This should be a json file. If not specified then the json toplevel  tags 
+ * should be the same as entity kind names. 
  * @return ERGraph! return a simple graph.
  */
-function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
-  if (DEBUG) echo '<h2>jsonGraphToERGraph</h2>' ;
+function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl=null) {
 
-  if (DEBUG>2) echo "<p>Loading the file $jsonUrl, $schemaUrl and $entityJsonMappingUrl</p>" ;
+  if (DEBUG>2) echo "<p>jsonGraphToERGraph: Loading the file $jsonUrl, $schemaUrl and $entityJsonMappingUrl</p>" ;
 
   // load the json file
   $jsonSource = file_get_contents($jsonUrl) ;
   if ($jsonSource===false) {
-    die("Cannot open ".$jsonUrl) ;
+    die("jsonGraphToERGraph: Cannot open ".$jsonUrl) ;
   }
   $json = json_decode($jsonSource,true) ;
   if (! is_array($json)) {
     if (DEBUG>10) var_dump($json) ;
-    die("incorrect json value in $jsonUrl : $jsonSource") ;
+    die("jsonGraphToERGraph: incorrect json value in $jsonUrl : $jsonSource") ;
   }
   // load the schema file
   $schemaSource = file_get_contents($schemaUrl) ;
   if ($schemaSource === false){
-    die("cannot open $schemaUrl") ;
+    die("jsonGraphToERGraph: cannot open $schemaUrl") ;
   }
   $schema = new ERSchema($schemaSource) ;
 
-  // load the mapping file
-  $mappingSource = file_get_contents($entityJsonMappingUrl) ;
-  if ($mappingSource === false){
-    die("cannot open $entityJsonMappingUrl") ;
-  }
-  $entityJsonMapping = json_decode($mappingSource,true) ;
-  if (! is_array($entityJsonMapping)) {
-    if (DEBUG>10) var_dump($entityJsonMapping) ;
-    die("incorrect mapping in $entityJsonMappingUrl : $mappingSource") ;
+  // load the mapping file if one is specified
+  if (isset($entityJsonMappingUrl)) {
+    $mappingSource = file_get_contents($entityJsonMappingUrl) ;
+    if ($mappingSource === false){
+      die("jsonGraphToERGraph: cannot open $entityJsonMappingUrl") ;
+    }
+    $entityJsonMapping = json_decode($mappingSource,true) ;
+    if (! is_array($entityJsonMapping)) {
+      if (DEBUG>10) var_dump($entityJsonMapping) ;
+      die("jsonGraphToERGraph: incorrect mapping in $entityJsonMappingUrl : $mappingSource") ;
+    }
+  } else {
+    $entityJsonMapping = null ;
   }
 
   // create the graph
@@ -62,16 +66,6 @@ function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
 // type EntityKind == String!  (entity kinds defined in the ERSchema)
 // Here feature, language, etc.
 
-/**
- * @param Entity $entityKind
- * @param unknown_type $keyValueOfEntity
- * @return string
- */
-/* function makeEntityId($entityKind,$keyValueOfEntity) {
-  // return $entityKind.'/'.strtolower($keyValueOfEntity) ;
-  return $keyValueOfEntity ;
-  
-} */
 
 /**
  * Load the information from a json representation into a ERGraph structure.
@@ -82,17 +76,22 @@ function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl) {
  * a Map(String!,Set*(Entity)) where String is the extension tag (e.g.
  * "implementations" and the result is the extension of the "implementation"
  * entity kind).  See below for the name of the entity kind.
- * @param Map+(EntityKind!,String!)! This map describes the link between
+ * 
+ * @param Map+(EntityKind!,String!)? If not null this map describes the link between
  * the entity kind name in the schema (e.g. "implementation") and the
  * corresponding top-level tag in the json file (e.g."implementations").
  * This is not necessarily simply a "s" at the because of some irregularities in naming
  * such as "categories" => "category".
  */
-function loadJsonGraphIntoERGraph($graph,$json,$extensionMap) {
+function loadJsonGraphIntoERGraph($graph,$json,$extensionMap=null) {
   assert(isset($graph->SCHEMA));
   // for each entity kind defined in the schema, load the corresponding extension
   foreach (  $graph->SCHEMA->getEntityKinds() as $entitykind ) {
-    $jsonExtensionTag = $extensionMap[$entitykind] ;
+    if (isset($extensionMap) && is_array($extensionMap)) {
+      $jsonExtensionTag = $extensionMap[$entitykind] ;
+    } else {
+      $jsonExtensionTag = $entitykind ;
+    }
     if (DEBUG>1) echo "<li>Loading '$entitykind' extension from top-level tag '$jsonExtensionTag':<br/>".count($json[$jsonExtensionTag])." json entities found." ;
     loadJsonEntityExtensionIntoERGraph($graph,$json[$jsonExtensionTag],$entitykind) ;
     if (DEBUG>10) echo '</br>'.count($graph->DATA[$entitykind])." ".$entitykind."(s) in the resulting graph</li>" ;

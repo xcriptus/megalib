@@ -15,7 +15,7 @@ $outputcore=$datadir.'generated/wiki' ;
 $formats = 'HTML,GraphML,Graphviz,Turtle,RDFXML,RDFJSON,NTriples' ;
 
 echo '<h2>Transforming jsonGraph '.$jsongraph.' with schema '.$schema.'</h2>';
-$graph = jsonGraphToERGraph($jsongraph,$schema,$inputdir.'wikiKindToTag.json') ;
+$graph = jsonGraphToERGraph($jsongraph,$schema) ;
 echo "done";
 
 echo '<h2>Conversion of the graph to RDF</h2>' ;
