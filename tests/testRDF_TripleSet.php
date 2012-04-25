@@ -125,4 +125,4 @@ testLoadSaveFilesRDFTripleSet() ;
 //   }
 // }
 
-echo '<h1>End of tests</h1>' ;
+echo '<h1>END OF TESTS</h1>' ;

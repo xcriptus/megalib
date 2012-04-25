@@ -5,7 +5,12 @@ require_once 'ERGraph.php' ;
 
 /**
  * Converter for ERGraph to RDF Triples
- *
+ * 
+ *   type URIPattern == URISimplePattern | URIChoicePattern
+ *   type URIChoicePattern == Map*(EntitKind!,URISimplePattern!)!
+ *   type URISimplePattern == string (with URIVariables)
+ *   type URIVariable == '${id}' | '${type}' 
+ *   
  */
 class ERGraphAsRDF {
   protected /*RDFTripleSet!*/ $tripleSet ;
@@ -26,36 +31,58 @@ class ERGraphAsRDF {
     return $this->tripleSet ;
   }
   
+  
+  /**
+   * Compute the URI of a given entity according to a pattern
+   * @param URIPattern! $uriPattern a pattern used 
+   * @param ERGraph! $graph  The graph which contains the entity in case some of its attributes should be consulted
+   * @param EntityKind! $entityKind The type of the entity.
+   * @param EntityId! $entityId The id of the entity in the ERGraph.
+   * @return URI the uri of the entity
+   */
+  public function getEntityURI($uriPattern, ERGraph $graph,$entityKind, $entityId) {
+    if (is_string($uriPattern)) {
+      $uri = $uriPattern ;
+    } else {
+      $uri = $uriPattern[$entityKind] ;
+    }
+ //   $graph->DATA[$entity]
+    $uri=str_replace('${type}',$entityKind,$uri) ;
+    $uri=str_replace('${id}',$entityId,$uri) ;
+    return $uri ;
+  }
+  
   /**
    * Add the given graph to the triple set using the prefixes specified.
    * @param ERGraph! $graph
    * @param URI!|Map(EntityKind!,URI!)! $dataprefixes Prefix(es) to build URIs for
    * entities. If $dataprefixes is a string, then all kinds of entities will use
-   * the same schema. Otherwise a prefix should be given for each entity kind in
+   * the same prefix. Otherwise a prefix should be given for each entity kind in
    * the form of a Map(EntityKind!,URI!)! 
-   * @param URI! $ontologyprefix This prefix will be added in the context
+   * @param URI! $schemaprefix This prefix will be added in the context
    * type declaration of entities to create an URI for the type of entity.
    * For instance a type of entity 'feature' will be converted to
-   * http://data.mydomain.org/schema#feature if $ontologyprefix has the 
+   * http://data.mydomain.org/schema#feature if $schemaprefix has the 
    * value http://data.mydomain.org/schema# 
    * @return void 
    */
-  public function addERGraph(ERGraph $graph, $dataprefixes,$ontologyprefix) {
+  public function addERGraph(ERGraph $graph,$dataURIPattern,$schemaprefix) {
     
-    echo( isset($this->tripletSet)) ;
-    // set the default schema prefix
-    $this->tripleSet->currentSchemaPrefix = $ontologyprefix ;
+    // set the default schema prefix.
+    // This is the same for all types
+    $this->tripleSet->currentSchemaPrefix = $schemaprefix ;
+    $this->tripleSet->getConfiguration()->addPrefix('schema',$schemaprefix) ;
     
+    // for each entity type extension
     foreach($graph->DATA as $entitykind => $mapofentities) {
-      // set the data prefix for this kind of entities.
-      $dataprefix = (is_string($dataprefixes)?$dataprefixes:$dataprefixes[$entitykind]) ;
-      $this->tripleSet->currentDataPrefix = $dataprefix ;
-      
+            
       $attributes=$graph->SCHEMA->getAttributeDescriptions($entitykind) ;
-      foreach ($mapofentities as $keyvalue => $map ) {
+      foreach ($mapofentities as $entityid => $map ) {
         
+        // compute the uri of the entity
+        $entityuri = $this->getEntityURI($dataURIPattern, $graph, $entitykind, $entityid ) ;
         // define the type of the entity
-        $this->tripleSet->addTriple('type',$keyvalue,'rdf:type',$entitykind) ;
+        $this->tripleSet->addTriple('type',$entityuri,'rdf:type',$entitykind) ;
         
         // define data or links triple for each attribbute
         foreach ($attributes as $attributename => $attributeinfo) {
@@ -66,14 +93,21 @@ class ERGraphAsRDF {
               if (isset($map[$attributename])) {
                 $value=$map[$attributename] ;
                 $this->tripleSet->addTriple(
-                    'data',$keyvalue,$attributename,$value) ;
+                    'data',$entityuri,$attributename,$value) ;
               }
               break ;
             case '*':
               if (isset($map[$attributename])) {
-                foreach ($map[$attributename] as $value) {
+                foreach ($map[$attributename] as $reference) {
+                  if (! $graph->isReference($reference)) {
+                    die("ERGraphAsRDF.addERGraph: the value of"
+                        ." $addERGraph($entityuri).$attributename is not a reference") ; 
+                  }
+                  $targetid = $graph->getReferenceKey($reference) ;
+                  $targettype = $graph->getReferenceType($reference) ;
+                  $targetentityuri = $this->getEntityURI($dataURIPattern,$graph,$targettype,$targetid) ;
                   $this->tripleSet->addTriple(
-                      'link',$keyvalue,$attributename,$value) ;
+                      'link',$entityuri,$attributename,$targetentityuri) ;
                 }
               }
               break ;

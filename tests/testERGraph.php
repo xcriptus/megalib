@@ -71,8 +71,13 @@ echo '<h2>Checking the constraints on the graph above</h2>' ;
 $ghostEntities = $graph->checkReferentialConstraints() ;
 echo '<p>Ghost entities added are</p>' ;
 echo arrayMapToHTMLTable($ghostEntities) ;
-echo '<h2>Checking the constraints on the graph above</h2>' ;
+echo '<h2>Checking again on the constraints on the modified graph</h2>' ;
 $ghostEntities = $graph->checkReferentialConstraints() ;
-echo '<p>Ghost entities added are</p>' ;
+if (count($ghostEntities)>=1) {
+  echo '<p>Ghost entities added are</p>' ;
+  echo arrayMapToHTMLTable($ghostEntities) ;
+} else {
+  echo '<p>no ghost entities</p>' ;
+}
 echo arrayMapToHTMLTable($ghostEntities) ;
-
+echo '<h1>END OF TESTS</h1>' ;

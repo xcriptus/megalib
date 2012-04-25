@@ -24,3 +24,5 @@ $generator =
        $sourceFileDirectory,
        $SourceDefinitions,
        TARGETDIR) ;
+
+echo "<h1>END OF TESTS</h1>" ;

@@ -67,3 +67,4 @@ testRDFStoreIntrospector($store) ;
 
 
 
+echo '<h1>END OF TESTS</h1>' ;

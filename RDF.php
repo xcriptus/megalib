@@ -120,7 +120,7 @@ class RDFTripleSet {
       'NTriples' => '.nt',
       'Turtle' => '.ttl',
       'RDFXML' => '.rdf',
-      'RDFJSON' => '.json',
+      'RDFJSON' => '.rdf.json',
       'MicroRDF' => '.micrordf',  // is that correct?
       'POSHRDF' => '.poshrdf',    // is that correct?
       'RSS10' => '.rss'
@@ -686,12 +686,12 @@ class RDFConfiguration {
    * Add a prefix to the list of prefixes. Ignore this statement if the prefix
    * is already defined (even with another value).
    * @param String $prefix The prefix without : (for instance "rdf")
-   * @param URI The full uri corresponding to the prefix
+   * @param URI The full uri corresponding to the prefix (without <>)
    * @return void
    */
   public function addPrefix($prefix,$url) {
     if (array_search($prefix,$this->arc2config['ns'])===false) {
-      $this->arc2config['ns'][] = $prefix ;
+      $this->arc2config['ns'][$prefix] = $url ;
     }
   }
   

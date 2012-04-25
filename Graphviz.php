@@ -81,3 +81,12 @@ class GraphvizWriter extends NAGraphWriter {
 
 }
 
+
+class Graphviz {
+  protected $graph ;
+//  public function doLayout($layoutKind,)
+//    dot -K$layoutKind -O
+  public function __construct(NAGraph $graph) {
+    $this->graph = $graph ;
+  }
+}

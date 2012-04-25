@@ -50,3 +50,5 @@ echo "<h2>Writing the graph again (should be the same as above)</h2>" ;
 $graphmlWriter2 = new GraphMLWriter($graph2) ;
 $graphmlString2 = $graphmlWriter2->graphToGraphString() ;
 echo '<pre>'.htmlAsIs($graphmlString2).'</pre>' ;
+
+echo '<h1>END OF TESTS</h1>' ;

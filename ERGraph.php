@@ -355,7 +355,7 @@ class ERGraph {
       die($msg." is of type $actualReferenceType while it must be $declaredTargetType") ; 
     }
     if (! isset($this->DATA[$actualReferenceType][$actualReferenceKey])) {
-      if (DEBUG>10) echo "<li><b> $msg = $actualReferenceType($actualReferenceKey). This object was not existing. Created now";
+      if (DEBUG>0) echo "<li><b> $msg = $actualReferenceType($actualReferenceKey). This object was not existing. Created now";
       $this->addGhostEntity($actualReferenceType,$actualReferenceKey) ;
       return false ;
     } else {
@@ -386,7 +386,7 @@ class ERGraph {
             if (isset($entityinfo[$attributename])) {
               $targets = $entityinfo[$attributename]  ;
               foreach ($targets as $target) {
-                if ($this->checkReference($entitykey,$entitykind,$attributename,$targettype,$target)==false) {
+                if ($this->checkReference($entitykey,$entitykind,$attributename,$targettype,$target)===false) {
                   $ghostsAdded[] = $target ;                  
                 }
               }
