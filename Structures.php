@@ -37,6 +37,32 @@ function is_string_map($x) {
   }
 }
 
+function is_map_to_string($x) {
+  if (is_array($x)) {
+    foreach ($x as $key => $value) {
+      if (!is_string($value)) {
+        return false ;
+      }
+    }
+    return true ;
+  } else {
+    return false ;
+  }    
+}
+
+function is_map_of_map($x) {
+  if (is_array($x)) {
+    foreach ($x as $key => $value) {
+      if (!is_array($value)) {
+        return false ;
+      }
+    }
+    return true ;
+  } else {
+    return false ;
+  }
+}
+
 /**
  * Merge flat arrays and remove duplicates. Does not work with nested arrays 
  * because it uses array_unique. 
@@ -59,47 +85,185 @@ function union($array1, $array2) {
 function array_append(&$array1,$array2) {
   array_splice($array1, count($array1), 0, $array2) ;
 }
-/**
- * Return all the possible keys that are used in the different rows.
- * @param List*(String!,Any!)! $arrayMap
- * @return List*(String!)!
- */
-function keysFromArrayMap($arrayMap) { 
-  $keys = array() ;
-  foreach ($arrayMap as $row) {
-    $keys = array_unique(array_merge($keys,array_keys($row))) ; 
-  }
-  return $keys ;
-} 
+
 
 /**
- * Build a homogeneous ArrayMap from a potentialy heterogeneous ArrayMap.
+ * The map of map is seen as a table with each inside map beeing
+ * a row and each of its elements forming a column. Return both
+ * the set of all row keys and the set of all column keys.
+ * 
+ * MapOfMapKeysInfo == Map{
+ *   'columnKeys' => List*(Scalar!)!,
+ *   'rowKeys' => List*(Scalar!)!),
+ *   'isFilled' => Boolean
+ * }
+ * 
+ * @param Map*(Scalar,(Scalar,Any!)! $mapOfMap
+ * @return MapOfMapKeyInfo
+ * the list set of all column kys and all row keys and an
+ * indicator if the mapOfMap is filled (i.e. homogeneous).
+ */
+
+function mapOfMapKeysInfo($mapOfMap) {
+  $columnKeys = array() ;
+  $rowKeys = array() ;
+  $n = 0 ;
+  foreach ($mapOfMap as $rowKey=>$row) {
+    $n++ ;
+    if ($n==1) {
+      $columnNbOfFirstRow = count($row) ;
+    }
+    $rowKeys[]=$rowKey ;
+    $columnKeys = array_unique(array_merge($columnKeys,array_keys($row))) ;
+  }
+  // because all columns are collected, if the first column as the same
+  // number of columns that all columns, then the array is filled
+  // that is homogeneous
+  $isFilled=$columnNbOfFirstRow===count($columnKeys) ;
+  return array(
+      'columnKeys'=>$columnKeys,
+      'rowKeys'=>$rowKeys,
+      'isFilled'=>$isFilled) ;
+}
+
+
+/**
+ * Fill a MapOfMap from a potentialy heterogeneous MapOfMap,
+ * that is one in which nested amy not have allways the same keys.
  * All keys for all rows are first computed, and then each a value is
  * attributed for each row using the filler value if necessary.
- * @param List*(String!,Any!)! $arrayMap
- * @param Any! $filler 
- * @return List*(List*(Any!)!)! 
+ * @param inout:Map*(Scalar!,Map*(Scalar!,Any!)! $mapOfMap 
+ * The map of map to fill. The map of map is changed in place.
+ * 
+ * type MapOfMapKeyAndHoleInfo == Map{
+ *   'columnKeys' => List*(Scalar!)!,
+ *   'rowKeys' => List*(Scalar!)!),
+ *   'isFilled' => Boolean,
+ *   'nbHolesFilled' => Integer>=0
+ * }
+ * 
+ * @param Any? $filler a value to fill undefined cells (if any).
+ * Default to an empty string.
+ * 
+ * @return  MapOfMapKeyAndHoleInfo
  */
-function heteroToHomoArrayMap($arrayMap,$filler='') {
-  $allKeys = keysFromArrayMap($arrayMap) ;
-  $fullArrayMap = array() ;
-  foreach ($arrayMap as $map){
-    $fullMap = array();
-    foreach($allKeys as $key) {
-      $fullMap[$key] = (isset($map[$key]) ? $map[$key] : $filler ) ;
+function fillMapOfMap(&$mapOfMap,$filler='') {
+  $nb=0 ;
+  $r = mapOfMapKeysInfo($mapOfMap) ;
+  if ($r['isFilled']) {
+    $r['nbOfHolesFilled'] = $nb ;
+    return $r ;
+  } else {
+    $allColumnKeys = $r['columnKeys'] ;
+    foreach ($mapOfMap as $keyRow => $row){
+      foreach($allColumnKeys as $columnKey) {
+        if (!isset($mapOfMap[$keyRow][$columnKey])) {
+          $mapOfMap[$keyRow][$columnKey] = $filler  ;
+          $nb++ ;
+        }
+      }
     }
-    $fullArrayMap[] = $fullMap;
+    $r['nbOfHolesFilled'] = $nb ;
+    return $r ;
   }
-  return $fullArrayMap ;
 }
 
 /**
- * TODO should be taken from homoArrayMapToHTMLTable
- * @param unknown_type $homoArrayMap
+ * Transform map of map to into a two dimentsional array indexed by integers and
+ * with optional column names and row names.
+ * Each inside map becomes a row (with the key if $printKeys is selected).
+ * Each key in a inside map leads to a colum. The first row is the table header
+ * if $addRowKeys is selected. 
+ * 
+ * @param Map*(Scalar!,Map*(Scalar!,Any!)!)! $mapOfMap A map of map not necessarily
+ * filled (homogeneous) and with arbitrary scalar keys.
+ * 
+ * @param String? $filler an optional filler that will be used if a cell has no value.
+ * 
+ * @param false|true|RegExp|List*(String!*)? $columnSpec 
+ * If false there will be no header (no special first row) but all columns are included.
+ * If true the first row is a header, and all columns are included.
+ * If a string is provided then it is assumbed to be a regular expression. Only matching
+ * column names will be added to the table. 
+ * If $displayFilter is a list, this list will constitute the list of columns headers. 
+ * Default is true. 
+ * 
+ * @param Boolean? $rowSpec 
+ * If true then the first column will contains the key of rows.
+ * Default to true. 
+
+ * @return List*(List*(Any!)) the resulting table.
  */
-function homoArrayMapToTable($homoArrayMap) {
-  
+function mapOfMapToTable($mapOfMap,$filler='',$columnSpec=true,$rowSpec=true) {
+  if (count($mapOfMap) == 0) {
+    return array() ;
+  } else {
+    // fill the map if necessary
+    $r = fillMapOfMap($mapOfMap,$filler) ;
+    $allExistingHeaders = $r['columnKeys'] ;
+
+    // compute the list of headers for which there will be a column.
+    // This does not include the column for the keys
+    if ($columnSpec===false) {
+      // the headers will not be displayed, but the columns will still be there
+      $header = $allExistingHeaders ;
+    }
+    if ($columnSpec===true) {
+      $headers = $allExistingHeaders ;
+    } elseif (is_array($columnSpec)) {
+      $headers = $columnSpec ;
+    } elseif (is_string($columnSpec)) {
+      $headers=array() ;
+      foreach($allExistingHeaders as $header) {
+        if (preg_match($columnSpec,$header)) {
+          $headers[]=$header ;
+        }
+      }
+    } else {
+      die('wrong argument for homoMapOfMapToHTMLTable: displayFilter='.$displayfilter) ;
+    }
+
+    $table=array() ;
+
+    // add an headerRow if required
+    if ($columnSpec!==false) {
+      if ($rowSpec===true) {
+        $headerRow=array('') ;
+      } else {
+        $headerRow=array() ;
+      }
+      array_append($headerRow,$headers) ;
+      $table[]=$headerRow ;
+    }
+    
+    // add the table "body"
+    foreach ($mapOfMap as $keyRow=>$row) {
+      $tableRow=array() ;
+      if ($rowSpec===true) {
+        $tableRow[]=$keyRow;
+      }
+      foreach ($headers as $keyColumn) {
+        $tableRow[]=$mapOfMap[$keyRow][$keyColumn] ;
+      }
+      $table[]=$tableRow ;
+    }
+    return $table ;
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /**
@@ -150,3 +314,5 @@ function typeOf($var) {
   if(is_resource($var)) return 'resource';
   return null ; 
 }
+
+

@@ -3,7 +3,6 @@ require_once 'main.config.local.php' ;
 require_once '../HTML.php' ;
 require_once '../ERGraph.php' ;
 require_once '../JsonGraphAsERGraph.php' ;
-require_once '../RDFAsNAGraph' ;
 
 $datadir='data/' ;
 $inputdir=$datadir.'input/' ;
@@ -18,10 +17,9 @@ echo '<h2>Checking the constraints on the graph above</h2>' ;
 $ghostEntities = $graph->checkReferentialConstraints() ;
 if (count($ghostEntities)>=1) {
   echo '<p>Ghost entities added are</p>' ;
-  echo arrayMapToHTMLTable($ghostEntities) ;
+  echo mapOfMapToHTMLTable($ghostEntities) ;
 } else {
   echo '<p>no ghost entities</p>' ;
 }
 
-ech
 echo '<h1>END OF TESTS</h1>' ;

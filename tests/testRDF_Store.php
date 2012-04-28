@@ -57,7 +57,7 @@ function testRDFStoreIntrospector($store) {
   $querynames = array_keys($introspector->QUERIES) ;
   foreach($querynames as $queryname) {
     echo '<h2>'.$queryname.'</h2>' ;
-    echo homoArrayMapToHTMLTable($introspector->introspect($queryname)) ;
+    echo mapOfMapToHTMLTable($introspector->introspect($queryname)) ;
   }
 }
 

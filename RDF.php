@@ -361,7 +361,7 @@ class RDFTripleSet {
    * @return String!
    */
   protected function makeStringForURI($string) {
-    return strtr(strtolower($string),' .,!?;@-+','_________') ;
+    return strtr($string,' .,!?;@-+','_________') ;
   }
   
   // if the string is a URI then returns it as is
@@ -436,7 +436,7 @@ class RDFTripleSet {
         $triple['o_type'] = 'uri' ;
         break ;
       case 'type' :
-        assert('$this->rdfConfiguration->isTypePredicate($predicate)') ;
+        assert('RDFConfiguration::isTypePredicate($predicate)') ;
         $triple['o'] = $this->makeURI($value,'schema') ;
         $triple['o_type'] = 'uri' ;
         break ;
@@ -514,7 +514,7 @@ class RDFTripleSet {
       $row['o'] = $this->itemToHTML($triple['o'],$triple['o_type']) ;
       $table[] = $row;
     }
-    return homoArrayMapToHTMLTable($table) ;
+    return mapOfMapToHTMLTable($table,'',true,true,null) ;
   }
 
   
@@ -549,8 +549,9 @@ class RDFTripleSet {
 /**
  * Wrapper for an arc2 configuration but contains as well convienience method to
  * deal with uri and prefixes. 
- * This is the root of a hierarchy which makes it easier to understand which parameters 
+ * This is the root of a class hierarchy which makes it easier to understand which parameters 
  * in the configuration should be set. This class provide the most simplified one.
+ * It basically just contains a set of RDF prefixes that are used to shortened URIs.
  */
 class RDFConfiguration {
   
@@ -583,20 +584,25 @@ class RDFConfiguration {
   }
 
 
-  /**
-   * @var Set of property that serves as a type. 
-   * Includes rdf:type as well as full urls. 
+  
+  
+  
+  /* --------------------------------------------------------------------------------
+   *     Helpers dealing with URI, domains, prefixes and segments
+   * --------------------------------------------------------------------------------
    */
-  public $RDF_TYPE_PREDICATES = array(
-      'rdf:type',
-      'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') ;
+  
+  
   
   /**
-   * Return
+   * Indicates if $predicate is refers to rdf:type or the same in the full form
    * @param URI $predicate
    */
-  public function isTypePredicate($predicate) {
-    return array_search($predicate,$this->RDF_TYPE_PREDICATES)!==false ;
+  public static function isTypePredicate($predicate) {
+    $typePred = array(
+        'rdf:type',
+        'http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
+    return array_search($predicate,$typePred)!==false ;
   }
     
   /**
@@ -604,7 +610,7 @@ class RDFConfiguration {
    * @param URI $uri
    * @return String domain (e.g. www.schema.org)
    */
-  public function domain($uri) {
+  public static function domain($uri) {
     return parse_url($uri,PHP_URL_HOST) ;
   }
   
@@ -613,10 +619,10 @@ class RDFConfiguration {
    * @param List*(URI!)! $uris
    * @return Set*(String!)! set of domains
    */
-  public function domains($uris) {
+  public static function domains($uris) {
     $domains = array() ;
     foreach ($uris as $uri) {
-      $domain = $this->domain($uris) ;
+      $domain = RDFConfiguration::domain($uris) ;
       if (!in_array($domain,$domains)) {
         $domains[] = $domain ;
       }
@@ -625,11 +631,11 @@ class RDFConfiguration {
   }
   
   /**
-   * Return the short part of the url (after # or the last /)
+   * Return the segment of the url (after # or the last /)
    * @param URI $uri
-   * @return string the segment after # or the last /
+   * @return String the segment after # or the last /
    */
-  public function shortname($uri) {
+  public static function segment($uri) {
     $pos = strpos($uri,'#') ;
     if ($pos===false) {
       $pos = strrpos($uri,'/') ;
@@ -643,7 +649,7 @@ class RDFConfiguration {
    * @param URI $uri
    * @return URI the path before # or the last / included
    */
-  public function base($uri) {
+  public static function base($uri) {
     if (strpos($uri,'#')===false) {
       $pos = strrpos($uri,'/') ;
       return substr($uri,0,$pos+1) ;
@@ -654,33 +660,107 @@ class RDFConfiguration {
   }
   
   /**
+   * Return the bases of the urls (before # or the last / included)
    * @param unknown_type $uris
    * @return multitype:Ambigous <string, mixed>
    */
-  public function bases($uris) {
+  public static function bases($uris) {
     $bases = array() ;
     foreach ($uris as $uri) {
-      $base = RDFDefinitions::base($uris) ;
+      $base = RDFConfiguration::base($uris) ;
       if (!in_array($base,$bases)) {
         $bases[] = $base ;
       }
     }
     return $domains ;
   }
+
+  
+
   
   /**
    * Return the shortened URI if it is corresponds to a prefix or the same URI otherwise
-   * @param unknown_type $uri
+   * @param URI! $uri
    * @return String A string of the form <prefix>:<segment> or a full uri
    */
   public function prefixed($uri) {
-    $r = array_search($this->base($uri),$this->arc2config['ns']) ;
+    $r = array_search(RDFConfiguration::base($uri),$this->arc2config['ns']) ;
     if ($r===false) {
       return $uri ;
     } else {
-      return $r.':'.$this->shortname($uri) ;
+      return $r.':'.RDFConfiguration::segment($uri) ;
     }
   }
+  
+  
+  
+//   /**
+//    * PrefixingURI is a string format that provides a mean to
+//    * a define RDF prefix either as a regular definition or
+//    * on the fly when the prefix is first used. Variables are also
+//    * supported to make it template language. This format is used
+//    * by various functions. This function is just an helper.
+  
+//    * Here are some examples without variable
+//    *   schema:<http//adomain.com/schema#>property23
+//    *   people:joe
+//    *   http://adomain.com/normaluri
+//    *   :<http://admina.com/again/>
+//    * and an examples with variables
+//    *   ${type}:<http://data.megaplanet.org/data/${type}/>${id}
+//    *
+//    * PrefixingURI ==
+//    *     <prefix> ":" "<" <prefixurl> ">" [ "segment" ]
+//    *   | <prefix> ":" "segment"
+//    *   | "<" fullurl ">"
+//    *
+//    * URIAndPrefixesResult = Map{
+//    *   'prefix'    => String?,        // the part before : if any
+//    *   'prefixurl' => String?,        // the part
+  
+//    * @param unknown_type $expr
+//    */
+//   public static function evalPrefixingURI($expr) {
+//     if (preg_match('/^(a-zA-Z0-9_]*:<)([^>]+)>([^>]*)$/',$expr,$matches)!==0) {
+//       $result=array() ;
+//       $result['prefix'] = $match[1] ;
+//       $result['prefixurl'] = $match[2]  ;
+//       $result['segment'] = $match[3] ;
+//       $result['fullurl'] = $result['prefixurl'].$result['segment'] ;
+//     }
+//   }
+  
+//   /**
+//    * Prefixing URIs provides a mean to define prefixes either with
+//    * regular definitions or on the fly definition when the prefix
+//    * is first used. This format is used by various functions.
+//    * PrefixingURIs is a list of PrefixinURI separated by some spaces
+//    * Here is an example
+//    *    abc:<http://domain.org/data/> cde:<http://another.com/rde#>
+//    *
+//    * PrefixingURIs == PrefixingURI* (separated by blanks, tabs, newlines)
+//    *
+//    * @param PrefixingURIs $expr
+//    * @return List*(PrefixingURIInfo)! The list of information for each valid
+//    * PrefixingURI. Expressions that are incorrect are ignored.
+//    */
+//   public static function evalPrefixingURIs($expr,$variableMapOrMaps) {
+//     $prefixedURIs = preg_split('/\s+/', $expr) ;
+//     $results = array() ;
+//     foreach($prefixedURIs as $prefixedURI) {
+//       if (trim($prefixedURI)!=="") {
+//         $r = RDFConfiguration::evalPrefixingURI($expr,$variableMap) ;
+//         if (isset($r)) {
+//           $results[] = $r ;
+//         }
+//       }
+//     }
+//     return $results ;
+//   }
+  
+  
+  
+  
   
   /**
    * Add a prefix to the list of prefixes. Ignore this statement if the prefix

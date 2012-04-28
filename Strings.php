@@ -1,5 +1,7 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
+require_once('Structures.php') ;
+
 /**
  * Return a string representation of the value interpreted as a boolean and possibly null.
  * @param Any $value A boolean or null or in fact any value
@@ -59,6 +61,7 @@ function withoutOptionalPrefix($str, $prefix) {
 function withoutOptionalSuffix($str, $suffix) {
   return endsWith($str,$suffix) ? substr($str,0,strlen($str)-strlen($suffix)) : $str  ;
 }
+
 
 /**
  * Compose two strings according by a given mode.

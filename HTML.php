@@ -25,7 +25,7 @@ function htmlAsIs($value) {
 
 /**
  * Return a list from a map where all pair in the map is on a line.
- * @param Map*<String!,String!>! $map
+ * @param Map*(String!,String!)! $map
  * @param String? $separator Separator between the key and the value (' => ' by default).
  * @return HTML!
  */
@@ -43,7 +43,7 @@ function mapToHTMLList($map,$separator=' => ') {
 
 /**
  * 
- * @param List*<String!,String!>! $arraymap
+ * @param List*(Map(String!,String!))! $arraymap
  * @return HTML!
  */
 function arrayMapToHTMLList($arraymap) {
@@ -63,83 +63,70 @@ function arrayMapToHTMLList($arraymap) {
   return $r ;
 }
 
+
 /**
- * Transform an homogeneous array map to an html table.
- * The function ArrayMapToHTMLTable can be used for all array map
- * including hereogeneous ones, but since it first try to fill the
- * map to make it homogeneous it is less performant.
- * TODO the table construction should fo to homoArrayMapToTable
- * @param List*<Map*<String!,String!>!>! $arraymap An homogeneous array map.
- * @param Boolean? $printHeader
- * @param RegExp|List*<String!*>? $displayFilter
- * @return HTML!
+ * Transform map of map to into a two dimentsional array indexed by integers and
+ * with optional column names and row names.
+ * Each inside map becomes a row (with the key if $printKeys is selected).
+ * Each key in a inside map leads to a colum. The first row is the table header
+ * if $addRowKeys is selected.
+ *
+ * @param Map*(Scalar!,Map*(Scalar!,Any!)!)! $mapOfMap A map of map not necessarily
+ * filled (homogeneous) and with arbitrary scalar keys.
+ *
+ * @param String? $filler an optional filler that will be used if a cell has no value.
+ *
+ * @param false|true|RegExp|List*(String!*)? $columnSpec
+ * If false there will be no header (no special first row) but all columns are included.
+ * If true the first row is a header, and all columns are included.
+ * If a string is provided then it is assumbed to be a regular expression. Only matching
+ * column names will be added to the table.
+ * If $displayFilter is a list, this list will constitute the list of columns headers.
+ * Default is true.
+ *
+ * @param Boolean? $rowSpec
+ * If true then the first column will contains the key of rows.
+ * Default to true.
+ * 
+ * @param FunctionName $cellRenderer the name of the function to render a cell value.
+ * Takes the cell value as an argument. If null then the cell value is not transformed.
+ * Default to 'htmlAsIs' so that all characters and break lines are rendered. null
+ * should be passed explicitely if the cell contains HTML that should be interpreted.
+
+ * @return List*(List*(Scalar!)) the resulting table.
  */
-function homoArrayMapToHTMLTable($arrayMap,$printHeader = true,$displayFilter = null) {
-  if (count($arrayMap) == 0) {
-    return "<b>(no result)</b>" ;
-  } else {  
-    // infer the actual headers from the first row
-    // this is ok because the arraymap is homogeneous
-    $allExistingHeaders = array_keys($arrayMap[0]) ;
-    
-    // compute the headersToDisplay     
-    if ($displayFilter == null) {
-      $headersToDisplay = $allExistingHeaders ;
-    } elseif (is_array($displayFilter)) {
-      $headersToDisplay = $displayFilter ;
-    } elseif (is_string($displayFilter)) {
-      $headersToDisplay=array() ;
-      foreach($allExistingHeaders as $header) {
-        if (preg_match($displayFilter,$header)) {
-          $headersToDisplay[]=$header ;
-        }
+
+function mapOfMapToHTMLTable($mapOfMap,$filler='',$columnSpec=true,$rowSpec=true,$cellRenderer='htmlAsIs',$border="1") {
+  if (count($mapOfMap) == 0) {
+    return "<b>(empty)</b>" ;
+  } else {
+    $table=mapOfMapToTable($mapOfMap,$filler,$columnSpec,$rowSpec) ;// fill the map if necessary
+    $html = '<table'.($border?" border=$border":"").'>' ;
+
+    $irow = 0 ;
+    // if the first row is a header, render it as an html table header
+    if ($columnSpec!==false) {
+      $html .= '<tr>' ;
+      foreach ($table[$irow] as $cell) {
+        $html .= '<th><b>'.(isset($cellRenderer)?$cellRenderer($cell):$cell).'</b></th>' ;
       }
-    } else {
-      die('wrong argument for rowsToHTMLTable: displayFilter='.$displayfilter) ;
+      $html .= '</tr>' ;
+      $irow++ ;
     }
 
-    $html = '<table>' ;
-    
-    // output header if necessary
-    if ($printHeader) {
+    // output the table body
+    $nbrows=count($table) ;
+    for($i=$irow; $i<$nbrows; $i++) {
       $html .= '<tr>' ;
-      foreach ($headersToDisplay as $header) {
-        $html .= '<th><b>'.$header.'</b></th>' ;
+      foreach ($table[$i] as $cell) {
+        $html .= '<td>'.(isset($cellRenderer)?$cellRenderer($cell):$cell).'</td>' ;
       }
       $html .= '</tr>' ;
-    }
-   
-    // output the table body    
-    foreach ($arrayMap as $row) {
-      $html .= '<tr>' ;
-      foreach ($headersToDisplay as $header) {
-        $html .= '<td>' ;
-        // $type = $row[$header.' type'] ;
-        $value = $row[$header] ;
-        // if ($type=='uri') {
-        //  $html .= '<a href="'.$value.'">'.$value.'</a>' ;
-        // } else {
-          $html .= $value ;
-        // }
-        $html .= '</td>' ;
-      }
-      $html .= '</tr>' ;
-    }
+    } 
     $html .= '</table>' ;
     return $html ;
   }
 }
 
-/**
- * Make an array map homogeneous and then transform it to a table
- * TODO the table construction should fo to homoArrayMapToTable
- * @param List*<Map*<String!,String!>!>! $arraymap an arbitray array map
- * @param Any! $filler the filler value to make the map homogeneous
- * @param Boolean? $printHeader
- * @param RegExp|List*<String!*>? $displayFilter
- * @return HTML!
- */
-function arrayMapToHTMLTable($arrayMap,$filler='',$printHeader = true,$displayFilter = null) {
-  $homoArrayMap=heteroToHomoArrayMap($arrayMap,$filler) ;
-  return homoArrayMapToHTMLTable($homoArrayMap,$printHeader,$displayFilter) ;
-}
+
+

@@ -20,9 +20,9 @@ function testRDFConfiguration() {
       'http://www.w3.org/2000/01/rdf-schema#label',
       'http://xmlns.com/foaf/0.1/maker') as $url) {
     echo "fullurl: ".$url.'</br>';
-    echo "domain: ".$c->domain($url)."</br>" ;
-    echo "shortname: ".$c->shortname($url)."</br>" ;
-    echo "base: ".$c->base($url)."</br>" ;
+    echo "domain: ".RDFConfiguration::domain($url)."</br>" ;
+    echo "segment: ".RDFConfiguration::segment($url)."</br>" ;
+    echo "base: ".RDFConfiguration::base($url)."</br>" ;
     echo "prefixed: ".$c->prefixed($url)."</br>" ;
     echo "</br>" ;
   }
@@ -101,7 +101,7 @@ function testRDFStoreIntrospector($store) {
   $querynames = array_keys($introspector->QUERIES) ;
   foreach($querynames as $queryname) {
     echo '<h2>'.$queryname.'</h2>' ;
-    echo homoArrayMapToHTMLTable($introspector->introspect($queryname)) ;
+    echo mapOfMapToHTMLTable($introspector->introspect($queryname),'',true,true,null) ;
   }
 }
 

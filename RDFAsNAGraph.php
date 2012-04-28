@@ -39,7 +39,7 @@ class RDFAsNAGraph {
       $predicateid = $this->rdfConfiguration->prefixed($predicate) ;
       $otype = $triple['o_type'] ;
 
-      if ($this->rdfConfiguration->isTypePredicate($predicate)) {
+      if (RDFConfiguration::isTypePredicate($predicate)) {
         $g->addNode(
             $node1id,
             array('type'=>$this->rdfConfiguration->prefixed($triple['o']) )) ;
