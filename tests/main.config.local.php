@@ -1,4 +1,7 @@
 <?php
+
+define('_MEGALIB','true') ;
+
 define('DEBUG',10) ;
 
 define('ABSPATH_BASE',dirname(dirname(__DIR__)).'/') ;
