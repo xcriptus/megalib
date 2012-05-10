@@ -191,7 +191,7 @@ class YEdGraphBrowserGenerator {
   
   protected function generateGlobalFiles() {
     $indexShortFileName = 'index.html' ;
-    $yedGraphAsHtml = $this->getYedGraphCoreName().'map.html' ;
+    $yedGraphAsHtml = $this->getYedGraphCoreName().'.map.html' ;
     $initShortFileName = 'init-details.html' ;
     echo "generate $indexShortFileName<br/>" ;
     file_put_contents($this->targetDirectory.'/'.$indexShortFileName,'

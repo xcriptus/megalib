@@ -20,6 +20,12 @@ function boolStr($value,$strings="false,true,null") {
 }
 
 
+/**
+ * Convert a range expresions of the form "10-12,4,28" to an list of integer.
+ * For instance "1-2,5,6-7" returns array(1,2,5,6,7)
+ * @param RangeString! $expression
+ * @return List*(Integer)
+ */
 function rangesExpression($expression){
   $ranges=explode(',',$expression) ;
   $values = array() ;

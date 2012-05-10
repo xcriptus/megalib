@@ -1,5 +1,21 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
+/**
+ * Get the type of a variable
+ * @param Mixed $value
+ * @return 'null'|'string'|'bool'|'integer'|'float'|'array'|'resource'|classname|null
+ */
+function typeOf($var) {
+  if(is_string($var)) return 'string';
+  if(is_int($var)) return 'integer';
+  if(is_bool($var)) return 'boolean';
+  if(is_null($var)) return 'null';
+  if(is_float($var)) return 'float';
+  if(is_object($var)) return get_class($var);
+  if(is_array($var)) return 'array';
+  if(is_resource($var)) return 'resource';
+  return null ;
+}
 
 /**
  * Indicates if the parameter is an empty array  or with only integer as keys
@@ -50,6 +66,11 @@ function is_map_to_string($x) {
   }    
 }
 
+/**
+ * Indicates if the parameter is a map of map
+ * @param Any $x a value to test
+ * @return boolean true if $x an array with all elements being an array 
+ */
 function is_map_of_map($x) {
   if (is_array($x)) {
     foreach ($x as $key => $value) {
@@ -298,21 +319,175 @@ function jsonLastErrorMessage() {
   return $JSON_ERRORS[json_last_error()];
 }
 
+
+
+
 /**
- * Get the type of a variable
- * @param Mixed $value
- * @return 'null'|'string'|'bool'|'integer'|'float'|'array'|'resource'|classname|null
+ * Create a summary of a map of map. That is create a structure
+ * with cardinalities, domains, ranges, etc.
+ * type MapOfMapSummary == Map{
+ *   'kind' => 'mapOfMap',
+ *   'domain1Card' => Integer,
+ *   'domain1'     => Set*(Scalar) ?, // only if $returnSets
+ *   'domain2'     => Set*(Scalar) ?, // only if $returnSets
+ *   'domain2Card' => Map{
+ *     'min' => Integer,
+ *     'max' => Integer,
+ *     'sum' => Integer,
+ *     'unique' => Integer,
+ *     'map' => Map(Scalar => Integer) ?  // only if $returnMaps
+ *   }
+ *   'range'       => Set*(Scalar) ?, // defined if $returnSets
+ *   'rangeCard'   => Integer
+ * }
+ * 
+ * @param Map(Scalar,Map(Scalar,Value)) $mapmap A map of map
+ * 
+ * @param Any? $valueIfEmpty If specified this value returned if the map
+ * is empty. Default to null, so if nothing is provided, the summary
+ * will be performed as usual but cardinalities will be 0, sets will be
+ * empty, etc. 
+
+ * @param Boolean! $returnKind indicated if the kind attribute should be
+ * returned.
+ *
+ * @param Boolean! $returnSets indicates if domains and range should be
+ * returned. These may contains many values. Default is false.
+ * 
+ * @param Boolean! $returnMaps indicates if the domain2Card map is returned.
+ *  
+ * @return MapOfMapSummary|$valueIfEmpty
  */
-function typeOf($var) {
-  if(is_string($var)) return 'string';
-  if(is_int($var)) return 'integer';
-  if(is_bool($var)) return 'boolean';
-  if(is_null($var)) return 'null';
-  if(is_float($var)) return 'float';
-  if(is_object($var)) return get_class($var);
-  if(is_array($var)) return 'array';
-  if(is_resource($var)) return 'resource';
-  return null ; 
+function mapOfMapSummary($mapmap,$valueIfEmpty=null,$returnKind=false,$returnSets=false,$returnMaps=false) {
+  if (count($mapmap)===0 && isset($valueIfEmpty)) {
+    return $valueIfEmpty ;
+  } else {
+    $r = array() ;
+    if ($returnKind) {
+      $r['kind']='mapOfMap' ;
+    }
+    $r['domain1card']=count($mapmap) ;
+    $r['domain1']=array_keys($mapmap) ;
+    $r['domain2']=array() ;
+    $r['range']=array() ;
+    $r['domain2Card']=array() ;
+    $r['domain2Card']['sum']=0 ;
+    foreach($mapmap as $key1 => $map2) {
+      $n = count($map2) ;
+      if ($returnMaps) {
+        $r['domain2Card']['map'][$key1] = count($map2) ;
+      }
+      if (!isset($r['domain2Card']['min']) || ($n < $r['domain2Card']['min'])) {
+        $r['domain2Card']['min'] = $n ;
+      }
+      if (!isset($r['domain2Card']['max']) || ($n > $r['domain2Card']['max'])) {
+        $r['domain2Card']['max'] = $n ;
+      }
+      $r['domain2Card']['sum'] += $n ;
+      $r['domain2']=union($r['domain2'],array_keys($map2)) ;
+      $r['range']=union($r['range'],array_values($map2)) ;
+    }
+    $r['domain2Card']['unique'] = count($r['domain2']) ;
+    $r['rangeCard']=count($r['range']) ;
+    if (!$returnSets) {
+      unset($r['domain1']) ;
+      unset($r['domain2']) ;
+      unset($r['range']) ;
+    }
+    return $r ;
+  }
+}
+
+function unnest_array($map,$keySeparator='.') {
+  $r = array() ;
+  foreach($map as $key => $value) {
+    if (! is_array($value)) {
+      $r[$key]=$value ;
+    } else {
+      $unnested = unnest_array($value,$keySeparator) ;
+      foreach($unnested as $nestedkey=>$atomicValue) {
+        $r[$key.$keySeparator.$nestedkey]=$atomicValue ;
+      }
+    }
+  }
+  return $r ;
+  
+}
+
+/**
+ * Create a summary of a map. For map of map it may be better to use
+ * mapOfMapSummary as it provides more information. 
+ *
+ * type MapSummary == Map{
+ *   'kind' => 'map' ?,              // only if $returnKind
+ *   'domain'     => Set*(Scalar) ?, // defined if $returnSets
+ *   'domainCard' => Integer,
+ *   'range'       => Set*(Scalar) ?, // defined if $returnSets
+ *   'rangeCard'   => Integer
+ * }
+ * 
+ * @param Map*(Scalar,Any!) $map a map
+ * 
+ * @param Any? $valueIfEmpty If specified this value returned if the map
+ * is empty. Default to null, so if nothing is provided, the summary
+ * will be performed as usual but cardinalities will be 0, sets will be
+ * empty, etc. 
+ * 
+ * @param Boolean! $returnKind indicated if the kind attribute should be
+ * returned.
+ *
+ * @param Boolean! $returnSets indicates if domain and range should be
+ * returned. These may contains many values.
+ * 
+ * @return MapSummary|$valueIfEmpty
+ * 
+ */
+function mapSummary($map,$valueIfEmpty=null,$returnKind=false,$returnSets=false) {
+  if (count($map)===0 && isset($valueIfEmpty)) {
+    return $valueIfEmpty ;
+  } else {
+    $r = array() ;
+    if($returnKind) {
+      $r['kind']='map' ;
+    }
+    $range=array_unique(array_values($map)) ;
+    if ($returnSets) {
+      $r['domain'] = array_keys($map);
+      $r['range']=$range ;
+    }
+    $r['domainCard']=count($map) ;
+    $r['rangeCard']=count($range) ;
+    return $r ;
+  }
 }
 
 
+/**
+ * @param Any? $value a value or null
+ */
+function mixedValueSummary($value,$valueIfEmpty=null,$returnKind=false) {
+  $valueToReturn = $value 
+                      ? $value 
+                      : (isset($valueIfEmpty)?$valueIfEmpty : $value) ;
+  if (!$returnKind) {
+    return $valueToReturn ;
+  } else {
+    $r = array() ;
+    $r['kind']=typeOf($valueToReturn) ;
+    $r['value']=$valueToReturn ;
+    return $r ;
+  }
+}
+
+/**
+ * Return a summary for a given value according to its type.
+ */
+function valueSummary($value,$valueIfEmpty=null,$returnKind=false,$returnSets=false,$returnMaps=false) {
+  if (is_map_of_map($value)) {
+    return mapOfMapSummary($value,$valueIfEmpty,$returnKind,$returnSets,$returnMaps) ;
+  } elseif (is_array($value)) {
+    return mapSummary($value,$valueIfEmpty,$returnKind,$returnSets) ;
+  } else {
+    return mixedValueSummary($value,$valueIfEmpty,$returnKind) ;
+  }
+}

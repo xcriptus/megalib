@@ -1,6 +1,12 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 /*
  * Basic function for FileSystem manipulations
+ * 
+ * filebasenames
+ *   occurrence basenames 
+ *   find . -type f -exec basename '{}' ';' | sort | uniq -c | sort -r
+ * 
+ * 
  */
 
 require_once 'Strings.php' ;
