@@ -194,16 +194,26 @@ function addToPath($path,$path2) {
 /**
  * List all filenames directly under a given directory or return null if the parameter
  * is not a readable directory. Never return '.' or '..'.
+ * 
  * @param String! $directory the directory containing the item to list
+ * 
  * @param Seq('dir','file','link','|')? $typeFilter the type of items to select separated by |
  * if various types are accepted. By default all types are accepted.
+ * 
  * @param RegExpr? $nameRegExpr if not null a regular expression that will be used as
  * a filter on the item name. The matching is done only on the file name, without the path.
  * $nameRegExpr should be a string of the form '/.../'. Default to null.
+ * 
  * @param Boolean? $ignoreDotFiles indicates if hidden items (.xxx) should be ignored. 
  * Default to true, so hidden items are ignored by default. 
+ *
  * @param Boolean? $prefixWithDirectory indicates if the resulting item names should be
  * prefixed with the directory name. Default to true.
+ * 
+ * @param Boolean? $ignoreDotDirectories indicates if dot directories should be totally
+ * ignored.
+
+ *
  * @return List*(String!)? The list of selected items or NULL if $directory cannot be opened
  */
 function /*Set*<String!>?*/ listFileNames(
@@ -211,7 +221,8 @@ function /*Set*<String!>?*/ listFileNames(
     $typeFilter="dir|file|link|error",
     $nameRegExpr=NULL,
     $ignoreDotFiles=TRUE,
-    $prefixWithDirectory=TRUE) {
+    $prefixWithDirectory=TRUE,
+    $ignoreDotDirectory=TRUE) {
   $paths = array() ;
   $allowedtypes=explode('|',$typeFilter) ;
   if (isReadableDirectory($directory) && $dh = opendir($directory)) {
@@ -229,7 +240,8 @@ function /*Set*<String!>?*/ listFileNames(
       $selected = $file!=='.' 
                   && $file!=='..'
                   && in_array($type,$allowedtypes) 
-                  && ($ignoreDotFiles!==TRUE || substr($file,0,1)!='.')
+                  && ($type!=='file' || $ignoreDotFiles!==TRUE || substr($file,0,1)!='.')
+                  && ($type!=='dir' || $ignoreDotDirectory!==TRUE || substr($file,0,1)!='.')
                   && (!isset($nameRegExpr) || preg_match($nameRegExpr,$file)) ; 
       if ($selected) {
         $paths[] = ($prefixWithDirectory ? addToPath($directory,"") : "") .$file ;
@@ -246,16 +258,25 @@ function /*Set*<String!>?*/ listFileNames(
  * List all filenames recursively in a given directory. Does not return the root directory itself.
  * If this not a readable directory, it returns null. The non readable sub directories are not
  * explored, but otherwise the whole subtree is explored indepedently from filters.
+ * 
  * @param String! $directory the root directory where to start
+ * 
  * @param Seq('dir','file','link','error','|')? $typeFilter the type of items to select separated by |
  * if various types are accepted. By default all types are accepted.
+ * 
  * @param RegExpr? $nameRegExpr if not null a regular expression that will be used as
  * a filter on the item name. The matching is done only on the file name, without the path.
  * $nameRegExpr should be a string of the form '/.../'. Default to null.
+ * 
  * @param Boolean? $ignoreDotFiles indicates if hidden items (.xxx) should be ignored. 
  * Default to true, so hidden items are ignored by default. 
+ * 
  * @param Boolean? $prefixWithDirectory indicates if the resulting item names should be
  * prefixed with the directory name. Default to true.
+ * 
+ * @param Boolean? $ignoreDotDirectories indicates if dot directories should be totally
+ * ignored. If so, they will not be explored. Default to true.
+ * 
  * @return List*(String!)? The list of selected items or NULL if $url cannot be opened
  */
 function listAllFileNames(
@@ -264,11 +285,12 @@ function listAllFileNames(
     $nameRegExpr=NULL,
     $ignoreDotFiles=TRUE,
     $prefixWithDirectory=TRUE,
-    $followLinks=false) {
+    $followLinks=false,
+    $ignoreDotDirectories=true) {
   $results = array() ;
   if (DEBUG>100) echo "<li>exploring '$root'..." ;
   // get subdirectories because they should be explored anyway
-  $subdirectories = listFileNames($root,'dir',null,null,true) ;
+  $subdirectories = listFileNames($root,'dir',null,true,true,$ignoreDotDirectories) ;
   if ($subdirectories === null) {
     // the root directory is not readable
     return null ;
@@ -334,6 +356,65 @@ function extensionFrequencies($filenames){
 
 
 
+/**
+ * Save a file in a given place and create directories if necessary.
+ * @param Filename $out the file in which to save
+ * @param String! $content the content to save in the file
+ * @param inout>Map(Filename,Integer|String) $results an array in which
+ * results are accumulated. That is if the filename is save then
+ * its name will be added in the map with the number of byte saved
+ * otherwise an error message will be returned. Use is_string to
+ * check if an error occured.
+ * @return Boolean! true if the file as been saved successfully,
+ * false otherwise. It is not necessary to test this value after
+ * each file save as the result is keep anyway in $results.
+ */
+function saveFile($filename,$content,&$results=array()) {
+  $dir = dirname($filename) ;
+  if (!is_dir($dir)) {
+    if (! mkdir($dir,0777,true)) {
+      $results[$filename]="error: can't create directory $dir" ;
+    }
+  }
+  $n = file_put_contents($filename,$content) ;
+  $results[$filename]=($n?$n:"error: cannot create file") ;
+}
+
+
+/**
+ * Compute a new path for a filename according to a base and
+ * a new base.
+ * 
+ * @param Pathname $srcpath either a filename or directoryname
+ * 
+ * @param Pathname $newbase a directory that will prefix the
+ * results in all cases.
+ * 
+ * @param Boolean|String! $base 
+ * if true the basename of the file will be added to $newbase
+ * if false the filename will be added directly to $newbase
+ * if $base is a string then it will be removed if possible
+ * from the filename and the result will be added to $newbase.
+ * Default to true.  
+ * 
+ * @return String! $newbase plus some fragment of $filename
+ * according to the rule specifed with $base
+ */
+function rebasePath($filename,$newbase,$base=true) {
+  if ($base===true) {
+    $filepart = basename($filename) ;
+  } elseif ($base===false) {
+    $filepart = $filename ;
+  } elseif (is_string($base)) {
+    if (startsWith($filename,$base)) {
+      $filepart = substr($filename,strlen($base)) ;
+    } else {
+      $filepart = $filename ;
+    }
+  }
+  return addToPath($newbase,$filepart) ;
+  
+}
 
 /**
  * Compute the information about a link. Note that if the link is broken or

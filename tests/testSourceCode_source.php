@@ -3,27 +3,20 @@ require_once 'main.config.local.php' ;
 
 require_once '../SourceCode.php' ;
 
-//echo "Results go to data/generated/*" ;
+define('OUTPUT_DIR','data/generated/') ;
 
+$basedir = '../../101repo/' ;
 
 $sources = array(
     array('s'=>'data/input/Company.xsd', 'l'=>'xml', 'x'=>''),
     array('s'=>'testNAGraph.php', 'l'=>'php', 'x'=>''),
-    array('s'=>'../Graphviz.php', 'l'=>'php', 'x'=>'')  );
+    array('s'=>'../Graphviz.php', 'l'=>'php', 'x'=>'') );
 
-displaySourceCode($sources) ;
-
-$filters = array('/COMMENT/','/KEYWORDS|URLS|SYMBOLS/','/STYLE/',true) ;
-
-function displayLanguageMatrices($filters) {
-  foreach($filters as $filter) {
-    echo '<h2>Language matrix with filter '.$filter.'</h2>' ;
-    GeSHiExtended::getLanguagePropertyHTMLMatrix($filter) ;
-  }
-}
+processSourceCode($sources,OUTPUT_DIR) ;
 
 
-function displaySourceCode($sources) {
+
+function processSourceCode($sources,$outputDirectory) {
   foreach ($sources as $src) {
     
     echo '<h2>Generating HTML for '.$src['s']." lines</h2>" ;
@@ -44,14 +37,8 @@ function displaySourceCode($sources) {
     
     echo '<h2>Summary</h2>' ;
     $summary=$source->getSummary($tokens) ;
-    foreach($summary as $element => $info) {
-      if (is_string($info)||is_integer($info)) {
-        echo "<li>$element = $info</li>" ;
-      } else {
-        echo "$element:<br/>" ;
-        var_dump($info) ;
-      }
-    }
+    echo 'This is a simplified summary nicer to display' ;
+    var_dump (SourceCode::simplifiedSummary($summary)) ;
   }
 }
 
