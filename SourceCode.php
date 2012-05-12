@@ -741,6 +741,7 @@ class SourceCode {
       'sourceId'=>$this->getSourceId(),
       'languageCode'=>$this->getLanguageCode(),
       'frequencies'=>$frequencies,
+      'size'=>count($this->plainSourceCode),
       'ncloc'=>count($nonCommentedLines),
       'nloc'=>$this->getNLOC() ) ;
   }
@@ -771,7 +772,10 @@ class SourceCode {
    * @return Json!
    */
   
-  public function getTokensAndSummaryAsJson($classExclude='/co/',$trimClassExclude='/st|es/',$shortClassName=true)  {
+  public function getTokensAndSummaryAsJson(
+      $classExclude='/co/',
+      $trimClassExclude='/st|es/',
+      $shortClassName=true)  {
     $tokens = $this->getTokens($classExclude,$trimClassExclude,$shortClassName) ;
     $summary = $this->getSummary($tokens) ;
     $summary['tokens']=$tokens ;
@@ -779,8 +783,19 @@ class SourceCode {
   }
    
   
+  /**
+   * Create a source code.
+   * 
+   * @param String! $text The text representing the source code
+   * 
+   * @param String! $language The geshiLanguageCode in which this source code is written
+   * 
+   * @param String? $sourceid an optional sourceId that will be used to differentiate this source 
+   * from other sources if in the same html page. This will be used as a CSS class name and prefix
+   * for CSS id, so it should be short. If nothing is provided an identifier will be automatically
+   * generated. This is probably the best.
+   */
   public function __construct($text,$language,$sourceid=null) {
-    // if (DEBUG>3) echo "new SourceCode('".substr($text,0,10)."...',$language,$sourceid)<br/>" ;
     $this->plainSourceCode = $text ;
     $this->geshiLanguageCode = $language ;
     if (isset($sourceid)) {
@@ -788,50 +803,63 @@ class SourceCode {
     } else {
       $this->sourceId = SourceCode::getNewSourceId() ;
     } 
-    //if (DEBUG>10) echo "Sourceid=".$this->sourceId."<br/>" ;
   }
   
 }
+
 
 
 
 
 /**
+ * Interface that both SourceFile and NonSourceFile implements. Such file can
+ * be declared to be relative with a SourceDirectory in which case the filename
+ * can be relative to the base of the SourceDirectory.
  *
  */
-class SourceDirectory {
-  protected $baseDir ;
-  protected $directory ;
-  
-  public function __construct($basedir,$dir) {
-    $this->baseDir = $basedir ;
-    $this->directory = $dir ;
-  }
-  
-  public function getRelativePath($path) {
-    return substr($path,strlen($this->baseDir)) ;
-  }
-  
-  public function generate($outputDirectory) {
-    $files = listAllFileNames(addToPath($this->baseDir,$this->directory),'file','/.+\..+/',true,true,false,true) ;
-    foreach($files as $file) {
-      $language = GeSHiExtended::getLanguageFromExtension(fileExtension($file)) ;
-      if ($language!=='') {
-        echo "Generation: ".$this->getRelativePath($file)."\n" ;
-        $source=new SourceFile($file) ;
-        $source->generate($outputDirectory,null,$this->baseDir) ;  
-      } else {
-        echo "Ignored:    ".$this->getRelativePath($file)."\n" ; 
-      }
-    }
-  }
-    
-}
-
-class SourceFile extends SourceCode {
+interface SomeFile {
+  /**
+   * Return the source directory if the source file have been declared within such
+   * directory. Otherwise return null.
+   * @return SourceDirectory? null or the source directory object.
+   */
+  public function getSourceDirectory() ;
   
   /**
-   * @var Filename The name of the source file
+   * Return the short filename of the file. It is relative to the source directory
+   * if provided. Otherwise this is the same value as full filename.
+   * @return Filename! the filename.
+   */
+  public function getShortFilename() ;
+      
+  /**
+   * Return the full filename of the file. If the this source file pertains to
+   * a source directory then this is the base of the directory + the short file name.
+   * Otherwise it is the same as the short filename.
+   */
+  public function getFullFilename() ;
+  
+  public function getGenerationResults() ;
+  
+}
+
+/**
+ * A source file. This class extends SourceCode but additionally a source file has a filename,
+ * possibly relative to a specific SourceDirectory. It also has methods to generate various
+ * files from the source code in a output directory.
+ */
+class SourceFile extends SourceCode implements SomeFile {
+  /**
+   * @var SourceDirectory? If set then this source file pertains to 
+   * a given source directory. It this case the relative filename
+   * will be relative to the base of the source directory.
+   */
+  private $sourceDirectory ;
+  
+  /**
+   * @var Filename! The name of the source file. 
+   * If the source directory is specified then this filename is relative to the
+   * base of the source directory. Otherwise it is a regular filename.
    */
   private $filename ;
   
@@ -840,8 +868,30 @@ class SourceFile extends SourceCode {
    */
   private $generationResults ;
   
-  public function getFilename() {
+  
+  /**
+   * @see SomeFile interface
+   */
+  public function getSourceDirectory() {
+    return $this->sourceDirectory ;
+  }
+  
+  /**
+   * @see SomeFile interface
+   */
+  public function getShortFilename() {
     return $this->filename ;
+  }
+  
+  /**
+   * @see SomeFile interface
+   */
+  public function getFullFilename() {
+    if ($this->getSourceDirectory()!==null) {
+      return addToPath($this->getSourceDirectory()->getBase(),$this->getShortFilename()) ;
+    } else {
+      return $this->getShortFilename() ;
+    }
   }
   
   /**
@@ -850,18 +900,42 @@ class SourceFile extends SourceCode {
   
   public function getSummary($tokens) {
     $summary = parent::getSummary($tokens) ;
-    $summary['filename']=$this->filename ;
+    $summary['filename']=$this->getShortFilename() ;
+    if ($this->getSourceDirectory()===null) {
+      $summary['fullFilename']=$this->getFullFilename() ;
+    }
     return $summary ;
   }
   
-  
+  public function getGenerationResults() {
+    return $this->generationResults ;
+  }
 
   
-  public function generate($outputDirectory,$fragmentSpecs=null,$base=true) {
-    // if (DEBUG>3) echo "SourceFile::generate ".$this->getFilename()." in directory $outputDirectory<br/>" ;
+  /**
+   * Generate files associated with this source file
+   * @param DirectoryName! $outputBase the directory where the files should go.
+   * This directory should not be within the source directory and its path
+   * is therefore outside of it.
+   * @param Map*(String!,RangeString!)? $fragmentSpecs a map that give for
+   * each fragment id (an arbitrary string that will appear in a filename), the
+   * range of lines considered. If null then this parameter is ignored.
+   * @param Boolean|String|null $base @see parameter $base of rebasePath.
+   * Here if nothing is specified, the base will take the value true if the
+   * file is not inside a source directory, and false if it is. That is
+   * by default the basename will be used if the file is not in a source directory
+   * (so all files will be generated at the same level, leading to a flat structure),
+   * otherwise the short name will be used, meaning that the output will be
+   * isomorphic to the source directory.  
+   * @return multitype:
+   */
+  public function generate($outputBase,$fragmentSpecs=null,$base=null) {
+    $base = isset($base) 
+              ? $base 
+              : ($this->getSourceDirectory()===null) ;
     $htmlBody = $this->getHTML() ;
-    $filename = $this->getFilename() ;
-    $outputfilename = rebasePath($filename,$outputDirectory,$base) ;
+    $filename = $this->getShortFilename() ;
+    $outputfilename = rebasePath($filename,$outputBase,$base) ;
     
     $generated=array() ;
     //----- generate html ------------------------------------------------------
@@ -908,15 +982,30 @@ class SourceFile extends SourceCode {
     return $language ;
   }
   
-  public function __construct($filename,$language=null,$sourceid=null) {
+  /**
+   * Create a SourceFile potentially within a source directory.
+   * @param Filename! $filename The filename of the source
+   * @param SourceDirectory! $sourcedirectory 
+   * @param String? $language Geshi language code. If not provided then
+   * the language code will be computed via the compute language method. 
+   * If this fail then 'text' will be taken as default. That is we assume
+   * that this is a source file otherwise this object should not be
+   * created on the first place.
+   * @param String? $sourceid see the constructor of SourceCode.
+   * @return after calling this constructor, $this->error() should be called.
+   * If it returns false everything is fine. Otherwise it is an error message.
+   */
+  public function __construct($filename,SourceDirectory $sourcedirectory=null,$language=null,$sourceid=null) {
     $this->filename = $filename ;
     $this->generationResults = array() ;
+    $this->sourceDirectory = $sourcedirectory ;
     if (!isset($language)) {
       $language = $this->computeLanguage($filename) ;
     }
-    $text = file_get_contents($filename) ;
+    $fullfilename = $this->getFullFilename() ;
+    $text = file_get_contents($fullfilename) ;
     if ($text===false) {
-      $this->error = 'cannot read file '.$filename ;
+      $this->error = 'cannot read file '.$fullfilename ;
       echo $this->error ;
     }
     parent::__construct($text,$language,$sourceid) ;
@@ -924,7 +1013,200 @@ class SourceFile extends SourceCode {
   
 }
 
+class NonSourceFile implements SomeFile {
+  /**
+   * @var SourceDirectory? If set then this source file pertains to
+   * a given source directory. It this case the relative filename
+   * will be relative to the base of the source directory.
+   */
+  private $sourceDirectory ;
+  
+  /**
+   * @var Filename! The name of the source file.
+   * If the source directory is specified then this filename is relative to the
+   * base of the source directory. Otherwise it is a regular filename.
+   */
+  private $filename ;
+  
+  /**
+   * @var Map(Filename,Integer|String)? file generated and corresponding results
+   */
+  private $generationResults ;
+  
+  
+  /**
+   * @see SomeFile interface
+   */
+  public function getSourceDirectory() {
+    return $this->sourceDirectory ;
+  }
+  
+  /**
+   * @see SomeFile interface
+   */
+  public function getShortFilename() {
+    return $this->filename ;
+  }
+  
+  /**
+   * @see SomeFile interface
+   */
+  public function getFullFilename() {
+    if ($this->getSourceDirectory()===null) {
+      return addPath($this->getSourceDirectory()->getBase(),$this->getShortFilename()) ;
+    } else {
+      return $this->getShortFilename() ;
+    }
+  }
+    
+  
+  public function getGenerationResults() {
+    return $this->generationResults ;
+  }
+  
+  public function __construct($filename,SourceDirectory $sourceDirectory=null) {
+    $this->filename = $filename ;
+    $this->sourceDirectory = $sourceDirectory ;
+    $this->generationResults = array() ;
+  }
+  
+}
 
 
+/**
+ * SourceDirectory
+ */
+class SourceDirectory {
+  protected $baseDir ;
+  protected $relativeDirectory ;
+  protected $defaultOutputBase ;
+  protected $processingResults ;
+  protected $allRelativeFilenames ;
+  protected $traceOnStdout ;
 
+  /**
+   * @return DirectoryName! The base of the source directory.
+   */
+  public function getBase() {
+    return $this->baseDir ;
+  }
+  
+  public function getFullDirectoryName() {
+    return addToPath($this->getBase(),$this->relativeDirectory) ;
+  }
+  
+  public function getFullFileName($relativeFileName) {
+    return addToPath($this->getBase(),$relativeFileName) ;
+  }
+  
+  /**
+   * Make the path relative to the base
+   * @param Path! $path a path
+   * @return Path!
+   */
+  public function getRelativePath($path) {
+    return substr($path,strlen($this->baseDir)) ;
+  }
+
+  /**
+   * Return the default output base if any
+   * @return DirectotyName?
+   */
+  public function getDefaultOutputBase() {
+    return $this->defaultOutputBase ;
+  }
+  
+  /**
+   * Return all files recursively found in the directory.
+   * Ignore dot files, files with no extensions and do not explore dot directories.
+   * @return List*(Filename!)! list of filename relative to the base.
+   */
+  public function getAllRelativeFileNames() {
+    if (!isset($this->allRelativeFilenames)) {
+      $filenames = 
+        listAllFileNames(
+            $this->getFullDirectoryName(),
+            'file',       // only files
+            '/.+\..+/',   // that have an extension
+            true,         // ignore dot files
+            true,         // return file path not only basenames
+            false,        // do not follow links
+            true) ;       // ignore dot directories
+      $this->allRelativeFilenames = array() ;
+      foreach( $filenames as $filename) {
+        $this->allRelativeFilenames[] = $this->getRelativePath($filename) ;
+      }
+    }
+    return $this->allRelativeFilenames ;
+  }
+  
+  protected function processSourceFile($relativeFilename,$language,$outputBase) {
+    if ($this->traceOnStdout) {
+      echo "SourceFile:    ".$relativeFilename." as $language\n" ;
+    }
+    $source = new SourceFile($relativeFilename,$this,$language) ;
+    // currently process it with the assumption that there is no fragment for this file
+    // TODO add support for fragments
+    $source->generate($outputBase,null,false) ;
+  }
+  
+  protected function processNonSourceFile($relativeFilename,$outputBase) {
+    if ($this->traceOnStdout) {
+      echo "NonSourceFile: ".$relativeFilename."n" ;
+    }
+  }
+  /**
+   * Generate elements for all files in this source directory
+   * @param DirectoryName $outputDirectory
+   */
+  public function generate($outputBase=null) {
+    // compute the output base
+    if (!isset($outputBase)) {
+      $outputBase = $this->getDefaultOutputBase() ;
+      if ($outputBase===null) {
+        die('SourceDirectory: not output base specified') ;
+      }
+    }
+    
+    // get the list of files to process
+    $relativeFilenames = $this->getAllRelativeFileNames() ;
+    foreach($relativeFilenames as $relativeFilename) {
+      
+      // get the language 
+      $language = GeSHiExtended::getLanguageFromExtension(fileExtension($relativeFilename)) ;
+      
+      if ($language!=='') {
+        $this->processSourceFile($relativeFilename,$language,$outputBase) ;
+      } else {
+        $this->processNonSourceFile($relativeFilename,$outputBase) ;
+      }
+    }
+  }
+  
+  /**
+   * @param DirectoryName! $basedir a directory that will serve as the base of 
+   * everything. That is all path will be relative to this base.
+   * 
+   * @param DirectoryName! $dir the directory to consider for analysis. Its
+   * value is relative to the base.
+   * 
+   * @param DirectoryName! $defaultOutputBase the default base directory for
+   * output. It is not necessary to specify it if generation is not to be used
+   * of if a base is specified in the generate method. Default to null.
+   * 
+   * @param $traceOnStdout? $traceOnStdout  as the generation can be quite
+   * time consuming this parameter allow to trace the process via some output
+   * on stdout. Default to true which means verbose mode. Otherwise nothing
+   * is displayed.
+   *
+   */
+  public function __construct($basedir,$relativeDirectory,$defaultOutputBase=null,$traceOnStdout=true) {
+    $this->baseDir = $basedir ;
+    $this->relativeDirectory = $relativeDirectory ;
+    $this->defaultOutputBase = $defaultOutputBase ;
+    $this->traceOnStdout     = $traceOnStdout ;
+    $this->processingResults = array() ;
+  }
+  
+}
 

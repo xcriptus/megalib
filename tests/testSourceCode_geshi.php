@@ -6,11 +6,11 @@ require_once '../SourceCode.php' ;
 
 
 $filters = array('/COMMENT/','/KEYWORDS|URLS|SYMBOLS/','/STYLE/',true) ;
-
+displayLanguageMatrices($filters) ;
 function displayLanguageMatrices($filters) {
   foreach($filters as $filter) {
     echo '<h2>Language matrix with filter '.$filter.'</h2>' ;
-    GeSHiExtended::getLanguagePropertyHTMLMatrix($filter) ;
+    echo GeSHiExtended::getLanguagePropertyHTMLMatrix($filter) ;
   }
 }
 

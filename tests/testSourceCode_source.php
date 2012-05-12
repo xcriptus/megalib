@@ -5,8 +5,6 @@ require_once '../SourceCode.php' ;
 
 define('OUTPUT_DIR','data/generated/') ;
 
-$basedir = '../../101repo/' ;
-
 $sources = array(
     array('s'=>'data/input/Company.xsd', 'l'=>'xml', 'x'=>''),
     array('s'=>'testNAGraph.php', 'l'=>'php', 'x'=>''),
@@ -39,6 +37,10 @@ function processSourceCode($sources,$outputDirectory) {
     $summary=$source->getSummary($tokens) ;
     echo 'This is a simplified summary nicer to display' ;
     var_dump (SourceCode::simplifiedSummary($summary)) ;
+    
+    echo "<h2>Generation from SourceFile in $outputDirectory</h2>" ;
+    $sourcefile = new SourceFile($src['s']) ;
+    $sourcefile->generate($outputDirectory) ;
   }
 }
 
