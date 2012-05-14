@@ -1216,6 +1216,10 @@ class NonSourceFile implements SomeFile {
     //-- generate the json summary
     $generated = array() ;
     saveFile(
+        $outputfilename.'.html',
+        "<html>Sorry, the content of <b>".basename($this->getShortFilename())." cannot be rendered</html>",
+        $generated) ;
+    saveFile(
         $outputfilename.'.summary.json',
         $this->getSummaryAsJson(),
         $generated) ;
@@ -1425,21 +1429,23 @@ abstract class SourceDirectory {
   
   public function getHTML_Listing($outputBase) {
     // add the listing box
-    $html = '<div class="dirListing"><ul>' ;
+    $html = '<div class="dirListing"><table>' ;
     
     foreach($this->getDirectoryMap() as $shortdirname => $sourceDirectory) {
-      $html .= '<li class="dirItem">' ;
-      $html .= '<a href="'.$shortdirname.'/index.html">'.$shortdirname.'</a>' ;
-      $html .= '</li>' ;
+      $html .= '<tr class="dirItem">' ;
+      $html .= '<td><a href="'.$shortdirname.'/index.html">'.$shortdirname.'</a></td>' ;
+      $html .= '<td><a href="'.$shortdirname.'/index.summary.json">summary</a></td>' ;
+      $html .= '</tr>' ;
     }
     
     foreach($this->getFileMap() as $shortfilename => $someFile) {
-      $html .= '<li class="fileItem">' ;
-      $html .= '<a href="'.$shortfilename.'.html">'.$shortfilename.'</a>' ;
-      $html .= '</li>' ;
+      $html .= '<tr class="fileItem">' ;
+      $html .= '<td><a href="'.$shortfilename.'.html">'.$shortfilename.'</a></td>' ;
+      $html .= '<td><a href="'.$shortfilename.'.summary.json">summary</a></td>' ;     
+      $html .= '</tr>' ;
     }
     
-    $html .= '</ul></div>' ;
+    $html .= '</table></div>' ;
     return $html ;
   }
   
