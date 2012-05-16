@@ -263,7 +263,8 @@ class GeSHiExtended extends GeSHi {
 }
 
 
-
+define('MAX_LINE_LENGTH',1000) ;
+define('MAX_NB_OF_LINES',10000) ;
 
 /**
  * Model a source code.
@@ -415,6 +416,16 @@ class SourceCode {
    *   HTML Views
    * ------------------------------------------------------------------------
    */
+
+  
+  public function releaseMemory() {
+    unset($this->geshi) ;
+    unset($this->geshiHtmlSourceCode) ;
+    unset($this->geshiXMLSourcCode) ;
+    unset($this->textNodeArray) ;
+  }
+  
+   
   
   public function getSourceId() {
     return $this->sourceId ;
@@ -427,8 +438,40 @@ class SourceCode {
    */
   protected function getGeSHI() {
     if (!isset($this->geshi)) {
+      
+      // truncante long lines and limit the number of lines
+      $text = "" ;
+      $linesTruncated=array() ;
+      $lines = explode("\n",$this->plainSourceCode) ;
+      $nbOfLines = count($lines) ;
+      // echo $nbOfLines ;
+      $n = 0 ;
+      while ($n < $nbOfLines && $n < MAX_NB_OF_LINES) {
+        $line = $lines[$n];
+        if (strlen($line)>MAX_LINE_LENGTH) {
+          $msg =
+            "line #".($n+1)." has been truncated to "
+            .MAX_LINE_LENGTH." characters (out of ".strlen($line)." characters)\n" ;          
+          $lines[$n] = substr($lines[$n],0,MAX_LINE_LENGTH)."... TRUNCATED" ;
+          echo $msg ; 
+        }
+        $text .= $line."\n" ;
+        $n++ ;
+      }
+      if (count($linesTruncated)) {
+        $text = "WARNING: Some long lines have been truncated."
+                 ."The file might not display correcly\n"
+                 .$text ;
+      }
+      $text = implode("\n",$lines) ;
+      if ($nbOfLines > MAX_NB_OF_LINES) {
+        $msg = "\nFILE truncated to ".MAX_NB_OF_LINES." lines (out of ".$nbOfLines." lines)\n" ;
+        $text .= $msg ;
+        echo $msg ;
+      }
+      
       $geshi = new GeSHi() ;
-      $geshi->set_source($this->plainSourceCode) ;
+      $geshi->set_source($text) ;
       $geshi->set_language($this->geshiLanguageCode) ; 
       $geshi->set_overall_id($this->sourceId) ;
       $geshi->enable_line_numbers(GESHI_NORMAL_LINE_NUMBERS) ;
@@ -459,6 +502,7 @@ class SourceCode {
    */
   public function getHTML() {
     if (!isset($this->geshiHtmlSourceCode)) {
+      
       $geshi = $this->getGeSHI() ;
       $html = $geshi->parse_code();
       // for some reason we should remove the caracters below to avoid problem
@@ -1080,6 +1124,12 @@ class SourceFile extends SourceCode implements SomeFile {
         $generated) ;
     
     $this->generationResults = array_merge($this->generationResults,$generated) ;
+    
+    
+    //-- we have finished with generation for this file so release the resource
+    // to avoid out of memory errors.
+    $this->releaseMemory() ;
+    
     return $generated ;
   }
   
@@ -1331,6 +1381,9 @@ abstract class SourceDirectory {
   public function getFileKind($fullFileName) {
     // get the language
     $language = GeSHiExtended::getLanguageFromExtension(fileExtension($fullFileName)) ;
+//    if ($language==='javascript') {
+//      $language='' ;
+//    }
     return $language ;    
   }
   
@@ -1521,13 +1574,13 @@ abstract class SourceDirectory {
         
     // for each file generate corresponding derived files
     foreach($this->getFileMap() as $shortfilename => $someFile) {
-      echo $shortfilename.'<br/>' ;
+      echo "File:    ".$shortfilename."\n" ;
       $someFile->generate($outputBase) ;
     }
     
     // for each directory generate what should be generated
     foreach($this->getDirectoryMap() as $shortdirname => $sourceDirectory) {
-      echo $shortdirname.'<br/>' ;
+      echo "Dir:     ".$shortdirname."\n" ;
       $sourceDirectory->generate($outputBase) ;
     }
     saveFile($outputDirectoryRootFileName.'.summary.json',$this->getSummaryAsJson()) ;
@@ -1683,7 +1736,6 @@ class SourceTopDirectory extends SourceDirectory {
     $this->processingResults = array() ;
   }
 }
-
 
 
 
