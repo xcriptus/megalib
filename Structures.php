@@ -1,5 +1,12 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
+
+
+/*----------------------------------------------------------------------------------
+ *     Type management
+ *----------------------------------------------------------------------------------
+ */
+
 /**
  * Get the type of a variable
  * @param Mixed $value
@@ -107,6 +114,99 @@ function array_append(&$array1,$array2) {
   array_splice($array1, count($array1), 0, $array2) ;
 }
 
+
+
+
+/**
+ * Flatten an array by distributing the keys
+ * @param Map(Scalar,NestedArray(Mixed) $map
+ * @param unknown_type $keySeparator
+ * @return Map(String,Mixed)
+ */
+function unnest_array($map,$keySeparator='.') {
+  $r = array() ;
+  foreach($map as $key => $value) {
+    if (! is_array($value)) {
+      $r[$key]=$value ;
+    } else {
+      $unnested = unnest_array($value,$keySeparator) ;
+      foreach($unnested as $nestedkey=>$atomicValue) {
+        $r[$key.$keySeparator.$nestedkey]=$atomicValue ;
+      }
+    }
+  }
+  return $r ;
+}
+
+/**
+ * Group a map of map by a given key creating a indexed
+ * map of map.
+ * @param Scalar! $key key on which to group
+ * @param Map*(Scalar!,Map*(Scalar!,Any!))! $mapOfMap
+ * @param Boolean? $removeKey
+ * @param String? $defaultGroupValue the value to use when
+ * the row has no value for the key. If not set then the
+ * rows that do not have this value set, will be removed.
+ * @return Map*(Scalar!,Map*(Scalar!,Map*(Scalar!,Any!))!)
+ */
+function groupedBy($key,$mapOfMap,$removeKey=true,$defaultGroupValue=null) {
+  $results = array() ;
+  foreach($mapOfMap as $keyRow => $row) {
+    if (isset($row[$key])) {
+      $keyGroupValue = $row[$key] ;
+      if ($removeKey) {
+        unset($row[$key]) ;
+      }
+      if (is_array($keyGroupValue)) {
+        var_dump($keyGroupValue) ;
+        var_dump($row) ;
+        die('groupedBy: attempt to group by '.$key.' failed. The value above is not a scalar') ;
+      }
+      $results[$keyGroupValue][$keyRow] = $row ;
+    } else {
+      if (isset($defaultGroupValue)) {
+        $results[$defaultGroupValue]=$row ;
+      }
+    }
+  }
+  return $results ;
+}
+
+function project($keys,$mapOfMap,$defaultValue=null) {
+  $results = array() ;
+  foreach($mapOfMap as $keyRow => $row) {
+    foreach($keys as $key) {
+      if (isset($row[$key])) {
+        $results[$keyRow][$key] = $row[$key] ;
+      } else {
+        if (isset($defaultValue)) {
+          $results[$keyRow][$key] = $defaultValue ;
+        }
+      }
+    }
+  }
+  return $results ;
+}
+
+
+function groupAndProject($groupSpecs,$mapOfMap) {
+  $results = array() ;
+  foreach ($groupSpecs as $groupName => $groupSpec) {
+    $groupKey = $groupSpec['groupedBy'] ;
+    $selectKeys = $groupSpec['select'] ;
+    $groups = groupedBy($groupKey,$mapOfMap) ;
+    foreach ($groups as $groupKeyValue => $mapOfMapSubset) {
+      $results[$groupName][$groupKeyValue] = project($selectKeys,$mapOfMapSubset) ;
+    }
+  }
+  return $results ;
+}
+
+
+/*----------------------------------------------------------------------------------
+ *     Map of maps
+ *----------------------------------------------------------------------------------
+ */
 
 /**
  * The map of map is seen as a table with each inside map beeing
@@ -322,7 +422,10 @@ function jsonLastErrorMessage() {
 }
 
 
-
+/*----------------------------------------------------------------------------------
+ *     Summary
+*----------------------------------------------------------------------------------
+*/
 
 /**
  * Create a summary of a map of map. That is create a structure
@@ -400,21 +503,7 @@ function mapOfMapSummary($mapmap,$valueIfEmpty=null,$returnKind=false,$returnSet
   }
 }
 
-function unnest_array($map,$keySeparator='.') {
-  $r = array() ;
-  foreach($map as $key => $value) {
-    if (! is_array($value)) {
-      $r[$key]=$value ;
-    } else {
-      $unnested = unnest_array($value,$keySeparator) ;
-      foreach($unnested as $nestedkey=>$atomicValue) {
-        $r[$key.$keySeparator.$nestedkey]=$atomicValue ;
-      }
-    }
-  }
-  return $r ;
-  
-}
+
 
 /**
  * Create a summary of a map. For map of map it may be better to use
