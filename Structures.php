@@ -264,7 +264,9 @@ function mapOfMapToTable($mapOfMap,$filler='',$columnSpec=true,$rowSpec=true) {
         $tableRow[]=$keyRow;
       }
       foreach ($headers as $keyColumn) {
-        $tableRow[]=$mapOfMap[$keyRow][$keyColumn] ;
+        if (isset($mapOfMap[$keyRow][$keyColumn])) {
+          $tableRow[]=$mapOfMap[$keyRow][$keyColumn] ;
+        }
       }
       $table[]=$tableRow ;
     }
