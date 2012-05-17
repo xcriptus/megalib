@@ -1,0 +1,197 @@
+type,regexpr,kind,humanReadable,geshiLanguage,language,locator,technology,role,urls
+file,(.*)\.jar,archive,,    ,,,,,http://www.fileinfo.com/extension/jar
+file,(.*)\.atl,source,,text,ATL,,,,
+file,(.*)\.sh,source,,bash,Bash,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.c,source,,c,C,,,,http://www.fileinfo.com/extension/c
+file,(.*)\.h,source,,c,C,,,,http://www.fileinfo.com/extension/h
+file,(.*)\.clj,source,,closure,Clojure,,,,
+file,(.*)\.cob,source,,cobol,Cobol,,,,http://www.fileinfo.com/extension/cob
+file,(.*)\.cpp,source,,cpp,CPlusPlus,,,,http://www.fileinfo.com/extension/cpp
+file,(.*)\.hpp,source,,cpp,CPlusPlus,,,,http://www.fileinfo.com/extension/hpp
+file,(.*)\.h,source,,cpp,CPlusPlus,,,,http://www.fileinfo.com/extension/h
+file,AssemblyInfo\.cs,source,,csharp,CSharp,,,,
+file,(.*)DetailsPage\.xaml\.cs,source,,csharp,Csharp,,,,
+file,(.*)\.cs,source,,csharp  ,CSharp  ,,,,http://www.fileinfo.com/extension/cs csharp
+file,(.*)\.xaml\.cs,source,,csharp  ,CSharp  ,,,,
+file,(.*)\.Designer\.cs,source,,csharp  ,CSharp  ,,,,
+file,(.*)\.css,source,,css,CSS,,,,http://www.fileinfo.com/extension/css
+file,(.*)\.min\.css,source,no,css,CSS,,,,
+file,(.*)\.erl,source,,erlang,Erlang,,,,http://www.fileinfo.com/extension/erl
+file,(.*)\.fratala,source,,javascript,FraTaLa,,,,
+file,(.*)\.groovy,source,,groovy,Groovy,,,,
+file,(.*)\.hs,source,,haskell,Haskell,../../technologies/HsFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/hs haskell
+file,index\.html,source,,html,HTML,,,,
+file,project\.properties,source,,html,HTML,,,,
+file,(.*)\.html,source,,html,HTML,,,,http://www.fileinfo.com/extension/html
+file,index\.html,source,,html,HTML,,,,
+file,(.*)\.xhtml ,source,,html,HTML,,,,http://www.fileinfo.com/extension/xhtml
+file,(.*)\.cshtml,source,,html,HTML,,,,http://www.fileinfo.com/extension/cshtml
+file,(.*)\.java,source,,java,Java,../../technologies/JFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/java
+file,\.101meta,source,,javascript,JavaScript,,,,
+file,(.*)\.js,source,,javascript,JavaScript,,,,http://www.fileinfo.com/extension/js
+file,(.*)\.min.\js,source,no,javascript,JavaScript,,,,
+file,(.*)\.json,source,,javascript,JavaScript,,,,
+file,(.*)\.latala,source,,javascript,LaTaLa,,,,
+file,(.*)\.php,source,,php,PHP,,,,http://www.fileinfo.com/extension/php
+file,index.php,source,,php,PHP,,,,
+file,(.*)\.php4,source,,php,PHP,,,,http://www.fileinfo.com/extension/php
+file,(.*)\.php5,source,,php,PHP,,,,http://www.fileinfo.com/extension/php
+file,(.*)\.phtml,source,,php,PHP,,,,http://www.fileinfo.com/extension/phtml
+file,(.*)\.pro,source,,prolog,Prolog,,,,
+file,(.*)\.pl,source,,prolog,Prolog,,,,
+file,(.*)\.py,source,,python,Python,,,,http://www.fileinfo.com/extension/py
+file,(.*)\.rsc,source,,text,Rascal,,,,
+file,(.*)\.rb,source,,ruby,Ruby,,,,http://www.fileinfo.com/extension/rb
+file,(.*)\.erb,source,,text,Ruby,,,,
+file,(.*)\.scala,source,,scala,Scala,,,,
+file,(.*)\.st,source,,smalltalk,Smalltalk,,,,
+file,(.*)\.sql,source,,sql,SQL,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.sqlsettings,source,,sql,SQL,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.sqlcmdvars,source,,sql,SQL,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.sqldeployment,source,,sql,SQL,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.sqlpermissions,source,,sql,SQL,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.trigger\.sql,source,,sql,SQL,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.pkey\.sql,source,,sql,SQL,,,,
+file,(.*)\.pkey\.sql,source,,sql,SQL,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.sqlfile\.sql,source,,sql,SQL,,,,http://www.fileinfo.com/extension/sql
+file,(.*)\.table\.sql,source,,sql,SQL,,,,
+file,(.*)\.svg,source,,xml,SVG,,,,http://www.fileinfo.com/extension/svg
+file,(.*)\.tetala,source,,javascript,TeTaLa,,,,
+file,(.*)DetailsPage\.xaml,source,,xml,XAML,,,,
+file,(.*)\.xml,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/xml
+file,(.*)\.xmi,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/xmi
+file,(.*)\.ecore,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,
+file,(.*)\.emx,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,
+file,(.*)\.genmodel,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,
+file,(.*)\.xaml ,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/xaml
+file,(.*)\.xsl,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/xsl
+file,(.*)\.xq,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/xq
+file,(.*)\.graphml,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/graphml
+file,(.*)\.config,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,
+file,(.*)\.csproj,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/csproj csharp
+file,(.*)\.tpl,source,,xml,XML,../../technologies/XmlFragmentLocator/locator.py,,,
+file,(.*)\.xsd,source,,xml,XSD,../../technologies/XmlFragmentLocator/locator.py,,,http://www.fileinfo.com/extension/xsd
+file,build\.xml,source,,xml,,,Ant,input,
+file,(.*)\.g,source,,text,,,ANTLR,input,
+file,(.*)\.tokens,source,,text,,,ANTLR,input,
+file,(.*)Lexer.java,source,,java,,,ANTLR,output,
+file,(.*)Parser.java,source,,java,,,ANTLR,output,
+file,antlr-(.*).jar,archive,,,,,ANTLR,support,
+file,\.htaccess,source,,text,,,Apache,,
+file,org\.eclipse\.jdt\.core\.prefs,source,,xml,,,Eclipse,,
+file,\.classpath,source,,text,,,Eclipse,,
+file,\.project,source,,xml,,,Eclipse,,
+file,\.gitignore,source,,text,,,Git,input,http://help.github.com/ignore-files/ https://github.com/github/gitignore
+file,\.gitkeep,source,,text,,,Git,input,
+file,(.*)\.cache\.png,image,,,,,GWT,output,
+file,(.*)\.cache\.html,source,,html,,,GWT,output,
+file,(.*)\.gwt\.rpc,source,,text,,,GWT,output,
+directory,gwt/,directory,,,,,GWT,,
+file,hibernate\.cfg\.xml,source,,xml,,,Hibernate,,
+file,(.*)\.hbm\.xml,source,,xml,,,Hibernate,,
+file,hibernate.cfg.xml,source,,xml,,,Hibernate,,
+file,HibernateDAOFactory.java,source,,java,,,Hibernate,,
+file,(.*)\.hbm\.xml,source,,xml,,,Hibernate,,
+file,(.*)DAOHibernate\.java,source,,java,,,Hibernate,,
+file,(.*)DAO\.java,source,,java,,,Hibernate,,
+file,(.*)\.jsp,source,,html,,,JSP,,http://www.fileinfo.com/extension/jsp
+file,log4j\.properties,source,,properties,,,Log4j,,
+file,Makefile,source,,make,,,make,input,
+file,makefile,source,,make,,,make,input,
+file,pom\.xml,source,,xml,,,Maven,,
+file,(.*)\.html.erb,source,,text,,,Ruby on Rails,,
+file,(.*)\.js\.coffee,source,,text,,,Ruby on Rails,,
+file,(.*)\.css\.scss,source,,text,,,Ruby on Rails,,
+file,edit\.html\.erb,source,,text,,,Ruby on Rails,,
+file,index\.html\.erb,source,,text,,,Ruby on Rails,,
+file,new\.html\.erb,source,,text,,,Ruby on Rails,,
+file,show\.html\.erb,source,,text,,,Ruby on Rails,,
+file,_form\.html\.erb,source,,text,,,Ruby on Rails,,
+file,(.*)\.xtext,source,,text,,,Xtext,,
+file,\.zfproject.xml,source,,xml,,,Zend framework,input,
+directory,application/views/scripts/error/,directory,,,,,Zend framework,,
+directory,application/views/scripts/,directory,,,,,Zend framework,,
+directory,application/views/models/,directory,,,,,Zend framework,,
+directory,application/views/layouts/scripts/,directory,,,,,Zend framework,,
+directory,application/views/forms/,directory,,,,,Zend framework,,
+file,make\.bat,source,,dos,,,,,
+file,README,source,,text,,,,,
+file,README\.txt,source,,text,,,,,
+file,README\.md,source,,text,,,,,
+file,readme\.txt,source,,text,,,,,
+file,COPYING,source,,text,,,,,
+file,LICENCE\.txt,source,,text,,,,,
+file,MANIFEST\.MF,source,,text,,,,,
+file,Settings\.settings,source,,text,,,,,
+file,Settings\.Designer\.settings,source,,text,,,,,
+file,Web\.config,source,,text,,,,,
+file,(.*)\.txt,source,,text,,,,,http://www.fileinfo.com/extension/txt
+file,(.*)\.md,source,,text,,,,,http://www.fileinfo.com/extension/md
+file,(.*)\.pdf,binary,,,,,,,http://www.fileinfo.com/extension/pdf
+file,(.*)\.exe,binary,,,,,,,http://www.fileinfo.com/extension/exe
+file,(.*)\.dll,binary,,,,,,,http://www.fileinfo.com/extension/dll
+file,(.*)\.gz,archive,,,,,,,http://www.fileinfo.com/extension/gz
+file,(.*)\.tar\.gz,archive,,,,,,,http://www.fileinfo.com/extension/gz
+file,(.*)\.tgz,archive,,,,,,,http://www.fileinfo.com/extension/tgz
+file,(.*)\.zip,archive,,,,,,,http://www.fileinfo.com/extension/zip
+file,(.*)\.tar,archive,,,,,,,http://www.fileinfo.com/extension/tar
+file,(.*)\.bat,source,,dos,,,,,http://www.fileinfo.com/extension/bat
+file,(.*)\.cmd,source,,dos,,,,,http://www.fileinfo.com/extension/cmd
+file,(.*)\.ml,source,,text,,,,,
+file,(.*)\.sdf,source,,text,,,,,
+file,(.*)\.esv,source,,text,,,,,
+file,(.*)\.str,source,,text,,,,,
+file,(.*)\.pro,source,,text,,,,,
+file,(.*)\.km3,source,,text,,,,,
+file,(.*)\.properties,source,,properties,,,,,http://www.fileinfo.com/extension/properties
+file,(.*)\.prefs,source,,properties,,,,,
+file,(.*)\.ini,source,,ini,,,,,http://www.fileinfo.com/extension/ini
+file,(.*)\.class,binary,,,,,,,http://www.fileinfo.com/extension/class
+file,(.*)\.mf,source,,text,,,,,http://www.fileinfo.com/extension/mf
+file,(.*)\.ser,binary,,,,,,,
+file,(.*)\.launch,source,,xml,,,,,
+file,(.*)\.png,image,,,,,,,http://www.fileinfo.com/extension/png
+file,(.*)\.gif,image,,,,,,,http://www.fileinfo.com/extension/gif
+file,(.*)\.jpg,image,,,,,,,http://www.fileinfo.com/extension/jpg
+file,(.*)\.jpeg,image,,,,,,,http://www.fileinfo.com/extension/jpeg
+file,(.*)\.bmp,image,,,,,,,http://www.fileinfo.com/extension/bmp
+file,(.*)\.ico,image,,,,,,,http://www.fileinfo.com/extension/bmp
+file,favicon\.ico,image,,,,,,,
+file,(.*)~,source,,text,,,,,
+file,(.*)Action\.java,source,,java,,,,,
+file,(.*)Service\.java,source,,java,,,,,
+file,(.*)ServiceAsync\.java,source,,java,,,,,
+file,(.*)ServiceImpl\.java,source,,java,,,,,
+file,(.*)Dto\.datasource,source,,text,,,,,
+file,(.*)Acceptor\.java,source,,java,,,,,
+file,(.*)Impl\.java,source,,java,,,,,
+file,(.*)FactoryImpl\.java,source,,java,,,,,
+file,(.*)PackageImpl\.java,source,,java,,,,,
+file,ComponentImpl\.java,source,,java,,,,,
+file,ContainerImpl\.java,source,,java,,,,,
+file,DAOFactory\.java,source,,java,,,,,
+file,(.*)DTO\.java,source,,java,,,,,
+file,(.*)Model\.js,source,,javascript,,,,,
+file,(.*)CreationModel\.js,source,,javascript,,,,,
+file,(.*)Model\.java,source,,java,,,,,
+file,(.*)View\.js,source,,javascript,,,,,
+file,(.*)View\.java,source,,java,,,,,
+file,(.*)Bean\.java,source,,java,,,,,
+file,(.*)BeanFactory\.java,source,,java,,,,,
+file,(.*)Controller\.cs,source,,cs,,,,,
+file,(.*)Controller\.js,source,,javascript,,,,,
+file,(.*)Controller\.java,source,,java,,,,,
+file,(.*)Controller\.php,source,,php,,,,,
+file,(.*)ContextManager\.java,source,,java,,,,,
+directory,view/,directory,,,,,,,
+directory,scripts/,directory,,,,,,,
+directory,client/,directory,,,,,,,
+directory,lang/,directory,,,,,,,
+directory,operations/,directory,,,,,,,
+directory,features/,directory,,,,,,,
+directory,org/,directory,,,,,,,
+directory,softlang/,directory,,,,,,,
+directory,dao/,directory,,,,,,,
+directory,dao/factory/,directory,,,,,,,
+directory,dao/factory/hibernate/,directory,,,,,,,
+directory,application/views/,directory,,,,,,,

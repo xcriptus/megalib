@@ -1776,6 +1776,144 @@ class SourceTopDirectory extends SourceDirectory {
 
 
 
+class FileSystemPatternMatcher {
+  protected $rules ;
+  
+  public function getPatternKeys() {
+    return array('type','regexpr') ;
+  }
+  
+  /**
+   * Merge a list of results corresponding to a same match.
+   * In case of conflicts, that is a multiple assignments to
+   * a key value, then an array is returned for the value of
+   * the corresponding key, and the conflicting key is added to
+   * a key 'conflictKeys'.
+   * @param List*(List*(String!)|String!)! $results
+   * @return Map*(String!,Set*(String!)|String!)!  
+   */
+  public function mergeMatchResults($results) {
+    if (count($results)<=1) {
+      // there is not multiple results, so nothing to merge
+      return $results ;
+    }
+    $mergedResult = array() ;
+    $patternKeys = $this->getPatternKeys() ;
+    foreach($results as $resultKey => $resultValue) {
+      // we do not care about patternKeys, i.e. regexpr
+      // as they are certainly distincts
+      if (!in_array($resultKey,$patternKeys)) {
+        if (!isset($resultKey)) {
+          // the key is not already defined, so no problem
+          $mergedResult = $resultValue ;
+        } else {
+          // there is already a value for that key
+          if ($mergedResult[$resultKey]===$resultValue) {
+            // that the same value, excellent!
+          } else {
+            // we just found a conflict, something already there
+            if (is_array($mergedResult[$resultKey])) {
+              // this was a array of values
+              if (in_array($resultValue,$mergedResult[$resultKey]) ) {
+                // no problem,the value is already registerd
+                // it was not found in the test above because an
+                // array has been compared with the value
+              } else {
+                // ok, there was already a conflict on that key
+                // (otherwise the old value would not have been an array)
+                // No additional conflict declaration for that key
+                // Just add this new value 
+                $mergedResult[$resultKey][] = $resultValue ;
+              }
+            } else {
+              // so we have two values, this is a conflict
+              $mergedResult['conflictKeys'][] = $resultKey ;
+              // create an array with the old value and the new one.
+              $mergedResult[$resultKey] = array($mergedResult[$resultKey],$resultValue) ;
+            }
+          }
+        }
+      }
+    } // foreach
+    return $mergedResult ;
+  }
+  
+  /**
+   * Match a path against the rules.
+   * @param 'directory'|'file'! $type
+   * @param Pathname! $path
+   * @param Boolean? $merge 
+   * @return List*(Map*(String!,String!))! The list of matching rules
+   */
+  public function matchPath($type,$path,$merge=true) {
+    $results = array() ;
+    foreach ($this->rules as $rule) {
+      if ($type===$rule['type']) {
+        $regexpr = '#^'.$rule['regexpr'].'$#' ;        
+        if (preg_match($regexpr,$path,$matches)) {
+          $result = $rule ;
+          $result['match']=$matches[0] ;
+          $result['regexprLength']=strlen($rule['regexpr']) ;
+          $results[] = $result ;
+        }
+      }
+    }
+    return $results ;
+  }
+  
+  /**
+   * @param Pathname! $rootDirectory an existing directory name to be explored.
+   * All files recursively this directory will be matched agains the rules.
+   * The same for subdirectories.
+   */
+  
+  public function matchFileSystem($rootDirectory) {
+    $files = listAllFileNames($rootDirectory,'file') ;
+    
+    $filesNotMatched=array() ;
+    $basenamesOfFilesNotMatched=array() ;
+    $extensionsOfFilesNotMatched=array() ;
+    
+    foreach($files as $filename) {
+      $shortfilename=basename($filename) ;
+      $relativefilename=substr($filename,strlen($rootDirectory)) ;
+      $matchResults = $this->matchPath('file',$shortfilename) ;
+      if (count($matchResults)===0) {
+        
+        $filesNotMatched[]=$relativefilename ;
+        @ $basenamesOfFilesNotMatched[$shortfilename]['nb'] += 1 ;
+        @ $basenamesOfFilesNotMatched[$shortfilename]['occurrences'] .= "<li>".$relativefilename."</li>" ;
+      
+        $extension=fileExtension($shortfilename) ;
+        @ $extensionsOfFilesNotMatched[$extension]['nb'] += 1 ;
+        @ $extensionsOfFilesNotMatched[$extension]['occurrences'] .= "<li>".$relativefilename."</li>" ;
+    
+      } else {
+        $filesMatched[$relativefilename] = $matchResults ; 
+      }
+    }
+    $nbOfFiles = count($files) ;
+    $nbOfFilesNotMatched = count($filesNotMatched) ;
+    $nbOfFilesMatched = $nbOfFiles-count($filesNotMatched) ;
+    $ratio = (($nbOfFilesMatched/$nbOfFiles)*100) ;
+    return 
+      array(
+        'nbOfFiles' => $nbOfFiles,
+        'nbOfFilesMatched' => $nbOfFilesMatched,
+        'nbOfFilesNotMatched' => $nbOfFilesNotMatched,  
+        'matchRatio' => $ratio,
+        'filesMatched' => $filesMatched,
+        'filesNotMatched'=> $filesNotMatched,
+        'extensionsOfFilesNotMatched' => $extensionsOfFilesNotMatched,
+        'basenamesOfFilesNotMatched' => $basenamesOfFilesNotMatched
+      ) ;
+  }
+  
+  public function __construct($rules) {
+    $this->rules = $rules ;
+  }
+}
+
 
 
 
