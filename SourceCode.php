@@ -1780,7 +1780,7 @@ class FileSystemPatternMatcher {
   protected $rules ;
   
   public function getPatternKeys() {
-    return array('type','regexpr') ;
+    return array('type','regexpr','regexprLength') ; // ,'regexprKeys'
   }
   
   /**
@@ -1793,47 +1793,53 @@ class FileSystemPatternMatcher {
    * @return Map*(String!,Set*(String!)|String!)!  
    */
   public function mergeMatchResults($results) {
-    if (count($results)<=1) {
+    if (count($results)===0) {
+      return array() ;
+    } elseif (count($results)===1) {
       // there is not multiple results, so nothing to merge
-      return $results ;
+      return $results[0] ;
     }
     $mergedResult = array() ;
     $patternKeys = $this->getPatternKeys() ;
-    foreach($results as $resultKey => $resultValue) {
-      // we do not care about patternKeys, i.e. regexpr
-      // as they are certainly distincts
-      if (!in_array($resultKey,$patternKeys)) {
-        if (!isset($resultKey)) {
-          // the key is not already defined, so no problem
-          $mergedResult = $resultValue ;
-        } else {
-          // there is already a value for that key
-          if ($mergedResult[$resultKey]===$resultValue) {
-            // that the same value, excellent!
+    foreach($results as $result) {
+      foreach ($result as $resultKey => $resultValue) {
+
+        // we do not care about patternKeys, i.e. regexpr
+        // as they are certainly distincts
+        if (!in_array($resultKey,$patternKeys)) {
+          if (!isset($mergedResult[$resultKey])) {
+            // the key is not already defined, so no problem
+            $mergedResult[$resultKey] = $resultValue ;
           } else {
-            // we just found a conflict, something already there
-            if (is_array($mergedResult[$resultKey])) {
-              // this was a array of values
-              if (in_array($resultValue,$mergedResult[$resultKey]) ) {
-                // no problem,the value is already registerd
-                // it was not found in the test above because an
-                // array has been compared with the value
-              } else {
-                // ok, there was already a conflict on that key
-                // (otherwise the old value would not have been an array)
-                // No additional conflict declaration for that key
-                // Just add this new value 
-                $mergedResult[$resultKey][] = $resultValue ;
-              }
+            // there is already a value for that key
+            if ($mergedResult[$resultKey]===$resultValue) {
+              // that the same value, excellent!
             } else {
-              // so we have two values, this is a conflict
-              $mergedResult['conflictKeys'][] = $resultKey ;
-              // create an array with the old value and the new one.
-              $mergedResult[$resultKey] = array($mergedResult[$resultKey],$resultValue) ;
+              // we just found a conflict, something already there
+              if (is_array($mergedResult[$resultKey])) {
+                // this was a array of values
+                if (in_array($resultValue,$mergedResult[$resultKey]) ) {
+                  // no problem,the value is already registerd
+                  // it was not found in the test above because an
+                  // array has been compared with the value
+                } else {
+                  // ok, there was already a conflict on that key
+                  // (otherwise the old value would not have been an array)
+                  // No additional conflict declaration for that key
+                  // Just add this new value 
+                  $mergedResult[$resultKey][] = $resultValue ;
+                }
+              } else {
+                // so we have two values, this is a conflict
+                $mergedResult['conflictingKeys'][] = $resultKey ;
+                // create an array with the old value and the new one.
+  
+                $mergedResult[$resultKey] = array($mergedResult[$resultKey],$resultValue) ;
+              }
             }
           }
         }
-      }
+      } // foreach
     } // foreach
     return $mergedResult ;
   }
@@ -1852,7 +1858,7 @@ class FileSystemPatternMatcher {
         $regexpr = '#^'.$rule['regexpr'].'$#' ;        
         if (preg_match($regexpr,$path,$matches)) {
           $result = $rule ;
-          $result['match']=$matches[0] ;
+          $result['matchedString']=$matches[0] ;
           $result['regexprLength']=strlen($rule['regexpr']) ;
           $results[] = $result ;
         }
@@ -1867,50 +1873,120 @@ class FileSystemPatternMatcher {
    * The same for subdirectories.
    */
   
-  public function matchFileSystem($rootDirectory) {
-    $files = listAllFileNames($rootDirectory,'file') ;
-    
-    $filesNotMatched=array() ;
-    $basenamesOfFilesNotMatched=array() ;
-    $extensionsOfFilesNotMatched=array() ;
-    
-    foreach($files as $filename) {
-      $shortfilename=basename($filename) ;
-      $relativefilename=substr($filename,strlen($rootDirectory)) ;
-      $matchResults = $this->matchPath('file',$shortfilename) ;
-      if (count($matchResults)===0) {
-        
-        $filesNotMatched[]=$relativefilename ;
-        @ $basenamesOfFilesNotMatched[$shortfilename]['nb'] += 1 ;
-        @ $basenamesOfFilesNotMatched[$shortfilename]['occurrences'] .= "<li>".$relativefilename."</li>" ;
+  public function matchFileSystem($rootDirectory,$groupSpecifications=array()) {
+      $artefactType = "file" ;
+      $files = listAllFileNames($rootDirectory,$artefactType) ;
       
-        $extension=fileExtension($shortfilename) ;
-        @ $extensionsOfFilesNotMatched[$extension]['nb'] += 1 ;
-        @ $extensionsOfFilesNotMatched[$extension]['occurrences'] .= "<li>".$relativefilename."</li>" ;
+      $filesNotMatched=array() ;
+      $basenamesOfFilesNotMatched=array() ;
+      $extensionsOfFilesNotMatched=array() ;
+      
+      foreach($files as $filename) {
+        $shortfilename=basename($filename) ;
+        $relativefilename=substr($filename,strlen($rootDirectory)) ;
+        $matchResults = $this->matchPath($artefactType,$shortfilename) ;
+        if (count($matchResults)===0) {
+          
+          $filesNotMatched[]=$relativefilename ;
+          @ $basenamesOfFilesNotMatched[$shortfilename]['nb'] += 1 ;
+          @ $basenamesOfFilesNotMatched[$shortfilename]['occurrences'] .= "<li>".$relativefilename."</li>" ;
+        
+          $extension=fileExtension($shortfilename) ;
+          @ $extensionsOfFilesNotMatched[$extension]['nb'] += 1 ;
+          @ $extensionsOfFilesNotMatched[$extension]['occurrences'] .= "<li>".$relativefilename."</li>" ;
+      
+        } else {
+          $filesMatched[$relativefilename] = $this->mergeMatchResults($matchResults) ;
+          if (count($matchResults)>=2) {
+            $filesMatched[$relativefilename]['rulesMatched'] = $matchResults ;
+          }
+        }
+      }
+      $nbOfFiles = count($files) ;
+      $nbOfFilesNotMatched = count($filesNotMatched) ;
+      $nbOfFilesMatched = $nbOfFiles-count($filesNotMatched) ;
+      $ratio = (($nbOfFilesMatched/$nbOfFiles)*100) ;
+      $output =  
+        array(
+          'rootDirectory' => $rootDirectory,
+          'nbOfFiles' => $nbOfFiles,
+          'nbOfFilesMatched' => $nbOfFilesMatched,
+          'nbOfFilesNotMatched' => $nbOfFilesNotMatched,  
+          'matchRatio' => $ratio,
+          'filesMatched' => $filesMatched,
+          'filesNotMatched'=> $filesNotMatched,
+          'extensionsOfFilesNotMatched' => $extensionsOfFilesNotMatched,
+          'basenamesOfFilesNotMatched' => $basenamesOfFilesNotMatched,
+        ) ;
+      if (isset($groupSpecifications) 
+          && is_array($groupSpecifications) && count($groupSpecifications)>=1) {
+        $output = array_merge($output,groupAndProject($groupSpecifications,$filesMatched)) ;
+      }
+      return $output ;
+  }
     
-      } else {
-        $filesMatched[$relativefilename] = $matchResults ; 
+  public function generate($rootDirectory,$outputbase=null,$groupSpecifications=array()) {
+    $html =  "<h2>Rules</h2>" ;
+    $html .= '<b>'.count($this->rules).'</b> rules defined<br/>' ;
+    $html .= mapOfMapToHTMLTable($this->rules,'',true,true,null,2) ;
+    $output['rules.html'] = $html ;
+    
+    $r = $this->matchFileSystem($rootDirectory,$groupSpecifications) ;
+    $html = '' ;
+    foreach ($r['filesMatched'] as $fileMatched => $matchingDescription) {
+      $html .= "<hr/><b>".$fileMatched."</b><br/>" ;
+      
+      $mergedResult = $matchingDescription ;
+      if (isset($mergedResult['conflictingKeys'])) {
+        $keys = $mergedResult['conflictingKeys'] ;
+        foreach ($keys as $key) {
+          $html .= "<li><span style='background:red;'>conflict on key $key </span></li>" ;
+          $mergedResult[$key] = "<li>".implode("<li>",$mergedResult[$key]) ;
+        }
+      }
+      $html .= "Merged result" ;
+      $html .= mapOfMapToHTMLTable(array($mergedResult),'',true,true,null,2) ;
+      
+      if (isset($matchingDescription['rulesMatched'])) {
+        $html .= mapOfMapToHTMLTable($matchingDescription['rulesMatched']) ;
       }
     }
-    $nbOfFiles = count($files) ;
-    $nbOfFilesNotMatched = count($filesNotMatched) ;
-    $nbOfFilesMatched = $nbOfFiles-count($filesNotMatched) ;
-    $ratio = (($nbOfFilesMatched/$nbOfFiles)*100) ;
-    return 
-      array(
-        'nbOfFiles' => $nbOfFiles,
-        'nbOfFilesMatched' => $nbOfFilesMatched,
-        'nbOfFilesNotMatched' => $nbOfFilesNotMatched,  
-        'matchRatio' => $ratio,
-        'filesMatched' => $filesMatched,
-        'filesNotMatched'=> $filesNotMatched,
-        'extensionsOfFilesNotMatched' => $extensionsOfFilesNotMatched,
-        'basenamesOfFilesNotMatched' => $basenamesOfFilesNotMatched
-      ) ;
+    $output['filesMatches.html'] = $html ;
+    
+    
+    $html =  "<h3>Basenames of files not matched</h3>" ;
+    $html .=  mapOfMapToHTMLTable($r['basenamesOfFilesNotMatched'],'',true,true,null,2) ;
+    $html .= "<h3>Extensions of files not matched</h3>" ;
+    $html .=  mapOfMapToHTMLTable($r['extensionsOfFilesNotMatched'],'',true,true,null,2) ;
+    $output['filesNotMatched.html'] = $html ;
+    
+    $output['matchSummary.json'] = json_encode($r) ;
+    
+    if (is_string($outputbase)) {
+      $index = "" ;
+      $index .= '<b>'.count($this->rules).'</b> rules defined</br>' ;
+      $index .= $r['nbOfFilesMatched']." files matched over ".$r['nbOfFiles']." files : ".$r["matchRatio"]."%<br/>" ;    
+      foreach($output as $file => $content) {
+        saveFile(addToPath($outputbase,$file),$content) ;
+        $index .= '<li><a href="'.$file.'">'.$file.'</a></li>' ;
+      }
+      $output['index.html']=$index ;
+      saveFile(addToPath($outputbase,'index.html'),$index) ;
+    }
+    return $r ;
   }
   
-  public function __construct($rules) {
-    $this->rules = $rules ;
+  public function __construct($rulesOrCSVFile) {
+    if (is_string($rulesOrCSVFile) && endsWith($rulesOrCSVFile,'.csv')) {
+      // this is a csv file. Load it and convert it to rules
+      $csv = new CSVFile() ;
+      if (! $csv->load($rulesOrCSVFile)) {
+        die('Cannot read '.$rulesOrCSVFile);
+      }
+      $this->rules = $csv->getListOfMaps() ;   
+    } else {
+      $this->rules = $rules ;
+    }
   }
 }
 

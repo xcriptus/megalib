@@ -1,5 +1,5 @@
 type,regexpr,kind,humanReadable,geshiLanguage,language,locator,technology,role,urls
-file,(.*)\.jar,archive,,    ,,,,,http://www.fileinfo.com/extension/jar
+file,(.*)\.jar,archive,,,,,,,http://www.fileinfo.com/extension/jar
 file,(.*)\.atl,source,,text,ATL,,,,
 file,(.*)\.sh,source,,bash,Bash,,,,http://www.fileinfo.com/extension/sql
 file,(.*)\.c,source,,c,C,,,,http://www.fileinfo.com/extension/c
@@ -8,12 +8,11 @@ file,(.*)\.clj,source,,closure,Clojure,,,,
 file,(.*)\.cob,source,,cobol,Cobol,,,,http://www.fileinfo.com/extension/cob
 file,(.*)\.cpp,source,,cpp,CPlusPlus,,,,http://www.fileinfo.com/extension/cpp
 file,(.*)\.hpp,source,,cpp,CPlusPlus,,,,http://www.fileinfo.com/extension/hpp
-file,(.*)\.h,source,,cpp,CPlusPlus,,,,http://www.fileinfo.com/extension/h
 file,AssemblyInfo\.cs,source,,csharp,CSharp,,,,
-file,(.*)DetailsPage\.xaml\.cs,source,,csharp,Csharp,,,,
-file,(.*)\.cs,source,,csharp  ,CSharp  ,,,,http://www.fileinfo.com/extension/cs csharp
-file,(.*)\.xaml\.cs,source,,csharp  ,CSharp  ,,,,
-file,(.*)\.Designer\.cs,source,,csharp  ,CSharp  ,,,,
+file,(.*)DetailsPage\.xaml\.cs,source,,csharp,CSharp,,,,
+file,(.*)\.cs,source,,csharp,CSharp,,,,http://www.fileinfo.com/extension/cs csharp
+file,(.*)\.xaml\.cs,source,,csharp,CSharp,,,,
+file,(.*)\.Designer\.cs,source,,csharp,CSharp,,,,
 file,(.*)\.css,source,,css,CSS,,,,http://www.fileinfo.com/extension/css
 file,(.*)\.min\.css,source,no,css,CSS,,,,
 file,(.*)\.erl,source,,erlang,Erlang,,,,http://www.fileinfo.com/extension/erl
