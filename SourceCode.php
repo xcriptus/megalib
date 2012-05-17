@@ -1445,17 +1445,74 @@ abstract class SourceDirectory {
   }
   
 
+  
+  /*-------------------------------------------------------------------------------
+   *   Summary of the directory
+   *-------------------------------------------------------------------------------
+   */
+  
+  public function getSummary() {
+    $summary = array() ;
+   
+    // Summarize information about files directly in this directory
+    $fileMap = $this->getFileMap() ;
+    $summary["nbOfFiles"] = count($fileMap) ;
+    $summary["files"] = array() ;
+    $languageDistribution=array() ;
+    foreach($fileMap as $fileShortName => $file) {
+      $fileSummary = $file->getSummary() ;
+      $language=$fileSummary['language'] ;
+      $filename=$fileSummary['filename'] ;
+      $summary['files'][$fileShortName]=array() ;
+      $summary['files'][$fileShortName]['filename']=$filename ;
+      $summary['files'][$fileShortName]['language']=$language ;      
+      
+      // initialize integer fields to 0 if necessary
+      if (!isset($languageDistribution[$language])) {
+        $languageDistribution[$language]['nbFiles']=0 ;
+        foreach($fileSummary as $key => $value) {
+          if (is_numeric($value)) {
+            $languageDistribution[$language][$key]=0;
+          }
+        }
+      }
+      $languageDistribution[$language]['files'][$fileShortName]['filename']=$filename;
+      // add integer fields.
+      $languageDistribution[$language]['nbFiles']++ ;
+      foreach($fileSummary as $key => $value) {
+        if (is_numeric($value)) {
+          $languageDistribution[$language][$key] += $value;
+        }
+      }
+    }
+    $summary['languages']=$languageDistribution ;
+  
+  
+    // Summarize informùation about direct subdirectories
+    $dirMap = $this->getDirectoryMap() ;
+    
+    $summary["nbOfSubDirectories"] = count($dirMap) ;
+    $summary["subDirectories"] = array() ;
+    foreach($dirMap as $dirShortName => $dir) {
+      $summary['subDirectories'][$dirShortName] = array() ;
+      $summary['subDirectories'][$dirShortName]['name'] = $dirShortName ;     
+    }
+    return $summary ;
+  }
+  
+  
+  public function getSummaryAsJson() {
+    return json_encode($this->getSummary()) ;
+  }
+  
+  
+  
+  
   /*-------------------------------------------------------------------------------
    *   HTML Representation of this directory
    *-------------------------------------------------------------------------------
    */  
-  
-  
-//   protected function getHTML_LinkToDirectory($outputBase,$sourceDirectory) {
-//     $dirname = $sourceDirectory->getDirectoryPath() ;
-//     return '<a href="'.addToPath($outputBase,$dirname).'">'.basename($dirname).'</a>' ; 
-//   }
-  
+    
   public function getHTML_Path($outputBase) {
     $html = '<div class="dirPath">' ;
     $ancestors=$this->getAncestors() ;
@@ -1465,36 +1522,50 @@ abstract class SourceDirectory {
       $basename = basename($ancestors[$i]->getDirectoryPath()) ;
       $relativePath = str_repeat('../', $nbAncestors-$i) ;
       $html .= '<a href="'.$relativePath.'">'.$basename.'</a>' ;
-      $html .= '</span>' ;
+      $html .= '</span> > ';
     }
-//     foreach($this->getAncestors() as $sourceDirectory) {
-//       $html .= '<span class="dirName">' ;
-//       $html .= $this->getHTML_LinkToDirectory($outputBase,$sourceDirectory) ;
-//       $html .= '</span>' ;
-//     }
-//     $html .= '<span class="dirName currentDirName">' ;
-    //$html .= $this->getHTML_LinkToDirectory($outputBase,$this) ;
-    $html .= '</span>' ;
-    
+   
+    $html .= '<span class="dirName currentDirName">' ;
+    $html .= '<b>'.basename($this->getDirectoryPath()).'</b>' ;
+    $html .= '</span>  ' ;
     $html .= '</div>' ;
     return $html ;
   }
   
+  public function getHTML_DirectorySummary($outputBase) {
+    $html = '<div class="dirSummary">' ;
+    $html .= '<a href="index.summary.json">summary</a>' ;
+    $html .= '</div>' ;  
+    return $html ;  
+  }
+  
   public function getHTML_Listing($outputBase) {
     // add the listing box
-    $html = '<div class="dirListing"><table>' ;
+    $html = '<div class="dirListing"><table border=1>' ;
     
     foreach($this->getDirectoryMap() as $shortdirname => $sourceDirectory) {
       $html .= '<tr class="dirItem">' ;
-      $html .= '<td><a href="'.$shortdirname.'/index.html">'.$shortdirname.'</a></td>' ;
+      $html .= '<td>DIR</td>' ;
+      $html .= '<td><a href="'.$shortdirname.'/index.html"><b>'.$shortdirname.'</b></a></td>' ;
       $html .= '<td><a href="'.$shortdirname.'/index.summary.json">summary</a></td>' ;
+      $html .= '<td></td>' ;
       $html .= '</tr>' ;
     }
     
     foreach($this->getFileMap() as $shortfilename => $someFile) {
       $html .= '<tr class="fileItem">' ;
+      if ($someFile instanceof SourceFile) {
+        $html .= '<td>SOURCE</td>' ;
+      } else {
+        $html .= '<td>NON SOURCE</td>' ;
+      }
       $html .= '<td><a href="'.$shortfilename.'.html">'.$shortfilename.'</a></td>' ;
-      $html .= '<td><a href="'.$shortfilename.'.summary.json">summary</a></td>' ;     
+      $html .= '<td><a href="'.$shortfilename.'.summary.json">summary</a></td>' ;
+      if ($someFile instanceof SourceFile) {
+        $html .= '<td><a href="'.$shortfilename.'.txt">txt</a></td>';     
+      } else {
+        $html .= '<td></td>' ;
+      }
       $html .= '</tr>' ;
     }
     
@@ -1507,56 +1578,21 @@ abstract class SourceDirectory {
     $html = '<div class="dirBox">' ;
     
     $html .= $this->getHTML_Path($outputBase) ;    
+    $html .= $this->getHTML_DirectorySummary($outputBase) ;
     $html .= $this->getHTML_Listing($outputBase) ;
     return $html ;
   }
   
-  public function getSummary() {
-    $summary = array() ;
-    $fileMap = $this->getFileMap() ;
-    $dirMap = $this->getDirectoryMap() ;
-    
-    
-    // Summarize information about files directly in this directory
-    $summary["nbOfFiles"] = count($fileMap) ;
-    
-    $languageDistribution=array() ;
-    foreach($fileMap as $fileShortName => $file) {
-      $fileSummary = $file->getSummary() ;
-      // echo "geting summary of $fileShortName" ;
-      // var_dump($fileSummary) ;
-      $language=$fileSummary['language'] ;
-      // initialize integer fields to 0 if necessary
-      if (!isset($languageDistribution[$language])) {
-        $languageDistribution[$language]['nbFiles']=0 ;
-        foreach($fileSummary as $key => $value) {
-          if (is_numeric($value)) {
-            $languageDistribution[$language][$key]=0;
-          }
-        }
-      }
-      // add integer fields. 
-      $languageDistribution[$language]['nbFiles']++ ;
-      foreach($fileSummary as $key => $value) {
-        if (is_numeric($value)) {
-          $languageDistribution[$language][$key] += $value;
-        }
-      }
-    }
-    $summary['languages']=$languageDistribution ;   
+  
+  
+  
+  
+  /*-------------------------------------------------------------------------------
+   *   Generation for this directory
+   *-------------------------------------------------------------------------------
+   */
+  
 
-    
-    // Summarize informùation about direct subdirectories 
-    $summary["nbOfSubDirectories"] = count($dirMap) ;
-    
-    return $summary ;
-  }
-  
-  
-  public function getSummaryAsJson() {
-    return json_encode($this->getSummary()) ;
-  }
-  
   /**
    * Generate elements for all files in this source directory
    * @param DirectoryName $outputDirectory
