@@ -425,7 +425,7 @@ function jsonLastErrorMessage() {
 
 function jsonDecodeAsMap($json) {
   $result = json_decode($json,true) ;
-  if (!is_array($json)) {
+  if (!is_array($result)) {
     die('jsonDecodeAsMap: cannot be decoded as a map : '.$json) ;
   }
   return $result ;
