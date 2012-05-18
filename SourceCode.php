@@ -2021,7 +2021,7 @@ class FileSystemPatternMatcher {
       if ($json === false) {
         die('Cannot read '.$rulesOrFile);
       }
-      $this->rules = json_decode($json) ;
+      $this->rules = jsonDecodeAsMap($json) ;
     } else {
       $this->rules = $rulesOrFile ;
     }

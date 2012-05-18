@@ -23,11 +23,7 @@ function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl=null) {
   if ($jsonSource===false) {
     die("jsonGraphToERGraph: Cannot open ".$jsonUrl) ;
   }
-  $json = json_decode($jsonSource,true) ;
-  if (! is_array($json)) {
-    if (DEBUG>10) var_dump($json) ;
-    die("jsonGraphToERGraph: incorrect json value in $jsonUrl : $jsonSource") ;
-  }
+  $json = jsonDecodeAsMap($jsonSource) ;
   // load the schema file
   $schemaSource = file_get_contents($schemaUrl) ;
   if ($schemaSource === false){
@@ -41,11 +37,7 @@ function jsonGraphToERGraph($jsonUrl, $schemaUrl, $entityJsonMappingUrl=null) {
     if ($mappingSource === false){
       die("jsonGraphToERGraph: cannot open $entityJsonMappingUrl") ;
     }
-    $entityJsonMapping = json_decode($mappingSource,true) ;
-    if (! is_array($entityJsonMapping)) {
-      if (DEBUG>10) var_dump($entityJsonMapping) ;
-      die("jsonGraphToERGraph: incorrect mapping in $entityJsonMappingUrl : $mappingSource") ;
-    }
+    $entityJsonMapping = jsonDecodeAsMap($mappingSource) ;
   } else {
     $entityJsonMapping = null ;
   }

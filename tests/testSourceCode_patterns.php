@@ -4,7 +4,7 @@ require_once 'main.config.local.php' ;
 require_once '../SourceCode.php' ;
 require_once '../CSV.php' ;
 define('OUTPUT_DIR','data/generated/sourceCodePatterns') ;
-define('RULES_FILE','data/input/sourceDirectoryMatchingRules.csv') ;
+define('RULES_FILE','data/input/sourceDirectoryMatchingRules.csv  ') ;
 if (!is_dir(addToPath(ABSPATH_BASE,'101results'))) {
   $dir101results = addToPath(ABSPATH_BASE,'../../101results') ;
   $realBaseDir = addToPath(ABSPATH_BASE,'../..') ;

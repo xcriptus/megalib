@@ -305,10 +305,7 @@ class TExprEvaluator {
   }
   
   public function doEvalJson($json,$tMapping) {
-    $expr=json_decode($json,true);
-    if ($expr===null) {
-      die("doEvalJson: error in json: $json") ;
-    }
+    $expr=jsonDecodeAsMap($json);
     return $this->doEval($expr,$tMapping) ;
   }
   

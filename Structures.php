@@ -422,50 +422,13 @@ function jsonLastErrorMessage() {
 }
 
 
-function json_encode_formatted($in,$indent=0) {
-  $_escape = function ($str) {
-    return preg_replace("!([\b\t\n\r\f\"\\'])!", "\\\\\\1", $str);
-  };
-  $out = '';
 
-  foreach ($in as $key=>$value) {
-    $out .= str_repeat("\t",$indent+1);
-    $out .= "\"".$_escape((string)$key)."\": ";
-
-    if (is_object($value) || is_array($value))
-    {
-      $out .= "\n";
-      $out .= json_encode_formatted($value, $indent + 1);
-    }
-    elseif (is_bool($value))
-    {
-      $out .= $value ? 'true' : 'false';
-    }
-    elseif (is_null($value))
-    {
-      $out .= 'null';
-    }
-    elseif (is_string($value))
-    {
-      $out .= "\"" . $_escape($value) ."\"";
-    }
-    else
-    {
-      $out .= $value;
-    }
-
-    $out .= ",\n";
+function jsonDecodeAsMap($json) {
+  $result = json_decode($json,true) ;
+  if (!is_array($json)) {
+    die('jsonDecodeAsMap: cannot be decoded as a map : '.$json) ;
   }
-
-  if (!empty($out))
-  {
-    $out = substr($out, 0, -2);
-  }
-
-  $out = str_repeat("\t", $indent) . "{\n" . $out;
-  $out .= "\n" . str_repeat("\t", $indent) . "}";
-
-  return $out;
+  return $result ;
 }
 
 /**
