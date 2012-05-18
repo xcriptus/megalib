@@ -378,6 +378,7 @@ function saveFile($filename,$content,&$results=array()) {
   }
   $n = file_put_contents($filename,$content) ;
   $results[$filename]=($n?$n:"error: cannot create file") ;
+  return $n!==false ;
 }
 
 
