@@ -5,7 +5,7 @@ require_once '../SourceCode.php' ;
 require_once '../CSV.php' ;
 define('OUTPUT_DIR','data/generated/sourceCodePatterns') ;
 define('RULES_FILE','data/input/FileSystemPattern.csv') ;
-define('EXPLORE_DIR','../../101results/101repo/contributions') ;  // /gwtTree
+define('EXPLORE_DIR',ABSPATH_BASE.'101results/101repo/contributions') ;  // /gwtTree
 echo '<h2>Exploring and matching the directory '.EXPLORE_DIR.'</h2>' ;
 $matcher = new FileSystemPatternMatcher(RULES_FILE) ;
 $groups=array(
