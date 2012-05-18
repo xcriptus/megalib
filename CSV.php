@@ -1,4 +1,7 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
+
+require_once '../Files.php' ;
+
 /**
  * Basic support for CSV files.
  * WARNING, table rows and columns start as 1, but the header is a 
@@ -69,10 +72,20 @@ class CSVFile {
    * @param Boolean? $removeBlankCells if true the blank cells
    * (that is those with en empty string as value) will not lead
    * to an entry in the JSON. 
+   * @param $beautify Boolean! if true the resulting json is intended.
    * @return JSON
    */
-  public function getJSON($removeBlankCells=true) {
-    return json_encode($this->getListOfMaps()) ;
+  public function getJSON($removeBlankCells=true,$beautify=true) {
+    $json = json_encode($this->getListOfMaps()) ;
+    if ($beautify) {
+      $json = jsonBeautifier($json) ;
+    }
+    return $json ;
+  }
+  
+  public function saveAsJSON($filename,&$results,$removeBlankCells=true,$beautify=true) {
+    $json = $this->getJSON($removeBlankCells,$beautify) ;
+    return saveFile($filename,$content,$results) ;
   }
   
   /**
