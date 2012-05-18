@@ -5,15 +5,18 @@ require_once '../SourceCode.php' ;
 require_once '../CSV.php' ;
 define('OUTPUT_DIR','data/generated/sourceCodePatterns') ;
 define('RULES_FILE','data/input/FileSystemPattern.csv') ;
-$root = addToPath(ABSPATH_BASE,'101results') ;
-if (!is_dir($root)) {
-  $root = addToPath(ABSPATH_BASE,'../../101results') ;
+if (!is_dir(addToPath(ABSPATH_BASE,'101results'))) {
+  $dir101results = addToPath(ABSPATH_BASE,'../../101results') ;
+  $realBaseDir = addToPath(ABSPATH_BASE,'../..') ;
+} else {
+  $dir101results = addToPath(ABSPATH_BASE,'101results') ;
+  $realBaseDir = ABSPATH_BASE ;
 }
-$exploreDir = addToPath($root,'101repo/contributions') ;  // /gwtTree
+$exploreDir = addToPath($dir101results,'101repo/contributions') ;  // /gwtTree
 
 echo '<h2>Exploring and matching the directory '.$exploreDir.'</h2>' ;
 $matcher = new FileSystemPatternMatcher(RULES_FILE) ;
-$groups=array(
+$matchedFilesGrouping=array(
     'languages' => 
        array(
            'select' => array('locator','geshiLanguage'),
@@ -25,5 +28,5 @@ $groups=array(
            'groupedBy' => 'technology'
        )
  ) ;
-$r = $matcher->generate($exploreDir,OUTPUT_DIR,$groups) ;
+$r = $matcher->generate($exploreDir,OUTPUT_DIR,$matchedFilesGrouping,array('language','technology')) ;
 echo 'files generated are in <a href="'.OUTPUT_DIR.'" target="_blank">'.OUTPUT_DIR.'</a>' ;

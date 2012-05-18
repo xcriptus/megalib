@@ -1779,8 +1779,32 @@ class SourceTopDirectory extends SourceDirectory {
 class FileSystemPatternMatcher {
   protected $rules ;
   
+  public function getRules() {
+    return $this->rules ;
+  }
+  
+  public function getRulesNumber() {
+    return count($this->getRules()) ; 
+  }
+  
+  public function getRulesSummary($groups=array()) {
+    $summary['rules']=$this->rules ;
+    foreach($groups as $group) {
+      $summary[$group] = groupedBy($group,$this->rules) ;
+    }
+    return $summary ;
+  }
+  
+  public function getRulesAsJSON($beautify=true) {
+    $json = jsonjson_encode($this->getRules()) ;
+    if ($beautify) {
+      $json = jsonBeautifier($json) ;
+    }
+    return $json ;
+  }
+  
   public function getPatternKeys() {
-    return array('type','regexpr','regexprLength') ; // ,'regexprKeys'
+    return array('patternRestriction','patternType','pattern','patternLength') ; // ,'regexprKeys'
   }
   
   /**
@@ -1854,12 +1878,11 @@ class FileSystemPatternMatcher {
   public function matchPath($type,$path,$merge=true) {
     $results = array() ;
     foreach ($this->rules as $rule) {
-      if ($type===$rule['type']) {
-        $regexpr = '#^'.$rule['regexpr'].'$#' ;        
-        if (preg_match($regexpr,$path,$matches)) {
+      if ($type===$rule['patternRestriction']) {
+        if (matchPattern($rule['patternType'],$rule['pattern'],$path,$matches)) {
           $result = $rule ;
           $result['matchedString']=$matches[0] ;
-          $result['regexprLength']=strlen($rule['regexpr']) ;
+          $result['patternLength']=strlen($rule['pattern']) ;
           $results[] = $result ;
         }
       }
@@ -1916,7 +1939,7 @@ class FileSystemPatternMatcher {
           'filesMatched' => $filesMatched,
           'filesNotMatched'=> $filesNotMatched,
           'extensionsOfFilesNotMatched' => $extensionsOfFilesNotMatched,
-          'basenamesOfFilesNotMatched' => $basenamesOfFilesNotMatched,
+          'basenamesOfFilesNotMatched' => $basenamesOfFilesNotMatched
         ) ;
       if (isset($groupSpecifications) 
           && is_array($groupSpecifications) && count($groupSpecifications)>=1) {
@@ -1925,13 +1948,22 @@ class FileSystemPatternMatcher {
       return $output ;
   }
     
-  public function generate($rootDirectory,$outputbase=null,$groupSpecifications=array()) {
+  public function generate(
+      $rootDirectory,
+      $outputbase=null,
+      $matchedFilesGroupSpecifications=array(),
+      $rulesGroups
+      ) {
     $html =  "<h2>Rules</h2>" ;
     $html .= '<b>'.count($this->rules).'</b> rules defined<br/>' ;
     $html .= mapOfMapToHTMLTable($this->rules,'',true,true,null,2) ;
     $output['rules.html'] = $html ;
     
-    $r = $this->matchFileSystem($rootDirectory,$groupSpecifications) ;
+    $rulesSummary = $this->getRulesSummary($rulesGroups) ;
+    $output['rulesSummary.json'] = jsonBeautifier(json_encode($rulesSummary)) ;
+    
+    
+    $r = $this->matchFileSystem($rootDirectory,$matchedFilesGroupSpecifications) ;
     $html = '' ;
     foreach ($r['filesMatched'] as $fileMatched => $matchingDescription) {
       $html .= "<hr/><b>".$fileMatched."</b><br/>" ;

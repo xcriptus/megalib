@@ -68,6 +68,44 @@ function withoutOptionalSuffix($str, $suffix) {
   return endsWith($str,$suffix) ? substr($str,0,strlen($str)-strlen($suffix)) : $str  ;
 }
 
+/**
+ * Check if a string match a pattern. Different type of patterns
+ * languages are supported.
+ * @param 'name'|'suffix'|'prefix'|'regexpr'|'path'! $patternType
+ * @param String! $pattern 
+ * @param String! $string string to match
+ * @param List*(String!) $matches the resulting matches if any.
+ * $matches[0] is always the whole string matched. Then the next
+ * elements are parts of match according to the expression type
+ * @return Boolean! true if the string matches the pattern or
+ * false otherwise.
+ */
+function matchPattern($patternType,$pattern,$string,&$matches) {
+  $matches=array() ;
+  switch ($patternType) {
+    case 'name':
+      $result = ($string === $pattern) ;
+      $matches[0]=$string ;
+      break ;
+    case 'suffix':
+      $result = endsWith($string,$pattern) ;
+      $matches[0]=$string ;
+      $matches[1]=substr($string,0,strlen($string)-strlen($pattern)) ;
+      break ;
+    case 'prefix':
+      $result = startsWith($string,$pattern) ;
+      $matches[0]=$string ;
+      $matches[1]=substr($string,strlen($pattern)) ;      
+      break ;
+    case 'regexpr':
+      $result = preg_match($pattern,$string,$matches) ;
+      break ;
+    case 'path':
+    default :
+      die('matchPattern: unsupported pattern type '.$patternType) ;
+  }
+  return $result ;
+}
 
 /**
  * Compose two strings according by a given mode.
