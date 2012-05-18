@@ -7,7 +7,7 @@ define('OUTPUT_DIR','data/generated/sourceCodePatterns') ;
 define('RULES_FILE','data/input/FileSystemPattern.csv') ;
 $root = addToPath(ABSPATH_BASE,'101results') ;
 if (!is_dir($root)) {
-  $root = addToPath(ABSPATH_BASE,'../101results') ;
+  $root = addToPath(ABSPATH_BASE,'..') ;
 }
 $exploreDir = addToPath($root,'101repo/contributions') ;  // /gwtTree
 
