@@ -1,6 +1,6 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
-require_once '../Files.php' ;
+require_once 'Files.php' ;
 
 /**
  * Basic support for CSV files.
