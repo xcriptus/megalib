@@ -2008,16 +2008,25 @@ class FileSystemPatternMatcher {
     return $r ;
   }
   
-  public function __construct($rulesOrCSVFile) {
-    if (is_string($rulesOrCSVFile) && endsWith($rulesOrCSVFile,'.csv')) {
+  public function __construct($rulesOrFile) {
+    if (is_string($rulesOrFile) && endsWith($rulesOrFile,'.csv')) {
       // this is a csv file. Load it and convert it to rules
       $csv = new CSVFile() ;
-      if (! $csv->load($rulesOrCSVFile)) {
-        die('Cannot read '.$rulesOrCSVFile);
+      if (! $csv->load($rulesOrFile)) {
+        die('Cannot read '.$rulesOrFile);
       }
       $this->rules = $csv->getListOfMaps() ;   
+    } elseif (is_string($rulesOrFile) && endsWith($rulesOrFile,'.rules.json')) {
+      $json = file_get_contents($rulesOrFile) ;
+      if ($json === false) {
+        die('Cannot read '.$rulesOrFile);
+      }
+      $this->rules = json_decode($json) ;
     } else {
-      $this->rules = $rules ;
+      $this->rules = $rulesOrFile ;
+    }
+    if (!is_array($this->rules)) {
+      die('incorrect set of rules') ;
     }
   }
 }
