@@ -1,6 +1,121 @@
 <?php
 
 /**
+ * type PatternType ==
+ *          'name'
+ *        | 'suffix'
+ *        | 'prefix' 
+ *        | 'regexpr'
+ *        | 'path'!
+ * type Pattern ==
+ *          RegExpr
+ *        | PatternType ':' String       
+ * 
+ */
+
+/**
+ * Match a string against a pattern. Different type of pattern
+ * languages are supported. Matching string segments are returned.
+ * 
+ * @param Pattern! $pattern
+ * 
+ * @param String! $string string to match
+ * 
+ * @param out>List*(String!)? $matches the resulting matches if any.
+ * $matches[0] is always the whole string matched. Then the next
+ * elements are parts of match according to the expression type
+ * @return Boolean! true if the string matches the pattern or
+ * false otherwise.
+ */
+function matchPattern($pattern,$string,&$matches=null) { 
+  $matches=array() ;
+  // decompose the pattern if it is prefixed. otherwise regexpr is the default.
+  if (preg_match('/^(name|suffix|prefix|regexpr|path):(.*)$/',$pattern,$r)) {
+    $patternType = $r[1] ;
+    $patternExpr = $r[2] ;
+  } else {
+    $patternType = 'regexpr' ;
+    $patternExpr = $pattern ;
+  }
+  switch ($patternType) {
+    case 'name':
+      $result = ($string === $patternExpr) ;
+      $matches[0]=$string ;
+      $matches[1]=$string ;
+      break ;
+    case 'suffix':
+      $result = endsWith($string,$patternExpr) ;
+      $matches[0]=$string ;
+      $matches[1]=substr($string,0,strlen($string)-strlen($patternExpr)) ;
+      break ;
+    case 'prefix':
+      $result = startsWith($string,$patternExpr) ;
+      $matches[0]=$string ;
+      $matches[1]=substr($string,strlen($patternExpr)) ;
+      break ;
+    case 'regexpr':
+      $result = preg_match($patternExpr,$string,$matches) ;
+      break ;
+    case 'path':
+    default :
+      die('matchPattern: unsupported pattern type '.$patternType) ;
+  }
+  return $result ;
+}
+
+/**
+ * Match the given pattern and return the template where string
+ * segments have replaced ${n} variables. Return null in case
+ * of no match.
+ * @param Pattern! $pattern
+ * @param String! $string
+ * @param Template! $template
+ * @return TResult?
+ */
+function matchToTemplate($pattern,$string,$template) {
+  if (matchPattern($pattern,$string,$matches)) {
+    return doEvalTemplate($template,$matches) ;
+  } else {
+    return null ;
+  }
+}
+
+
+/**
+ * Evaluate a template according to a given map.
+ * This is a shorthand to the use of the class TExprEvaluator.
+ * 
+ * @param Template $template
+ * @param TMapping $map
+ * @param inout>TExprEvaluator? $evaluator if no evaluator is provided then
+ * the function create one and return it. Otherwise use the evalutor provided
+ * to eval the template.
+ * @return TResult!
+ */
+function doEvalTemplate($template,$map,&$evaluator=null) {
+  // fast track if the template is indeed a constant
+  if (TExprEvaluator::isConstant($template)) {
+    return $template ;
+  } else {
+    if (! isset($evaluator)) {
+      $evaluator = new TExprEvaluator() ;
+    }
+    return $evaluator->doEval($template,$map) ;
+  }
+}
+
+/**
+ * 
+ * 
+ * 
+ *        ------------------------------------------------------------------------
+ *                     TODO : complete this description with the various
+ *                     elements (CONCAT, MATCH, LIST, MAP,...
+ *                     TODO : Support simple notation (sn) shown in the tests
+ *        ------------------------------------------------------------------------
+
+
+
  * Evaluate a template with some variables of the form ${xxx}.
  * Return either a string when a map is given, an array of string
  * when an array of maps is given, or a map of string if an
@@ -15,24 +130,49 @@
  * 
  * TODO: currently rest is ignore. Could be used for more bash like expr
  * TODO: add simple $xxx syntax
+ * TODO: integrate this with patternMatch in Strings.h
  * 
  * type Template == string // containing potentially some TVarExpr
+ * 
  * type TVarMap = Map(String,Template)
+ * 
  * type TMapping =
  *          TVarMap
  *        | List*(TVarMap)
  *        | Map*(String!,TVarMap!)
+ * 
  * type TResult =
  *          String
  *        | List*(String!)
  *        | Map*(String!, String)
+ * 
  * type TReplacement = Map{
  *        'expr' => TVarExpr!,
  *        'result' => Template!  }
+ *        
+ *        ------------------------------------------------------------------------
+ *                     TODO : complete this description with the various
+ *                     elements (CONCAT, MATCH, LIST, MAP,...
+ *                     TODO : Support simple notation (sn) shown in the tests
+ *        ------------------------------------------------------------------------
  *
  */
 
 class TExprEvaluator {
+  
+  /**
+   * @param Template $expr indicates if the template is in fact a constant
+   * in which case there is no need to make some complex computation.
+   * @return Boolean! true if the template is a constant, false otherwise
+   */
+  public static function isConstant($expr) {
+    return
+         is_string($expr) && (strpos($expr,'$')===false) 
+      || is_bool($expr)
+      || is_numeric($expr) 
+      || is_array($expr) && count($expr)===0 ;
+  }
+  
   /**
    * @var String Value used to replace undefined variable. 
    * It should not contains a variable that is not defined otherwise 
@@ -86,6 +226,7 @@ class TExprEvaluator {
    * 
    * @param Template $template the template to use.
    */
+  
   protected function evalString($template,$map,$level) {
     $this->t($level,"BEGIN evalString: '$template'") ;
     $regexpr='/\$\{([a-zA-Z0-9_]+)([^}]*)\}/' ;
@@ -233,6 +374,19 @@ class TExprEvaluator {
     return $result ;
   }
   
+  
+  /**
+   * Eval an expression for a given map
+   * 
+   * @param String|Numeric|Map*(Scalar,Any)|TMatchExpr|TConcatExpr|TListExpr| $expr
+   * 
+   * @param unknown_type $map
+   * 
+   * @param unknown_type $level Do not use this parameter. It is just defined to
+   * indicates the level in case of recursive expression.
+   * 
+   * @return TResult!
+   */
   protected function evalExpr($expr,$map,$level=0) {
     if (is_string($expr)) {
       return $this->evalString($expr,$map,$level) ;
@@ -261,8 +415,10 @@ class TExprEvaluator {
       return $this->evalMap($expr,$map,$level) ;
     }
   }
+  
 
   /**
+   * @param $expr
    * 
    * @param TMapping $tMapping the mapping(s) containing variables. It could
    * be either a single map, or a list or a map of map. In this later case
@@ -270,6 +426,7 @@ class TExprEvaluator {
    * Note that the variable $_ will be replaced by "_", the integer or
    * string of the map for each successive string production.
    * in each step. Default to 10000. Die if this limit is reached.
+   * 
    * @return TResult! either string, a list of string or a map of string depending
    * the type of the parameter $tMapping
    */
@@ -277,6 +434,11 @@ class TExprEvaluator {
     $this->undefinedVariables = array() ;
     $this->replacements = array() ;
     $this->trace = "" ;
+    
+    // fast track if this is a constant.
+    if (TExprEvaluator::isConstant($expr)) {
+      return $expr ;
+    }  
     
     // first convert the tMapping parameter in an array to simplify
     $isSimpleMap = !is_map_of_map($tMapping) ;
@@ -304,11 +466,26 @@ class TExprEvaluator {
     }
   }
   
+  
+  /**
+   * @param unknown_type $json
+   * 
+   * @param TMapping $tMapping the mapping(s) containing variables. It could
+   * be either a single map, or a list or a map of map. In this later case
+   * a list or map of string will be returned instead of a string.
+   * Note that the variable $_ will be replaced by "_", the integer or
+   * string of the map for each successive string production.
+   * in each step. Default to 10000. Die if this limit is reached.
+   * 
+   * @return TResult! either string, a list of string or a map of string depending
+   * the type of the parameter $tMapping
+   */
   public function doEvalJson($json,$tMapping) {
     $expr=jsonDecodeAsMap($json);
     return $this->doEval($expr,$tMapping) ;
   }
   
+
   public function __construct() {
     
   }

@@ -13,6 +13,7 @@ require_once 'Strings.php' ;
 require_once 'Structures.php' ;
 require_once 'Environment.php' ;
 require_once 'HTML.php' ;
+require_once 'TExpr.php' ;
 
 
 /**
@@ -200,9 +201,9 @@ function addToPath($path,$path2) {
  * @param Seq('dir','file','link','|')? $typeFilter the type of items to select separated by |
  * if various types are accepted. By default all types are accepted.
  * 
- * @param RegExpr? $nameRegExpr if not null a regular expression that will be used as
+ * @param Pattern? $namePattern if not null a pattern (see TExpr.php) that will be used as
  * a filter on the item name. The matching is done only on the file name, without the path.
- * $nameRegExpr should be a string of the form '/.../'. Default to null.
+ * $nameRegExpr should be a string of the form '/.../' or 'suffix:.c', 'etc.'. Default to null.
  * 
  * @param Boolean? $ignoreDotFiles indicates if hidden items (.xxx) should be ignored. 
  * Default to true, so hidden items are ignored by default. 
@@ -219,7 +220,7 @@ function addToPath($path,$path2) {
 function /*Set*<String!>?*/ listFileNames(
     $directory, 
     $typeFilter="dir|file|link|error",
-    $nameRegExpr=NULL,
+    $namePattern=NULL,
     $ignoreDotFiles=TRUE,
     $prefixWithDirectory=TRUE,
     $ignoreDotDirectory=TRUE) {
@@ -242,7 +243,7 @@ function /*Set*<String!>?*/ listFileNames(
                   && in_array($type,$allowedtypes) 
                   && ($type!=='file' || $ignoreDotFiles!==TRUE || substr($file,0,1)!='.')
                   && ($type!=='dir' || $ignoreDotDirectory!==TRUE || substr($file,0,1)!='.')
-                  && (!isset($nameRegExpr) || preg_match($nameRegExpr,$file)) ; 
+                  && (!isset($namePattern) || matchPattern($namePattern,$file)) ; 
       if ($selected) {
         $paths[] = ($prefixWithDirectory ? addToPath($directory,"") : "") .$file ;
       }
@@ -264,9 +265,9 @@ function /*Set*<String!>?*/ listFileNames(
  * @param Seq('dir','file','link','error','|')? $typeFilter the type of items to select separated by |
  * if various types are accepted. By default all types are accepted.
  * 
- * @param RegExpr? $nameRegExpr if not null a regular expression that will be used as
+ * @param Pattern? $namePattern if not null a pattern (see TExpr.php) that will be used as
  * a filter on the item name. The matching is done only on the file name, without the path.
- * $nameRegExpr should be a string of the form '/.../'. Default to null.
+ * $nameRegExpr should be a string of the form '/.../' or 'suffix:.c', 'etc.'. Default to null.
  * 
  * @param Boolean? $ignoreDotFiles indicates if hidden items (.xxx) should be ignored. 
  * Default to true, so hidden items are ignored by default. 
@@ -279,10 +280,11 @@ function /*Set*<String!>?*/ listFileNames(
  * 
  * @return List*(String!)? The list of selected items or NULL if $url cannot be opened
  */
+
 function listAllFileNames(
     $root,
     $typeFilter="dir|file|link|error",
-    $nameRegExpr=NULL,
+    $namePattern=NULL,
     $ignoreDotFiles=TRUE,
     $prefixWithDirectory=TRUE,
     $followLinks=false,
@@ -296,13 +298,13 @@ function listAllFileNames(
     return null ;
   } else {
     // get selected children according to the filter
-    $selectedRootChildren = listFileNames($root,$typeFilter,$nameRegExpr,$ignoreDotFiles,$prefixWithDirectory) ;
+    $selectedRootChildren = listFileNames($root,$typeFilter,$namePattern,$ignoreDotFiles,$prefixWithDirectory) ;
     $result = $selectedRootChildren ;
     foreach ($subdirectories as $subdirectory) {
       $subdirectorySelectedChildren = listAllFileNames(
           $subdirectory,
           $typeFilter,
-          $nameRegExpr,
+          $namePattern,
           $ignoreDotFiles,
           $prefixWithDirectory) ;
       if ($subdirectorySelectedChildren !== null) {
@@ -379,6 +381,19 @@ function saveFile($filename,$content,&$results=array()) {
   $n = file_put_contents($filename,$content) ;
   $results[$filename]=($n?$n:"error: cannot create file") ;
   return $n!==false ;
+}
+
+/**
+ * Load the content of a file or die if the file does not exist.
+ * @param Filename $filename
+ * @return String! the content of the file
+ */
+function loadFile($filename,&$results=array()) {
+  $content = file_get_contents($filename) ;
+  if ($content === false) {
+    die('loadFile: cannot read file '.$filename) ;
+  }
+  return $content ;
 }
 
 

@@ -1,5 +1,6 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
+require_once 'Files.php' ;
 
 
 /*----------------------------------------------------------------------------------
@@ -405,6 +406,16 @@ function columnValuesFromArrayMap($arrayMap,$key,$distinct=false) {
 
 
 
+
+
+
+
+/*----------------------------------------------------------------------------------
+ *     Json processing
+ *----------------------------------------------------------------------------------
+ */
+
+
 /**
  * Return the last error message produced by json_encode and json_decode.
  * @return String! Error message.
@@ -423,19 +434,36 @@ function jsonLastErrorMessage() {
 
 
 
-function jsonDecodeAsMap($json) {
+/**
+ * Decode a json string and die if the result is not a map
+ * @param JSON! $json
+ * @param $die 
+ * @return Map$(Scalar!,Any!)! the map
+ * @die if the results is not an map
+ */
+function jsonDecodeAsMap($json,$dieIfInvalidJson=true) {
   $result = json_decode($json,true) ;
-  if (!is_array($result)) {
+  if ($dieIfInvalidJson && !is_array($result)) {
     die('jsonDecodeAsMap: cannot be decoded as a map : '.$json) ;
   }
   return $result ;
 }
 
+
+/**
+ * Load a json file and decoded it as a map. Die in case of error.
+ * @param Filename! $jsonFilename
+ * @return Map$(Scalar!,Any!)! the map
+ * @die if the file doesn't exist or is not a valid json, or is not an map
+ */
+function jsonLoadFileAsMap($jsonFilename,$dieIfInvalidJson=true) {
+  $json = loadFile($jsonFilename,$results) ;
+  return jsonDecodeAsMap($json,$dieIfInvalidJson) ;
+}
+
 /**
  * Indents a flat JSON string to make it more human-readable.
- *
  * @param string $json The original JSON string to process.
- *
  * @return string Indented version of the original JSON string.
  */
 function jsonBeautifier($json) {
@@ -485,8 +513,122 @@ function jsonBeautifier($json) {
 
     $prevChar = $char;
   }
-
   return $result;
+}
+
+/**
+ * Encode a value in json and beautify it if requested
+ * @param Any $value
+ * @param Boolean? $beautify whether the json results should be indented or not.
+ * Default to false.
+ * @return JSON! The json string.  
+ * @Die in case of error.
+ */
+function jsonEncode($value, $beautify=false) {
+  $json = json_encode($value) ;
+  if ($json===null) {
+    $msg = jsonLastErrorMessage() ;
+    die('jsonEncode: '.msg) ;
+  }
+  if ($beautify) {
+    $json=jsonBeautifier($json) ;
+  }
+  return $json ;
+}
+
+/**
+ * Save a value (typically a map) as a json file.
+ * @param Filename! $filename The name of the file to save. 
+ * Directory will be created recursively if necessary. 
+ * @param Any! $value the value to save. Typically a map.
+ * @param inout>Map(Filename,Integer|String) $results an array in which
+ * results are accumulated. That is if the filename is save then
+ * its name will be added in the map with the number of byte saved
+ * otherwise an error message will be returned. Use is_string to
+ * check if an error occured.
+ * @param Boolean? $beautify whether the json results should be indented or not.
+ * Default to false.
+ * @return Boolean! true if the file as been saved successfully,
+ * false otherwise. It is not necessary to test this value after
+ * each file save as the result is keep anyway in $results.
+ */
+function saveAsJsonFile($filename,$value,&$results=array(),$beautify=false) {
+  $json = jsonEncode($value,$beautify) ;
+  return saveFile($filename,$json,$results) ;
+}
+
+
+/**
+ * Save a map to as as json file or merge this map to the existing map if the file already
+ * exist. By contrast to saveAsJsonFile that override an potential existing file, here the
+ * previous and current value are merged.
+ * @param Filename! $filename name of the file to save or to merge
+ * @param Map*(Scalar!,Any!)! $map map to save or to merge
+ * @param Function? $merger the function to merge the two arrays. Default to "array_merge_recursive"
+ * but could be set also to "array_merge" or any other functions taking two maps and returning a map. 
+ * @param Boolean? $beautify whether the json results should be indented or not.
+ * Default to false.
+ * @return Boolean! true in case of successof the file writing, false otherwise. It is not
+ * necessary to test the result directly as it is recorded in $results anyway.
+ * @die if the file exist and is not a valid json map.
+ */
+function saveOrMergeJsonFile($filename,$map,$merger='array_merge_recursive',&$results=array(),$beautify=false) {
+  if (file_exists($filename)) {
+    // the file exist, so load the existing structure
+    $existingMap = jsonLoadFileAsMap($filename) ;
+    $newMap = $merger($existingMap,$map) ;
+    $result = saveAsJsonFile($filename,$newMap,$results,$beautify) ;
+  } else {
+    $result = saveAsJsonFile($filename,$map,$results,$beautify) ;
+  }
+  return $result ;
+}
+
+
+/**
+ * 
+ * @param unknown_type $root
+ * @param unknown_type $nameRegExpr
+ * @param unknown_type $keyTemplate
+ * @param unknown_type $ignoreDotFiles
+ * @param unknown_type $followLinks
+ * @param unknown_type $ignoreDotDirectories
+ * @die if the directory is not readable
+ * @die if one of the files found is not a json map
+ */
+function mapFromJsonDirectory(
+    $root,
+    $recursive=true,
+    $namePattern='/\.json$/',
+    $keyTemplate='${0}',
+    $ignoreDotFiles=false,
+    $followLinks=false,
+    $ignoreDotDirectories=true) {
+  // get the list of all filenames with the parameters above
+  // except that we defintively need the full file name 
+  
+  // TODO this should be changed in listAllFileNames
+  if ($recursive) {
+    $jsonFullFilenames = listAllFileNames($root,'file',$namePattern,$ignoreDotFiles,true,$followLinks,$ignoreDotDirectories) ;
+  } else {
+    $jsonFullFilenames = listFileNames($root,'file',$namePattern,$ignoreDotFiles,true,$ignoreDotDirectories) ;
+  }
+  
+  if ($jsonFullFilenames === null) {
+    die('jsonFromJsonDirectory: directory '.$root.' cannot be read') ;
+  }
+  $results = array () ;
+  foreach ($jsonFullFilenames as $jsonFullFilename) {
+    $map = jsonLoadFileAsMap($jsonFullFilename,false) ;
+    
+    if ($map===null) {
+      echo "<li>File $jsonFullFilename contains is not a valid json</li>" ;
+      $map = array("ERROR") ;
+    } else 
+    $key = matchToTemplate($namePattern,$jsonFullFilename,$keyTemplate) ;
+    $results[$key] = $map ;
+  }
+  return $results ;
 }
 
 /*----------------------------------------------------------------------------------
@@ -620,6 +762,9 @@ function mapSummary($map,$valueIfEmpty=null,$returnKind=false,$returnSets=false)
 }
 
 
+
+
+
 /**
  * @param Any? $value a value or null
  */
@@ -648,4 +793,190 @@ function valueSummary($value,$valueIfEmpty=null,$returnKind=false,$returnSets=fa
   } else {
     return mixedValueSummary($value,$valueIfEmpty,$returnKind) ;
   }
+}
+
+
+
+/**
+ * Concat an list of string with an optional separators,
+ * begining string and trailing string.
+ * @param List*(String) $list An array of strings
+ * @param String? $separator default to ""
+ * @param String? $begin defaut to ""
+ * @param String? $end default to ""
+ * @return String! the concatenation of the string 
+ */
+function array_concat($list,$separator='',$begin='',$end='') {
+  return implode('',$list) ;
+}
+
+function array_avg($list) {
+  $n = count($list) ;
+  if ($n===0) {
+    return null ;
+  } else {
+    return array_sum($list)/$n ;
+  }
+}
+
+function array_fusion($map1,$map2,$recursive=true) {
+  $result = $map1 ;
+  foreach($map2 as $key=>$val2) {
+    if (!isset($map1[$key])) {
+      $result[$key] = $val2 ; 
+    } else {
+      if (is_integer($key)) {
+        $result[] = $val2 ;
+      } else {
+        $val1 = $map1[$key] ;
+        if (is_int_map($val1) && is_int_map($val2)) {
+          $result[$key] = array_merge($val1,$val2) ;
+        } elseif (is_string_map($val1) && is_string_map($val2)) {
+          if ($recursive) {
+            $result[$key] = array_fusion($val1,$val2,$recursive) ;
+          } else {
+            $result[$key] = $val2 ;
+          }
+        } else {
+          $result[$key] = $val2 ;
+        }
+      }
+    } 
+  }
+  return $result ;
+}
+
+function array_fold_list($list,$fun,$init) {
+  $acc = $init ;
+  foreach($list as $elem) {
+    $acc = $fun($acc,$elem) ;
+  }
+  return $acc ;
+}
+
+function array_fusion_all($listOfMap) {
+  return array_fold_list($listOfMap,"array_fusion",array()) ;
+}
+
+function array_merge_all($listOfMap) {
+  return array_fold_list($listOfMap,"array_merge",array()) ;
+}
+
+function array_replace_all($listOfMap) {
+  return array_fold_list($listOfMap,"array_replace",array()) ;
+}
+
+function array_count_all($listOfMap) {
+  $acc = 0 ;
+  foreach($listOfMap as $map) {
+    $acc += count($map) ;
+  }
+  return $acc ;
+}
+
+
+
+/*----------------------------------------------------------------------------------
+ *     Synthesis of trees of maps
+ *----------------------------------------------------------------------------------
+ */
+
+
+class Synthesizer {
+
+  /*----------------------------------------------------------------------------------
+   *     Aggregating functions.
+   *----------------------------------------------------------------------------------
+   */
+  
+  
+  /**
+   * @param Fun:List*(Any1)->Any2 $aggregator
+   * @param unknown_type $rootKey
+   * @param unknown_type $value
+   * @param unknown_type $childValues
+   */
+  public static function aggregate($aggregator,$rootKey,$value,$childValues) {
+    $values = array($value) ;
+    foreach ($childValues as $childId => $childValue) {
+      $values[] = $childValue ;
+    }
+    return $aggregator($values) ;
+  }
+  
+  public static function count($rootKey,$value,$childValues) {
+    return self::aggregate('count',$rootKey,$value,$childValues);
+  }
+  
+  public static function sum($rootKey,$value,$childValues) {
+    return self::aggregate('array_sum',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function product($rootKey,$value,$childValues) {
+    return self::aggregate('array_product',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function concat($rootKey,$value,$childValues) {
+    return self::aggregate('array_concat',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function min($rootKey,$value,$childValues) {
+    return self::aggregate('min',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function max($rootKey,$value,$childValues) {
+    return self::aggregate('max',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function avg($rootKey,$value,$childValues) {
+    return self::aggregate('array_avg',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function mergeAll($rootKey,$value,$childValues) {
+    return self::aggregate('array_merge_all',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function replaceAll($rootKey,$value,$childValues) {
+    return self::aggregate('array_replace_all',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function fusionAll($rootKey,$value,$childValues) {
+    return self::aggregate('array_fusion_all',$rootKey,$value,$childValues) ;
+  }
+  
+  public static function countAll($rootKey,$value,$childValues) {
+    return self::aggregate('array_count_all',$rootKey,$value,$childValues);
+  }  
+  
+  
+  
+  /*----------------------------------------------------------------------------------
+   *     
+   *----------------------------------------------------------------------------------
+   */
+  
+  public static function prefixAll($rootKey,$map,$childMaps,$separator='/') {
+    $results = $map ;
+    foreach ($childMaps as $childId => $childMap) {
+      foreach ($childMap as $key => $value) {
+        $results[$childId.$separator.$key] = $value ;
+      }
+    }
+    return $results ;
+  }
+  
+}
+
+
+function synthesizeMap($rootMap,$childMaps,$attibuteSynthesizer) {
+  $result=array() ;
+  foreach($rootMap as $rootKey => $rootValue) {
+    $childValues = array() ;
+    foreach($childMaps as $childId => $childMap) {
+      $childValues[$childId]=$childMap[$rootKey] ;
+    }
+    $newmap = $attibuteSynthesizer($rootKey,$rootValue,$childValues) ;
+    $result=array_fusion($result,$newmap) ;
+  }
+  return $result ;
 }

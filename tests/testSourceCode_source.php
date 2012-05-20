@@ -38,9 +38,9 @@ function processSourceCode($sources,$outputDirectory) {
     echo 'This is a simplified summary nicer to display' ;
     var_dump (SourceCode::simplifiedSummary($summary)) ;
     
-    echo "<h2>Generation from SourceFile in $outputDirectory</h2>" ;
-    $sourcefile = new SourceFile($src['s']) ;
-    $sourcefile->generate($outputDirectory) ;
+    // echo "<h2>Generation from SourceFile in $outputDirectory</h2>" ;
+    // $sourcefile = new SourceFile($src['s']) ;
+    // $sourcefile->generate($outputDirectory) ;
   }
 }
 

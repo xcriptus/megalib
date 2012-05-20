@@ -3,6 +3,9 @@ require_once 'main.config.local.php' ;
 require_once '../TExpr.php' ;
 require_once '../HTML.php' ;
 
+// TODO: simple notation (sn) is not supported yet
+
+
 
 
 $mapcontrib= array(
@@ -10,6 +13,19 @@ $mapcontrib= array(
     "WrongMap" => array("type"=>"toto","whatever"=>"blabla"),
     "xsdClasses" => array("type"=>"Implementation","name"=>"xsdClasses")
 ) ;
+
+$matchToTemplateTestCases =  array(
+    array('suffix:.java',"/x/y/toto.java",'${0}','/x/y/toto.java'),
+    array('#(.*)(\.java)#',"/x/y/toto.java",'${1} extension ${2}','/x/y/toto.java'),
+    ) ;
+
+foreach($matchToTemplateTestCases as $t) {
+  echo '<li>matchToTemplate( "'.$t[0].'" , "'.$t[1].'" , "'.$t[2].'")=</br>' ;
+  $r = matchToTemplate($t[0],$t[1],$t[2]) ;
+  var_dump($r) ;
+}
+ 
+
 
 $testCases = array(
 //-------------------------------
