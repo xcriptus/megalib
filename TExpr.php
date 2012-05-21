@@ -2,7 +2,7 @@
 
 /**
  * type PatternType ==
- *          'name'
+ *          'is'
  *        | 'suffix'
  *        | 'prefix' 
  *        | 'regexpr'
@@ -30,7 +30,7 @@
 function matchPattern($pattern,$string,&$matches=null) { 
   $matches=array() ;
   // decompose the pattern if it is prefixed. otherwise regexpr is the default.
-  if (preg_match('/^(name|suffix|prefix|regexpr|path):(.*)$/',$pattern,$r)) {
+  if (preg_match('/^(is|suffix|prefix|regexpr|path):(.*)$/',$pattern,$r)) {
     $patternType = $r[1] ;
     $patternExpr = $r[2] ;
   } else {
@@ -38,7 +38,7 @@ function matchPattern($pattern,$string,&$matches=null) {
     $patternExpr = $pattern ;
   }
   switch ($patternType) {
-    case 'name':
+    case 'is':
       $result = ($string === $patternExpr) ;
       $matches[0]=$string ;
       $matches[1]=$string ;

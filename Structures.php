@@ -797,6 +797,16 @@ function valueSummary($value,$valueIfEmpty=null,$returnKind=false,$returnSets=fa
 
 
 
+
+function array_change_keys($map,$prefix,$suffix="") {
+  $result = array() ;
+  foreach($map as $key=>$value) {
+    $result[$prefix.$key.$suffix] = $value ;
+  }
+  return $result ;
+}
+
+
 /**
  * Concat an list of string with an optional separators,
  * begining string and trailing string.

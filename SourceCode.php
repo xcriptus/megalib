@@ -263,6 +263,13 @@ class GeSHiExtended extends GeSHi {
 }
 
 
+
+
+
+
+
+
+
 define('MAX_LINE_LENGTH',1000) ;
 define('MAX_NB_OF_LINES',10000) ;
 
@@ -330,7 +337,7 @@ class SourceCode {
   /**
    * @var String! language string used by the geshi package for highlighting
    */
-  protected $geshiLanguageCode ;
+  protected $geshiLanguage ;
 
   /**
    * @var GeSHI? the geshi object used for highlighting. Computed on demand.
@@ -408,8 +415,8 @@ class SourceCode {
     return $this->plainSourceCode ;
   }
   
-  public function getLanguageCode() {
-    return $this->geshiLanguageCode ;
+  public function getGeshiLanguage() {
+    return $this->geshiLanguage ;
   }
   
   /*-------------------------------------------------------------------------
@@ -472,7 +479,7 @@ class SourceCode {
       
       $geshi = new GeSHi() ;
       $geshi->set_source($text) ;
-      $geshi->set_language($this->geshiLanguageCode) ; 
+      $geshi->set_language($this->geshiLanguage) ; 
       $geshi->set_overall_id($this->sourceId) ;
       $geshi->enable_line_numbers(GESHI_NORMAL_LINE_NUMBERS) ;
       $geshi->enable_classes();
@@ -819,7 +826,7 @@ class SourceCode {
    *   
    * type SourceCodeSummary == Map{
    *     'sourceId' => String!,          // an id used to distinguish different source code in a same page.
-   *     'languageCode' => String!,      // the geshi language code
+   *     'geshiLanguage' => String!,     // the geshi language 
    *     'frequencies' =>                // for each token class the corresponding frequencies of tokens
    *       Map(String!,ClassFrequencies), 
    *     'nloc' => Integer >= 0          // number of line of code 
@@ -857,12 +864,12 @@ class SourceCode {
       $frequencies[$class]['max']=max($frequencies[$class]['tokens']) ;
     }
     return array(
-      'sourceId'=>$this->getSourceId(),
-      'language'=>$this->getLanguageCode(),
-      'frequencies'=>$frequencies,
-      'size'=>strlen($this->plainSourceCode),
-      'ncloc'=>count($nonCommentedLines),
-      'nloc'=>$this->getNLOC() ) ;
+      'sourceId'      => $this->getSourceId(),
+      'geshiLanguage' => $this->getGeshiLanguage(),
+      'frequencies'   => $frequencies,
+      'size'          => strlen($this->plainSourceCode),
+      'ncloc'         => count($nonCommentedLines),
+      'nloc'          => $this->getNLOC() ) ;
   }
   
   /**
@@ -891,14 +898,12 @@ class SourceCode {
    * @return Json!
    */
   
-  public function getTokensAndSummaryAsJson(
+  public function getTokensAsJson(
       $classExclude='/co/',
       $trimClassExclude='/st|es/',
       $shortClassName=true)  {
     $tokens = $this->getTokens($classExclude,$trimClassExclude,$shortClassName) ;
-    $summary = $this->getSummary($tokens) ;
-    $summary['tokens']=$tokens ;
-    return json_encode($summary) ; 
+    return jsonEncode($tokens) ; 
   }
    
   
@@ -907,16 +912,16 @@ class SourceCode {
    * 
    * @param String! $text The text representing the source code
    * 
-   * @param String! $language The geshiLanguageCode in which this source code is written
+   * @param GeshiLanguage! $language The geshiLanguage in which this source code is written
    * 
    * @param String? $sourceid an optional sourceId that will be used to differentiate this source 
    * from other sources if in the same html page. This will be used as a CSS class name and prefix
    * for CSS id, so it should be short. If nothing is provided an identifier will be automatically
    * generated. This is probably the best.
    */
-  public function __construct($text,$language,$sourceid=null) {
+  public function __construct($text,$geshiLanguage,$sourceid=null) {
     $this->plainSourceCode = $text ;
-    $this->geshiLanguageCode = $language ;
+    $this->geshiLanguage = $geshiLanguage ;
     if (isset($sourceid)) {
       $this->sourceId = $sourceid ;
     } else {
