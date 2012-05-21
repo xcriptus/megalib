@@ -1,17 +1,31 @@
 <?php
 
 /**
+ *        
  * type PatternType ==
  *          'is'
  *        | 'suffix'
  *        | 'prefix' 
  *        | 'regexpr'
  *        | 'path'!
+ *        
  * type Pattern ==
- *          RegExpr
- *        | PatternType ':' String       
+ *          ( <patternFunction> ':' )* [ PatternType ':' ] String
  * 
  */
+
+$_PATTERN_FUNCTIONS = array(
+    'basename'  => 'basename',
+    'dirname'   => 'dirname',
+    'corename'  => 'fileCoreName',
+    'extension' => 'fileExtension',
+    'lower'     => 'strtolower',
+    'upper'     => 'strtoupper',
+    'trim'      => 'trim' 
+  ) ;
+// the regexpr /^(basename|dirname|...):/ 
+$_PATTERN_FUNCTIONS_PREFIX_REGEXPR = 
+  '/^('.implode('|',array_keys($_PATTERN_FUNCTIONS)).'):(.*)$/' ;
 
 /**
  * Match a string against a pattern. Different type of pattern
@@ -28,6 +42,16 @@
  * false otherwise.
  */
 function matchPattern($pattern,$string,&$matches=null) { 
+  global $_PATTERN_FUNCTIONS ;
+  global $_PATTERN_FUNCTIONS_PREFIX_REGEXPR ;
+  
+  // apply all the functions (if any) to the string
+  while (preg_match($_PATTERN_FUNCTIONS_PREFIX_REGEXPR,$pattern,$matches)) {
+    $fun=$_PATTERN_FUNCTIONS[$matches[1]] ;
+    $string = $fun($string) ;
+    $pattern=$matches[2] ;
+  }  
+  
   $matches=array() ;
   // decompose the pattern if it is prefixed. otherwise regexpr is the default.
   if (preg_match('/^(is|suffix|prefix|regexpr|path):(.*)$/',$pattern,$r)) {
