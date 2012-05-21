@@ -47,8 +47,18 @@ function rangesExpression($expression){
   return $values ;
 }
 
-function startsWith($haystack, $needle){
-  return substr($haystack, 0, strlen($needle)) === $needle;
+function startsWith($haystack, $needleOrNeedles){
+  if (is_string($needleOrNeedles)) {
+    $needles = array($needleOrNeedles) ;
+  } else {
+    $needles = $needleOrNeedles ;
+  }
+  foreach ($needles as $needle) {
+    if (substr($haystack, 0, strlen($needle)) === $needle) {
+      return true ;
+    }
+  }
+  return false ;
 }
 
 function endsWith($haystack, $needle)
