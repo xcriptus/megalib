@@ -1,0 +1,9 @@
+#!/bin/bash
+USAGE="$0 <rootDirectory> <unixPathRegExpr> <sedAction>"
+ROOTDIRECTORY=${1?$USAGE}
+FILTER=${2?$USAGE}
+ACTION=${3?$USAGE}
+for FILE in `find "${ROOTDIRECTORY?}" -name "${FILTER?}" -type l`
+do
+  sedlink $FILE "${ACTION?}"
+done

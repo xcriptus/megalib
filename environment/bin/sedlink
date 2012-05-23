@@ -1,0 +1,38 @@
+#!/bin/sh
+USAGE="$0 <symlink> <sedAction>"
+SYMLINK=${1?$USAGE}
+ACTION=${2?$USAGE}
+if [ -L $SYMLINK ]
+then
+  TARGET=`ls -l $SYMLINK | cut '-d ' -f 12`
+  if NEWTARGET=`echo ${TARGET?} | sed -e "${ACTION?}"`
+  then
+    if [ "${TARGET?}" != "${NEWTARGET?}" ]
+    then
+      if rm ${SYMLINK?}
+      then
+        if ln -s ${NEWTARGET?} ${SYMLINK?} 
+        then
+          echo "CHANGED: ${SYMLINK?} -> was: ${TARGET?} ; now: ${NEWTARGET?}" 
+          exit 0
+        else
+          echo "$0: cannot recreate ${SYMLINK?}. Sorry. Original value was ${TARGET?}"
+	  exit 3
+        fi
+      else
+        echo "$0: ${SYMLINK?} cannot be removed"
+        exit 2
+      fi
+    else
+      echo "IGNORED: ${SYMLINK} -> ${TARGET}"  
+      exit 0
+    fi
+  else
+   echo "$0: Invalid sed action ${ACTION?}"
+   exit 4
+  fi
+else
+  echo "$0: ${SYMLINK?} is not a symbolic link"
+  exit 1
+fi
+

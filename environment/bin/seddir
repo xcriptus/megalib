@@ -1,0 +1,65 @@
+#!/bin/sh
+USAGE="$0 <rootDirectory> <perlRegExpr> <sedAction> <backup> [verbose]"
+ROOTDIRECTORY=${1?$USAGE}
+PATTERN=${2?$USAGE}
+ACTION=${3?$USAGE}
+BACKUP=${4?USAGE}
+MODE=$5
+ARCHIVE=${BACKUP?}.tar
+LOG=${BACKUP?}.log
+if [ "$MODE" == "verbose" ]
+then
+  echo "STARTING $0 $ROOTDIRECTORY $PATTERN $ACTION" >>$LOG
+fi
+GREPDIRCMD="grepdir files ${ROOTDIRECTORY?} ${PATTERN?}"
+if [ "$MODE" == "verbose" ]
+then 
+  echo "GREPDIR $GREPDIRCMD" >>$LOG
+fi
+if FILES=`$GREPDIRCMD`
+then
+  for FILE in $FILES
+  do
+    BACKUPFILE=${FILE}.sed.bak
+    if [ "$MODE" == "verbose" ]
+    then
+      echo -n "PROCESSING $FILE ... " >>$LOG
+    fi
+    if sed -e "${ACTION}" -i.sed.bak $FILE
+    then
+      if cmp -s $BACKUPFILE $FILE 
+      then
+        if [ "$MODE" == "verbose" ]
+        then
+          echo "NO CHANGES" >>$LOG
+        fi
+        rm $BACKUPFILE
+      else
+        if [ "$MODE" == "verbose" ]
+        then
+          echo "CHANGED" >>$LOG 
+        fi
+        echo "BEGIN-CHANGES:\t$FILE" >>$LOG
+	diff $BACKUPFILE $FILE >>$LOG
+        echo "END-CHANGES:\t$FILE" >>$LOG
+        if tar -rf ${ARCHIVE?} $BACKUPFILE
+        then
+          rm $BACKUPFILE
+        fi
+      fi
+    else
+      echo "ERROR WITH $SEDCMD" 
+      exit 2
+    fi
+    if [ "$MODE" == "verbose" ] ; then echo >>$LOG ; fi
+  done
+  if [ -f ${ARCHIVE?} ]
+  then
+    tar -rf ${ARCHIVE?} $LOG
+    gzip -9 ${ARCHIVE?}
+  fi
+else
+  echo "ERROR: $FILES"
+  exit 1
+fi
+
