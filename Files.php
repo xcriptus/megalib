@@ -193,6 +193,8 @@ function addToPath($path,$path2) {
 
 
 /**
+ * @deprecated use findFiles instead.
+ * 
  * List all filenames directly under a given directory or return null if the parameter
  * is not a readable directory. Never return '.' or '..'.
  * 
@@ -202,7 +204,7 @@ function addToPath($path,$path2) {
  * if various types are accepted. By default all types are accepted.
  * 
  * @param Pattern? $namePattern if not null a pattern (see TExpr.php) that will be used as
- * a filter on the item name. The matching is done only on the file name, without the path.
+ * a filter on the item name. If not specified otherwise, the pattern applied to basename. 
  * $nameRegExpr should be a string of the form '/.../' or 'suffix:.c', 'etc.'. Default to null.
  * 
  * @param Boolean? $ignoreDotFiles indicates if hidden items (.xxx) should be ignored. 
@@ -219,40 +221,120 @@ function addToPath($path,$path2) {
  */
 function /*Set*<String!>?*/ listFileNames(
     $directory, 
-    $typeFilter="dir|file|link|error",
-    $namePattern=NULL,
-    $ignoreDotFiles=TRUE,
+    $types="dir|file|link|error",
+    $pattern=NULL,
+    $excludeDotFiles=TRUE,
     $prefixWithDirectory=TRUE,
-    $ignoreDotDirectory=TRUE) {
-  $paths = array() ;
-  $allowedtypes=explode('|',$typeFilter) ;
+    $excludeDotDirectories=TRUE) {
+      return 
+        findDirectFiles($directory,array(
+            'types'                 => $types,
+            'pattern'               => isset($pattern) ? 'basename:'.$pattern : null,
+            'excludeDotFiles'       => $excludeDotFiles,
+            'excludeDotDirectories' => $excludeDotDirectories,
+            'apply'                 => ($prefixWithDirectory ? 'path' : 'basename')
+          )) ;
+}
+      
+      
+// null if error      
+function findDirectFiles($directory,$params) {
+  $excludeDotFiles = isset($params['excludeDotFiles']) ? $params['excludeDotFiles'] : true;
+  $excludeDotDirectories = isset($params['excludeDotDirectories']) ? $params['excludeDotDirectories'] : true;
+  $types = isset($params['types']) ? $params['types'] : "dir|file|link|error" ;
+  $pattern = isset($params['pattern']) ? $params['pattern'] : null ;
+  $exclude = isset($params['$exclude']) ? $params['$exclude'] : null ;
+  $predicate = isset($params['predicate']) ? $params['predicate'] : null ;
+  $init = isset($params['init']) ? isset($params['init']) : array() ;
+  $apply = isset($params['apply']) ? $params['apply'] : "path" ;
+  $action = isset($params['action']) ? $params['action'] : null ;
+  
+  $allowedTypes=explode('|',$types) ;
+  
+  $accumulator = $init ;
   if (isReadableDirectory($directory) && $dh = opendir($directory)) {
     // this is a readable directory:
     // process each directory item
     while (($file = readdir($dh)) !== false) {
-      $filepath = addToPath($directory,$file) ;
+      $path = addToPath($directory,$file) ;
       // the filetype generates a warning for a broken link so use @
-      @ $type = filetype($filepath) ;
+      @ $type = filetype($path) ;
       // a broken link returns false. Not obvious to know which other cases
       // false is returned. But we therefore use the type "unknown".
       if ($type===false) {
         $type="error" ;
       }
-      $selected = $file!=='.' 
+      
+      $selected =    $file!=='.' 
                   && $file!=='..'
-                  && in_array($type,$allowedtypes) 
-                  && ($type!=='file' || $ignoreDotFiles!==TRUE || substr($file,0,1)!='.')
-                  && ($type!=='dir' || $ignoreDotDirectory!==TRUE || substr($file,0,1)!='.')
-                  && (!isset($namePattern) || matchPattern($namePattern,$file)) ; 
+                  && in_array($type,$allowedTypes) 
+                  && ($type!=='file' || $excludeDotFiles!==TRUE || substr($file,0,1)!='.')
+                  && ($type!=='dir' || $excludeDotDirectories!==TRUE || substr($file,0,1)!='.')
+                  && (!isset($predicate) || $predicate($file)) 
+                  && (!isset($exclude) || !matchPattern($exclude,$path))                 
+                  && (!isset($pattern) || matchPattern($pattern,$path,$matches)) ;
+                  
       if ($selected) {
-        $paths[] = ($prefixWithDirectory ? addToPath($directory,"") : "") .$file ;
+        
+        switch ($apply) {
+          case "basename":
+            $value = $file ;
+            break ;
+          case "path":
+          default:
+            $value = $path ;            
+        }
+        
+        switch ($action) {
+          case 'collect':
+          default:
+            $accumulator[] = $value ;
+        }
       }
     }
-    return $paths ;
+    return $accumulator ;
   } else {
-    // not a directory
-    return NULL ;
+    return null ;
   }
+}
+
+
+
+
+// null if error at the first level. Errors at lower levels are ignored.
+function findFiles($root,$param,$currenLevel=1) {
+  $exploreDotDirectories = isset($param['exploreDotDirectories']) ? $param['exploreDotDirectories'] : false ;
+  $levels = isset($param['levels']) ? $param['levels'] : 1000 ;
+           
+  // Start with adding the direct files.
+  $accumulator = findDirectFiles($root,$param) ; 
+  if ($accumulator===null) {
+    return null ;  // there was an error
+  }
+  
+  if ($currenLevel < $levels) {
+    // Get the subdirectories that should be explored.
+    // Do not use parameters related to file filtering
+    // We should also collect paths
+    $subdirectories =
+      findDirectFiles($root, array(
+            'types'=>'dir',
+            'exploreDotDirectories'=>$exploreDotDirectories,
+            'apply'=>'path')) ;
+    if ($subdirectories===null) {
+      return null ;  // there was an error
+    }      
+    // now process the subdirectories to explore
+    foreach ($subdirectories as $subdirectory) {
+      $subdirectorySelectedChildren = findFiles($subdirectory,$param,$currenLevel+1)  ;
+      if ($subdirectorySelectedChildren !== null) {
+        // push the result at the end. They can be duplicate if $prefixWithDirectory is false
+        // because the same name could be found in different directory
+        array_append($accumulator,$subdirectorySelectedChildren) ;
+      }
+    }
+  }
+  return $accumulator ;
 }
 
 /**
@@ -283,39 +365,28 @@ function /*Set*<String!>?*/ listFileNames(
 
 function listAllFileNames(
     $root,
-    $typeFilter="dir|file|link|error",
-    $namePattern=NULL,
-    $ignoreDotFiles=TRUE,
+    $types="dir|file|link|error",
+    $pattern=NULL,
+    $excludeDotFiles=TRUE,
     $prefixWithDirectory=TRUE,
     $followLinks=false,
-    $ignoreDotDirectories=true) {
-  $results = array() ;
-  if (DEBUG>100) echo "<li>exploring '$root'..." ;
-  // get subdirectories because they should be explored anyway
-  $subdirectories = listFileNames($root,'dir',null,true,true,$ignoreDotDirectories) ;
-  if ($subdirectories === null) {
-    // the root directory is not readable
-    return null ;
-  } else {
-    // get selected children according to the filter
-    $selectedRootChildren = listFileNames($root,$typeFilter,$namePattern,$ignoreDotFiles,$prefixWithDirectory) ;
-    $result = $selectedRootChildren ;
-    foreach ($subdirectories as $subdirectory) {
-      $subdirectorySelectedChildren = listAllFileNames(
-          $subdirectory,
-          $typeFilter,
-          $namePattern,
-          $ignoreDotFiles,
-          $prefixWithDirectory) ;
-      if ($subdirectorySelectedChildren !== null) {
-        // push the result at the end. They can be duplicate if $prefixWithDirectory is false
-        // because the same name could be found in different directory
-        array_append($result,$subdirectorySelectedChildren) ;
-      }
-    }
-    return $result ;
-  }
+    $excludeDotDirectories=true) {
+  return
+  findFiles($root,array(
+      'types'                 => $types,
+      'pattern'               => isset($pattern) ? 'basename:'.$pattern : null,
+      'excludeDotFiles'       => $excludeDotFiles,
+      'excludeDotDirectories' => $excludeDotDirectories,
+      'apply'                 => ($prefixWithDirectory ? 'path' : 'basename')
+  )) ;
 }
+
+
+
+
+
+
+
 
 
 /**

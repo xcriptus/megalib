@@ -2,11 +2,26 @@
 require_once 'main.config.local.php' ;
 
 require_once '../Files.php' ;
+testFindFiles() ;
 testIsAbsolutePath() ;
 testGetRelativePath() ;
 testListFileNameFunctions('listFileNames','..') ;
 testListFileNameFunctions('listAllFileNames','.') ;
 testListAllLinksWithInfo('..') ;
+
+function testFindFiles() {
+  $testCases = array(
+      array('data/input',array('levels'=>2) ),
+      array('../../101results/101repo/contributions',array('excludeDotFiles'=>false,'pattern'=>'/\.fratala$/')) ,
+    ) ;
+  foreach($testCases as $t) {
+    echo "<h3>findFiles</h3>" ; 
+    echo "parameters are " ;
+    var_dump($t) ;
+    echo "result is" ;
+    var_dump(findFiles($t[0],$t[1])); ;
+  }
+}
 
 function testIsAbsolutePath() {
   echo "<h2>Testing isAbsolutePath</h2>" ;
@@ -67,6 +82,7 @@ function testListAllLinksWithInfo($dir) {
   echo "<h2>Testing listAllLinksWithInfo</h2>" ;
   var_dump(listAllLinksWithInfo($dir)) ;
 }
+
 
 
 
