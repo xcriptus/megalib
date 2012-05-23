@@ -3,6 +3,8 @@ require_once 'main.config.local.php' ;
 
 require_once '../SourceCode.php' ;
 require_once '../SourceFileSystem.php' ;
+require_once '../FileSystemMatcher.php' ;
+
 
 require_once '../CSV.php' ;
 define('OUTPUT_DIR','data/generated/sourceCodePatterns') ;
@@ -15,6 +17,7 @@ if (!is_dir(addToPath(ABSPATH_BASE,'101results'))) {
   $dir101results = addToPath(ABSPATH_BASE,'101results') ;
   $realBaseDir = ABSPATH_BASE ;
 }
+
 $exploreDir = addToPath($dir101results,'101repo/contributions/gwtTree') ;  // /gwtTree
 
 echo '<h2>Exploring and matching the directory '.$exploreDir.'</h2>' ;
