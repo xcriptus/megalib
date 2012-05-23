@@ -298,8 +298,9 @@ class TaggedFragmentSetReader {
 
   /**
    * Set the 'locator' property. To get its value search
-   * - first in the fragment definition
-   * - then via the file extensions
+   * - first in the fragment definition with the field 'locator'
+   * - then via the file extensions. In this case search for the field 'fragmentLocator'
+   * in the RHS of rules.
    * @param FullFilePath! $fragmentedFilePath
    * @param FragmentId! $fragmentId the id of the fragment within the file
    * @param inOut>TaggedFragmentDefinition! $definition
@@ -313,8 +314,8 @@ class TaggedFragmentSetReader {
     } else {
       // then search according to the FileSystemPatternMatcher
       $properties = $this->fileSystemPatternMatcher->matchPath('file',$fragmentedFilePath) ;
-      if (isset($properties['fragmentlocator'])) {
-        $locator = $properties['fragmentlocator'] ;
+      if (isset($properties['fragmentLocator'])) {
+        $locator = $properties['fragmentLocator'] ;
       } else {
         // not found
         $this->errors[$fragmentedFilePath] = "no locator found" ;
