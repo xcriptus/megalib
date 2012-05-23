@@ -169,7 +169,6 @@ class TaggedFragmentSet {
     public function saveInJsonSummaryFiles($oldBase,$newBase,$beautify=false) {
       
       foreach($this->getFragmentedFiles() as $file) {
-        echo $file.'<br/>' ;
         $targetFile = rebasePath($file,$newBase,$oldBase).'.fragments.json' ;        
         // FIXME currently save in a fragments files instead of summary files as there is a bug in array_merge
         // FIXME the file before as it is 
