@@ -3,7 +3,9 @@ require_once 'main.config.local.php' ;
 
 require_once '../Fragments.php' ;
 
-$root = '../../101results/101repo/contributions' ;
+$sourceBaseDirectory = '../../101results/101repo' ;
+$targetBaseDirectory = '../../101web/101repo' ;
+$mainDirectory = 'contributions' ;
 $rulesFile = 'data/input/sourceDirectoryMatchingRules.csv' ;
 $tmpDir = '/tmp' ;
 $commandsBaseDirectory='.' ;
@@ -11,8 +13,9 @@ $commandsBaseDirectory='.' ;
 echo "=== Creating the reader with rules from $rulesFile\n" ;
 $reader = new TaggedFragmentSetReader($rulesFile) ;
 
-echo "=== Reading tagged fragment definitions from $root\n" ;
-$taggedFragmentSet = $reader->read($root) ;
+$sourceDirectory=addToPath($sourceBaseDirectory,$mainDirectory) ;
+echo "=== Reading tagged fragment definitions from $sourceDirectory\n" ;
+$taggedFragmentSet = $reader->read($sourceDirectory) ;
 $nbErrors = count($reader->getErrors()) ;
 if ($nbErrors!==0) {
   echo "$nbErrors error(s) found\n" ;
@@ -30,4 +33,4 @@ $taggedFragmentSet->computeDerivedInformation() ;
 if (DEBUG>10) echo htmlAsIs($taggedFragmentSet->asJson(true)) ;
 
 echo "=== Saving taggedFragments to json files\n" ;
-$taggedFragmentSet->saveInJsonSummaryFiles(true) ;
+$taggedFragmentSet->saveInJsonSummaryFiles($sourceBaseDirectory,$targetBaseDirectory,true) ;

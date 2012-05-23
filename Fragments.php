@@ -166,12 +166,15 @@ class TaggedFragmentSet {
     }
 
     //
-    public function saveInJsonSummaryFiles($beautify=false) {
+    public function saveInJsonSummaryFiles($oldBase,$newBase,$beautify=false) {
+      
       foreach($this->getFragmentedFiles() as $file) {
+        echo $file.'<br/>' ;
+        $targetFile = rebasePath($file,$newBase,$oldBase).'.fragments.json' ;        
         // FIXME currently save in a fragments files instead of summary files as there is a bug in array_merge
         // FIXME the file before as it is 
-        unlink($file.'.fragments.json') ;
-        saveOrMergeJsonFile($file.'.fragments.json', $this->fileToTaggedFragmentsMapping[$file],'array_merge_recursive',$results,$beautify) ;
+        @ unlink($targetFile) ;
+        saveOrMergeJsonFile($targetFile, $this->fileToTaggedFragmentsMapping[$file],'array_merge_recursive',$results,$beautify) ;
       }
       var_dump($results) ;
     }
