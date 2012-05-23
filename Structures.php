@@ -588,35 +588,25 @@ function saveOrMergeJsonFile($filename,$map,$merger='array_merge_recursive',&$re
 /**
  * 
  * @param unknown_type $root
- * @param unknown_type $nameRegExpr
+ * @param unknown_type $findFileParams
  * @param unknown_type $keyTemplate
- * @param unknown_type $ignoreDotFiles
- * @param unknown_type $followLinks
- * @param unknown_type $ignoreDotDirectories
  * @die if the directory is not readable
  * @die if one of the files found is not a json map
  */
-function mapFromJsonDirectory(
-    $root,
-    $recursive=true,
-    $namePattern='/\.json$/',
-    $keyTemplate='${0}',
-    $ignoreDotFiles=false,
-    $followLinks=false,
-    $ignoreDotDirectories=true) {
-  // get the list of all filenames with the parameters above
-  // except that we defintively need the full file name 
+function mapFromJsonDirectory($root,$findFileParams,$keyTemplate='${0}') {
   
-  // TODO this should be changed in listAllFileNames
-  if ($recursive) {
-    $jsonFullFilenames = listAllFileNames($root,'file',$namePattern,$ignoreDotFiles,true,$followLinks,$ignoreDotDirectories) ;
-  } else {
-    $jsonFullFilenames = listFileNames($root,'file',$namePattern,$ignoreDotFiles,true,$ignoreDotDirectories) ;
+  if (!isset($findFileParams['pattern'])) {
+    $findFileParams['pattern'] = 'suffix:.json' ;
   }
+  // get the list of filenames with the parameters above
+  // we defintively need the full file name  and only files
+  $findFileParams["apply"] = "path" ;
+  $findFileParams["types"] = "file" ;
   
+  $jsonFullFilenames = findFiles($root, $findFileParams) ;
   if ($jsonFullFilenames === null) {
-    die('jsonFromJsonDirectory: directory '.$root.' cannot be read') ;
-  }
+    die(__FUNCTION__.': directory "'.$root.'" cannot be read') ;
+  }  
   $results = array () ;
   foreach ($jsonFullFilenames as $jsonFullFilename) {
     $map = jsonLoadFileAsMap($jsonFullFilename,false) ;
@@ -625,7 +615,7 @@ function mapFromJsonDirectory(
       echo "<li>File $jsonFullFilename contains is not a valid json</li>" ;
       $map = array("ERROR") ;
     } else 
-    $key = matchToTemplate($namePattern,$jsonFullFilename,$keyTemplate) ;
+    $key = matchToTemplate($findFileParams['pattern'],$jsonFullFilename,$keyTemplate) ;
     $results[$key] = $map ;
   }
   return $results ;

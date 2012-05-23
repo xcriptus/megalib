@@ -46,29 +46,36 @@ function testJsonBeautifier() {
 function testMapFromJsonDirectory() {
   echo '<h2>Testing mapFromJsonDirectory </h2>' ;
   $testCases1 = array(
-      array(
-          'dir'=>'data/generated/contributions/gwt',
-          'recursive'=>false,
-          'pattern'=>'suffix:index.summary.json',
+     array(
+          'dir'=>'data/generated/',
+          'files' => array(
+             'levels'=>1,
+             'pattern'=>'suffix:.summary.json'),
           'key'=>'${0}'
-      ),
-      array(
+      ), 
+     array(
           'dir'=>'../../101results/101repo',
-          'recursive'=>true,
-          'pattern'=>'/(.*)\.fratala$/',
+          'files' => array(
+              'pattern'=>'#(.*)/\.fratala#',
+              'excludeDotFiles'=>false,
+              /*'levels'=>1*/),
           'key'=>'${1}'
       ),
-      array(
+  /*    array(
           'dir'=>'../../101results/101repo',
           'recursive'=>true,
           'pattern'=>'suffix:.fratala',
           'key'=>'${1}'
-      ),
+      ), */
   ) ;
   foreach ($testCases1 as $t) {
     if (is_dir($t['dir'])) {
-      echo '<h3>mapFromJsonDirectory('.$t['dir'].'" , "'.$t['recursive'].'" , "'.$t['pattern'].'" , "'.$t['key'].'" )</h3>' ;
-      echo htmlAsIs(jsonEncode(mapFromJsonDirectory($t['dir'],$t['recursive'],$t['pattern'],$t['key']),true)) ;
+      echo '<h3>mapFromJsonDirectory</h3>' ;
+      echo "paramaters are:" ;
+      var_dump($t) ;
+      // ('.$t['dir'].'" , "'.$t['recursive'].'" , "'.$t['pattern'].'" , "'.$t['key'].'" )</h3>' ;
+      
+      echo htmlAsIs(jsonEncode(mapFromJsonDirectory($t['dir'],$t['files'],$t['key']),true)) ;
     } else {
       echo "<h3>Directory ".$t['dir']." doesn't exist <h3>" ;
     }
