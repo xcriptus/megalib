@@ -13,8 +13,6 @@ $sources = array(
 
 processSourceCode($sources,OUTPUT_DIR) ;
 
-
-
 function processSourceCode($sources,$outputDirectory) {
   foreach ($sources as $src) {
         

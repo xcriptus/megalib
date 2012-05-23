@@ -1,9 +1,9 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
-require_once '../HTML.php' ;
-require_once '../TExpr.php' ;
-require_once '../Structures.php' ;
-require_once '../FileSystemMatcher.php' ;
+require_once 'HTML.php' ;
+require_once 'TExpr.php' ;
+require_once 'Structures.php' ;
+require_once 'FileSystemMatcher.php' ;
 
 
 /**
@@ -462,9 +462,11 @@ class FragmentLocatorIterator {
     @ unlink($this->tmpLocationFile) ;
     $command = $this->_getLocateFragmentCommand($filePath,$locator,$fragmentSpecification) ;
     if ($dummyExecution) {
-      echo "executing ".$command."\n<br/>" ;
+      echo "# executing ".$command."\n<br/>" ;
+      $location = array('from'=>1,'to'=>1) ;
     } else {
       // execute the command and try to read the output file. If no such file then there was an error
+      echo "executing ".$command."\n<br/>" ;
       system($command) ;
       if (file_exists($this->tmpLocationFile)) {
         $location = jsonLoadFileAsMap($this->tmpLocationFile,false) ;
@@ -485,7 +487,7 @@ class FragmentLocatorIterator {
             && $set->issetProperty($file,$id,'specification')) {
           $locator = $set->getProperty($file,$id,'locator') ;
           $specification = $set->getProperty($file,$id,'specification') ;
-          $location = $this->_computeLocation($file,$locator,$specification) ;
+          $location = $this->_computeLocation($file,$locator,$specification,$dummyExecution) ;
           if ($location!==null) {
             $set->setProperty($file,$id,'location',$location) ;
           }

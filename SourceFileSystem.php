@@ -1036,6 +1036,10 @@ class SourceTopDirectory extends SourceDirectory {
    * @param DirectoryName! $directoryPath the directory to consider for analysis. Its
    * value is relative to the base.
    *
+   * @param List*(String!)? $properties ???
+   * 
+   * @param 
+   * 
    * @param DirectoryName! $defaultOutputBase the default base directory for
    * output. It is not necessary to specify it if generation is not to be used
    * of if a base is specified in the generate method. Default to null.
