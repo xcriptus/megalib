@@ -90,8 +90,12 @@ class FirstFileSystemPatternMatcher implements FileSystemPatternMatcher {
  *
  * type RuleLHS ==
  *   Map {
- *     'patternRestriction' => String!,
- *     'pattern' => Pattern
+ *     'ruleId' => String!,    // not used so far TODO
+ *     'ruleRestriction' => String!,
+ *     'ruleCondition' => Pattern!,
+ *     'ruleWeight' => String!,  // not used so far TODO
+ *     'ruleOrigin' => String?,  // not used so far TODO
+ *     'ruleKind' => String?     // not used so far TODO
  *   }
  *
  * type RuleRHS ==
@@ -129,10 +133,14 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
 
   public function getPredefinedKeys() {
     return array(
-        'patternRestriction',
-        'pattern',
-        'patternLength',
-        'merging') ;
+        'ruleId',
+        'ruleRestriction',
+        'ruleCondition',
+        'ruleWeight',
+        'ruleOrigin',
+        'ruleKind',
+        'rulePatternLength',
+        'ruleMerging') ;
   }
   
   public function clearPredefined($map) {
@@ -178,8 +186,8 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
     $results = array() ;
     // compute the list of
     foreach ($this->rules as $rule) {
-      if ($type===$rule['patternRestriction']) {
-        if (matchPattern($rule['pattern'],$path,$matches)) {
+      if ($type===$rule['ruleRestriction']) {
+        if (matchPattern($rule['ruleCondition'],$path,$matches)) {
           $result = array() ;
           foreach($rule as $key=>$value) {
             if (!$this->isUserDefinedKey($key)) {
@@ -188,7 +196,7 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
               $result[$key]=doEvalTemplate($value,$matches) ;
             }
           }
-          $result['patternLength']=strlen($rule['pattern']) ;
+          $result['rulePatternLength']=strlen($rule['ruleCondition']) ;
           $results[] = $result ;
         }
       }
@@ -207,9 +215,9 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
    *   | MatchedUserRuleRHS
    *     +
    *     Map{
-   *       'merging' => Map{
+   *       'ruleMerging' => Map{
    *         'nbOfMatchingRules' => Integer>=2,
-   *         'patternLength' => Map+(String!,Integer>=0)?, // for a key, the maximum length of the matching rules
+   *         'rulePatternLength' => Map+(String!,Integer>=0)?, // for a key, the maximum length of the matching rules
    *         'conflicts' => Map+(String!,List+(Any!))?,    // for a key, the list of possible values to select from
    *       }
    *     }
@@ -241,10 +249,10 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
         // there at least two results. So we should perform a merge.
 
         $mergedResult = array() ;
-      $mergedResult['merging']['nbOfMatchingRules'] = count($results) ;
+      $mergedResult['ruleMerging']['nbOfMatchingRules'] = count($results) ;
       foreach($results as $result) {
         foreach ($result as $resultKey => $resultValue) {
-          $resultPatternLength = $result['patternLength'] ;
+          $resultPatternLength = $result['rulePatternLength'] ;
 
           // we do not care about patternKeys, i.e. regexpr
           // as they are certainly distincts
@@ -258,7 +266,7 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
               // to whoch patternLengths the key has been selected in
               // the method longestPattern.
               if ($mergeMethod==='longestPattern') {
-                $mergedResult['merging']['patternLength'][$resultKey]=$resultPatternLength ;
+                $mergedResult['ruleMerging']['rulePatternLength'][$resultKey]=$resultPatternLength ;
               }
             } else {
               // there is already a value for that key
@@ -266,8 +274,8 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
                 // this is the the same value, excellent!
                 // to nothing except to update the pattern length for that key as it may win
                 if ($mergeMethod==='longestPattern'
-                    && $mergedResult['merging']['patternLength'][$resultKey] < $resultPatternLength) {
-                  $mergedResult['merging']['patternLength'][$resultKey]=$resultPatternLength ;
+                    && $mergedResult['ruleMerging']['rulePatternLength'][$resultKey] < $resultPatternLength) {
+                  $mergedResult['ruleMerging']['rulePatternLength'][$resultKey]=$resultPatternLength ;
                 }
               } else {
                 // we just found a conflict, something already there
@@ -287,15 +295,15 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
                   }
                 } else {
                   // so we have two scalar values, this is a conflict
-                  @ $mergedResult['merging']['conflicts'][$resultKey][]=$resultValue ;
+                  @ $mergedResult['ruleMerging']['conflicts'][$resultKey][]=$resultValue ;
 
                   switch ($mergeMethod) {
                     case 'longestPattern' :
-                      if ($mergedResult['merging']['patternLength'][$resultKey] <= $resultPatternLength) {
+                      if ($mergedResult['ruleMerging']['rulePatternLength'][$resultKey] <= $resultPatternLength) {
                         // the current rule has a longer pattern, so select this value
                         $mergedResult[$resultKey] = $resultValue ;
                         // update also the patternLength
-                        $mergedResult['merging']['patternLength'][$resultKey] = $resultPatternLength ;
+                        $mergedResult['ruleMerging']['rulePatternLength'][$resultKey] = $resultPatternLength ;
                       }
                       break ;
 
@@ -322,7 +330,7 @@ class RuleBasedFileSystemPatternMatcher implements FileSystemPatternMatcher {
           }
         } // foreach
       } // foreach
-      // unset($mergedResult['merging']['patternLength']) ;
+      // unset($mergedResult['ruleMerging']['patternLength']) ;
       return $mergedResult ;
     }
   }
