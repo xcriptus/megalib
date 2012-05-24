@@ -39,7 +39,7 @@ class GeSHiExtensionPatternMatcher implements FileSystemPatternMatcher {
   public function matchPath($type,$path) {
     if ($type==="file") {
       $extension = fileExtension($path) ;
-      $geshiLanguage = GeSHiExtended::getLanguageFromExtension(fileExtension($extension)) ;
+      $geshiLanguage = GeSHiExtended::getLanguageFromExtension($extension) ;
       if ($geshiLanguage==="") {
         return null ;
       } else {
