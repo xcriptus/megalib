@@ -1,16 +1,68 @@
 <?php
 
 /**
+ * The pattern expressions below allow to use different pattern notations depending
+ * on the problem at hand. While patterns functions are intended to be used for 
+ * arbitrary kind of strings (plain text, programming language identifiers, file names), 
+ * some special features are handy to deal with specific domains. This is the case for
+ * instance when dealing with path names (e.g. file names or directory names).
+ *
+ * A pattern can either be a simple string (in which case it is assumed to be a regexpr),
+ * or a string with some modifiers written as prefixes and separated with ":".
+ * 
+ * First, various functions can be applied to the string to be matched, 
+ * then the type of patterns to be used is indicated.
+ * 
+ * Examples:
+ *   /elem/                  is a regular (perl)regexpr and will match "element" or "selem"  
+ *   lower:/elem/            will match "ELemenT" or "SELEM" as the string is first converted to lower cases
+ *                           "lower" is a PatternFunction. In this case it could also be written /elem/i
+ *   basename:lower:/elem/   will match "ElemeT" but not ".../elementHere/butNotThere" as the "basename"
+ *                           PatternFunction is first applied (see unix basename), leaving butNotThere string
+ *                           for matched. Here : can be seen as a pipe. (Will be certainly changed by | in the future)
+ *   suffix:.java            will match all strings ending with .java with no special characters being taken into
+ *                           account. Not that suffix is a PatternType, not a PatternFunction: it does not change
+ *                           the value to be matched but the interpretation of the pattern itself. In this example
+ *                           this is handy because "." is interpreted as any char in a regexpr while the user certainly
+ *                           want to express that the string ends with ".java"
+ *                                               
+ * type Pattern ==           // a pattern expression 
+ *     ( <patternFunction> ':' )* [ PatternType ':' ] String
+ *              
+ * type 
+ *   PatternFunction ==      // a string->string function to be applied to the string to be matched before matching
+ *       'basename'          // unix basename, returns the short file name without directory (could be use for any string)
+ *     | 'dirname'           // unix dirname, remove the last component.
+ *     | 'corename'          // remove the extension of the basename. See fileExtension in megalib for documentation.
+ *     | 'extension'         // just get the extension, that is the string after the leftmost '.'
+ *     | 'lower'             // convert to lowercase
+ *     | 'upper'             // convert to uppercase
+ *     | 'trim'              // remove starting and trailing white spaces
+ * 
+ * type 
+ *   PatternType ==
+ *       'is'         // true if the whole string is equals to the pattern. No special characters.
+ *                    // Examples: "is:the" will match "the" but not "then".
+ *                    
+ *     | 'suffix'     // true if the string ends with/is equal to the pattern. No special characters.
+ *                    // Examples: "suffix:.java" will match "abc/yes.java" and ".java"  but not ".java.something"
+ *                    
+ *     | 'prefix'     // true if the sring starts with/is equal to the pattern. No special characters.
+ *                    // Examples: "prefix:README" will match "README.txt" but not "abc/README.php" or "readme.md"
+ *                    
+ *     | 'regexpr'    // true if the string match the perl-php regular expression (almost standard perl)
+ *                    // See http://www.php.net/manual/en/reference.pcre.pattern.syntax.php
+ *                    // Examples: "regexpr:.*" will match everything string
+ *                    //           "regexpr:/^readme/i  will match all strings starting with readme ignoring case (i modifer)
+ *                    //           "regexpr:#.java$# will match "ajava" as "." means any characters except newlines
+ *                    //           "regexpr:#get([a-z]+)Listener# will match "getCompanyListener" and set the match #1 to "Company"
+ *                    // See the url above for the documentation
+ *                    
+ *     | 'match'      // TO BE IMPLEMENTED true if the string match the unix file regular expression  
+ *                    // Examples: "match:*.java" will match all strings that ends with ".java", "." being a regular character
+ *                    //                          and * meaning any characters (.* in regexpr).
+ *     | 'path'       // deprecated
  *        
- * type PatternType ==
- *          'is'
- *        | 'suffix'
- *        | 'prefix' 
- *        | 'regexpr'
- *        | 'path'!
- *        
- * type Pattern ==
- *          ( <patternFunction> ':' )* [ PatternType ':' ] String
  * 
  */
 
@@ -40,6 +92,7 @@ $_PATTERN_FUNCTIONS_PREFIX_REGEXPR =
  * elements are parts of match according to the expression type
  * @return Boolean! true if the string matches the pattern or
  * false otherwise.
+ * 
  */
 function matchPattern($pattern,$string,&$matches=null) { 
   global $_PATTERN_FUNCTIONS ;
@@ -80,6 +133,11 @@ function matchPattern($pattern,$string,&$matches=null) {
     case 'regexpr':
       $result = preg_match($patternExpr,$string,$matches) ;
       break ;
+    case 'match':
+      // replace * by .* 
+      // replace . by \.
+      // plus do other stuff depending on the level of
+      // conformance we want and on the dialect to be supported
     case 'path':
     default :
       die('matchPattern: unsupported pattern type '.$patternType) ;
@@ -134,12 +192,14 @@ function doEvalTemplate($template,$map,&$evaluator=null) {
  * 
  *        ------------------------------------------------------------------------
  *                     TODO : complete this description with the various
- *                     elements (CONCAT, MATCH, LIST, MAP,...
+ *                     elements implemented (CONCAT, MATCH, LIST, MAP,...
+ *                     TODO : change preg_match with the matchMattern as define above
  *                     TODO : Support simple notation (sn) shown in the tests
+ *                     TODO : Add the ${x|fun|fun...} notation base on function
+ *                            define for pattern and change PatternFunction to
+ *                            fun|fun|protocol:expr 
  *        ------------------------------------------------------------------------
-
-
-
+ *
  * Evaluate a template with some variables of the form ${xxx}.
  * Return either a string when a map is given, an array of string
  * when an array of maps is given, or a map of string if an
@@ -174,11 +234,6 @@ function doEvalTemplate($template,$map,&$evaluator=null) {
  *        'expr' => TVarExpr!,
  *        'result' => Template!  }
  *        
- *        ------------------------------------------------------------------------
- *                     TODO : complete this description with the various
- *                     elements (CONCAT, MATCH, LIST, MAP,...
- *                     TODO : Support simple notation (sn) shown in the tests
- *        ------------------------------------------------------------------------
  *
  */
 
