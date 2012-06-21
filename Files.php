@@ -2,6 +2,8 @@
 /*
  * Basic function for FileSystem manipulations
  * 
+ * TODO: change preg_match in find files for using PExpression
+ * 
  * filebasenames
  *   occurrence basenames 
  *   find . -type f -exec basename '{}' ';' | sort | uniq -c | sort -r
@@ -13,7 +15,7 @@ require_once 'Strings.php' ;
 require_once 'Structures.php' ;
 require_once 'Environment.php' ;
 require_once 'HTML.php' ;
-require_once 'TExpr.php' ;
+require_once 'PExpressionConcrete.php' ;     // TODO This should be removed. The dependency is because of usage of pattern in find
 
 
 /**
@@ -203,7 +205,7 @@ function addToPath($path,$path2) {
  * @param Seq('dir','file','link','|')? $typeFilter the type of items to select separated by |
  * if various types are accepted. By default all types are accepted.
  * 
- * @param Pattern? $namePattern if not null a pattern (see TExpr.php) that will be used as
+ * @param Pattern? $namePattern if not null a pattern (see TExpression.php) that will be used as
  * a filter on the item name. If not specified otherwise, the pattern applied to basename. 
  * $nameRegExpr should be a string of the form '/.../' or 'suffix:.c', 'etc.'. Default to null.
  * 
@@ -229,10 +231,10 @@ function /*Set*<String!>?*/ listFileNames(
       return 
         findDirectFiles($directory,array(
             'types'                 => $types,
-            'pattern'               => isset($pattern) ? 'basename:'.$pattern : null,
+            'pattern'               => isset($pattern) ? 'basename | matches '.$pattern : null,
             'excludeDotFiles'       => $excludeDotFiles,
             'excludeDotDirectories' => $excludeDotDirectories,
-            'apply'                 => ($prefixWithDirectory ? 'path' : 'basename')
+            'apply'                 => ($prefixWithDirectory ? 'n' : 'basename')
           )) ;
 }
       
@@ -249,6 +251,7 @@ function findDirectFiles($directory,$params) {
   $apply = isset($params['apply']) ? $params['apply'] : "path" ;
   $action = isset($params['action']) ? $params['action'] : null ;
   
+    
   $allowedTypes=explode('|',$types) ;
   
   $accumulator = $init ;
@@ -271,6 +274,10 @@ function findDirectFiles($directory,$params) {
                   && ($type!=='file' || $excludeDotFiles!==TRUE || substr($file,0,1)!='.')
                   && ($type!=='dir' || $excludeDotDirectories!==TRUE || substr($file,0,1)!='.')
                   && (!isset($predicate) || $predicate($file)) 
+                  
+                  
+                  
+      // TODO use ConcretePExpression instead as the analysis of the expression will be done only once!            
                   && (!isset($exclude) || !matchPattern($exclude,$path))                 
                   && (!isset($pattern) || matchPattern($pattern,$path,$matches)) ;
                   
@@ -374,10 +381,10 @@ function listAllFileNames(
   return
   findFiles($root,array(
       'types'                 => $types,
-      'pattern'               => isset($pattern) ? 'basename:'.$pattern : null,
+      'pattern'               => isset($pattern) ? 'basename | matches '.$pattern : null,
       'excludeDotFiles'       => $excludeDotFiles,
       'excludeDotDirectories' => $excludeDotDirectories,
-      'apply'                 => ($prefixWithDirectory ? 'path' : 'basename')
+      'apply'                 => ($prefixWithDirectory ? 'nop' : 'basename')
   )) ;
 }
 
