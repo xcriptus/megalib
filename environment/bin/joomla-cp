@@ -1,4 +1,8 @@
 #!/bin/bash
+# TODO the exact status of the script is unkown
+# It should work, but it contains code that is redundant with joomla-zip and joomla-db-dump
+# It may not be necessary to use this script if the joomla installation do not contains
+# absolute symbolic link
 
 #------ Copy and Patch the Joomla Directory including links
 
