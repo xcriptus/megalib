@@ -1,5 +1,11 @@
 #!/bin/sh
-USAGE="$0 <symlink> <sedAction>"
+USAGE="usage: $0 <symlink> <sedAction>"
+if [ "$#" != 2 ]
+then
+  echo $USAGE
+  exit 1
+end
+
 SYMLINK=${1?$USAGE}
 ACTION=${2?$USAGE}
 if [ -L $SYMLINK ]

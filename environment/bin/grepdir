@@ -1,7 +1,9 @@
 #!/bin/bash
 if [ "$#" != 3 ]
 then
-  echo "usage: $0 files|lines <rootDirectory> <perlRegexpr>"
+  echo "recursive grep in a directory with a perlRegExpr"
+  echo "return either the list of files or lines containing the expression"
+  echo "usage: $0 files|lines <rootDirectory> <perlRegExpr>"
   exit 1
 fi
 MODE=${1?Mode: either "files" or "lines"}

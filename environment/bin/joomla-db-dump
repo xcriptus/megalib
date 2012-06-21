@@ -1,0 +1,95 @@
+#!/bin/bash
+# Create a dump of the database and make a diff between this dump and the previous version
+
+# @CALLS mysqldump
+function dumpDatabase() {
+	echo -n "dumping database ${J_DATABASE?} as user ${J_USER?} ... "
+	if mysqldump \
+	     --databases "${J_DATABASE?}" \
+	     --user "${J_USER?}" \
+	     --password="${J_PASSWORD?}" \
+	     --skip-comments --skip-extended-insert --order-by-primary --dump-date \
+	     --ignore-table=${J_DATABASE?}.${J_PREFIX?}session \
+	     > ${THIS_DB_FILE?}
+	then
+	  echo done. 
+	  echo `cat ${THIS_DB_FILE?} | wc -l` lines saved.
+	  echo `cat ${THIS_DB_FILE?} | grep 'INSERT'  | wc -l` INSERTs 
+	else
+	  echo Failed >/dev/stderr
+	  exit 1
+	fi
+}
+
+# @CALLS sed
+function makeRelocatable() {	
+	DBNAME_REPLACEMENT=__!%DBNAME%!__
+	PREFIX_REPLACEMENT=__!%PREFIX%!__
+	
+	if [ "$RELOCATE" == "relocate" ]
+	then
+	  echo replacing the database name by $DBNAME_REPLACEMENT and prefix by $PREFIX_REPLACEMENT ...
+	  if sed -e "s#\`$J_DATABASE\`#\`${DBNAME_REPLACEMENT?}\`#g" -e "s#\`$J_PREFIX#\`${PREFIX_REPLACEMENT}#g" -i ${THIS_DB_FILE?}
+	  then
+	    echo "done"
+	  else
+	    echo Failed >/dev/stderr
+	    exit 2
+	  fi
+	else
+	  echo No databasename/prefix replacement were performed as option "relocate" has not be selected
+	fi
+}
+
+# @CALLS cmp
+function compareDatabaseWithLastOneIfAny() {
+  if [ -f ${PREV_DB_FILE?} ]
+  then
+      # there is already a file so compare the new file with the last one
+	  if cmp ${THIS_DB_FILE?} ${PREV_DB_FILE?}
+	  then
+	    echo No difference beetwen current content and the last version `basename ${PREV_DB_FILE?}`. 
+	    # echo No file created, but change the time stamp of this file.
+	    # rm -f ${THIS_DB_FILE?}
+	    # touch ${PREV_DB_FILE?}
+	  else
+	    DIFFFILE=${J_BACKUPDIR?}/diff-${PREV_DB_INDEX?}-${THIS_DB_INDEX?}
+	    diff --side-by-side --suppress-common-lines -W 200 ${PREV_DB_FILE?} ${THIS_DB_FILE?} > $DIFFFILE
+	    echo `cat $DIFFFILE | wc -l` lines changed. See $DIFFFILE.
+	  fi
+  else
+      echo This is the first database dump. No comparison performed.
+  fi  
+}
+
+
+#---- starts here
+# @CALLS joomla-read-config.sh
+
+USAGE="usage: <configuration> [ relocate ]"
+
+CONFIGURATION=${1?*USAGE}   # $1 used directly in joomla-read-config.sh
+RELOCATE="$2"
+
+echo $USAGE
+echo Create a dump of the database into the specified outputfile 
+echo If a prefix is specified then the database name and this prefix
+echo will be replaced in the dump by generic placeholder to
+echo "anonymize" the database and make it "relocatable"
+
+source `dirname $0`/../lib/joomla-read-config.sh
+
+THIS_DB_INDEX=`ls ${J_BACKUP_DBFILE_PREFIX?}*.sql 2>/dev/null | wc -l`
+PREV_DB_INDEX=`expr ${THIS_DB_INDEX?} - 1`
+THIS_DB_FILE=${J_BACKUP_DBFILE_PREFIX?}${THIS_DB_INDEX?}.sql
+PREV_DB_FILE=${J_BACKUP_DBFILE_PREFIX?}${PREV_DB_INDEX?}.sql
+echo dump will be saved in `basename ${THIS_DB_FILE?}`
+
+dumpDatabase 
+
+makeRelocatable 
+
+compareDatabaseWithLastOneIfAny 
+ 
+
+

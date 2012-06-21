@@ -1,0 +1,11 @@
+#!/bin/bash
+USAGE="usage cat file | $0 <directory> .  The input file should be of the form changename tab  source tab target"
+DIR=${1?}
+IFS="	"
+while read NAME SOURCE TARGET
+do
+  echo -n executing "$DIR" "$SOURCE" "s|$SOURCE|$TARGET|g" "change-$NAME" ...
+  seddir "$DIR" "$SOURCE" "s|$SOURCE|$TARGET|g" "change-$NAME"
+  echo "done"
+done
+

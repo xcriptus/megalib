@@ -1,0 +1,227 @@
+#!/bin/bash
+
+#------ Copy and Patch the Joomla Directory including links
+
+
+# @CALLS gzip
+# @CALLS tar
+CopyJoomlaDirectory () {
+        echo -n "Creating the target directory: ${TARGETDIR?} ... "
+        if mkdir ${TARGETDIR?}
+        then
+          echo "done"
+        else
+          echo "$0: cannot create ${TARGETDIR?}"
+          exit 1
+        fi
+        echo -n "Going to source root directory: "
+        if cd ${SOURCEROOTDIR?}
+        then
+          echo `pwd`
+        else
+          echo "$0: cannot cd ${SOURCEROOTDIR?}"
+          exit 2
+        fi
+        echo -n "Creating the archive ${ARCHIVE?} from the source directory ... "
+        if tar cf ${ARCHIVE?} ${DIRSHORTNAME?}
+        then
+          echo "done"
+        else
+          echo "$0: cannot tar cf ${ARCHIVE?} ."
+          exit 3
+        fi
+        echo -n "Going to target root directory: "
+        if cd ${TARGETROOTDIR?}
+        then
+          echo `pwd`
+        else
+          echo "$0: cannot cd ${TARGETROOTDIR?}"
+          exit 4
+        fi
+        echo -n "Extracting the archive ... "
+        if tar xf ${ARCHIVE?}
+        then
+          echo "done"
+        else
+          echo "$0: cannot extract the archive in `pwd`"
+          exit 5
+        fi
+        echo -n "Compressing the archive ... "
+        if gzip -9 ${ARCHIVE?}
+        then
+          echo "done"
+        else
+          echo "$0: failed"
+          exit 6
+        fi
+}
+
+
+# @CALLS seddirbatch
+# @CALLS seddirlink
+
+PatchJoomlaFiles () { 
+        echo -n "Going to target root directory: "
+        if cd ${TARGETROOTDIR?}
+        then
+          echo `pwd`
+        else
+          echo "$0: cannot cd ${TARGETROOTDIR?}"
+          exit 4
+        fi
+
+        echo "Removing logs if any"
+        rm -f ${TARGETDIR?}/administrator/error_log* ${TARGETDIR?}/administrator/components/com_akeeba/backup/akeeba.*.log
+       
+        echo "-----------"
+        echo "Changing the content of all files containing some patterns with seddir"
+        echo "  root directories, dbnames, dbusers, and dbpasswords will be changed everywhere"
+        echo "rootdir	$SOURCEROOTDIR/	$TARGETROOTDIR/" >sedbatch.seddir
+        echo "dbname	'$SOURCEDBNAME'	'$TARGETDBNAME'" >>sedbatch.seddir
+        echo "dbuser	'$SOURCEDBUSER'	'$TARGETDBUSER'" >>sedbatch.seddir
+        echo "passwd	'$SOURCEDBPASSWORD'	'$TARGETDBPASSWORD'" >>sedbatch.seddir
+        echo "  additionally ${DIRSEDBATCH?} patterns will also be replaced" 
+        cat ${DIRSEDBATCH?} >>sedbatch.seddir
+        echo "  the following replacements will be done"
+        echo
+        cat sedbatch.seddir 
+        echo
+        
+        if cat sedbatch.seddir | seddirbatch ${DIRSHORTNAME}
+        then
+          echo "done"
+        else
+          echo "$0: seddirbatch failed"
+          exit 7
+        fi
+
+        echo -n "saving original link configuration  ... "
+        if find ${DIRSHORTNAME?} -type l -ls >change-link-originals.log
+        then
+          echo "`cat change-link-originals.log | wc -l` links found in total"
+        else
+          echo "$0: cannot save the original links"
+          exit 8
+        fi
+
+        echo -n "changing links ..."
+        if seddirlink ${DIRSHORTNAME?} "*" "s|${SOURCEROOTDIR?}|${TARGETROOTDIR?}|g" >change-links.log
+        then
+          echo "`grep "^CHANGED" change-links.log | wc -l` change(s)"
+        else
+          exit "$0: seddirlink failed"
+          exit 9
+        fi
+}
+
+#------ Copy and Patch the database
+
+# @CALLS mysqldump
+
+CopyAndPatchDatabase () {
+    echo -n "Going to target root directory: "
+        if cd ${TARGETROOTDIR?}
+        then
+          echo `pwd`
+        else
+          echo "$0: cannot cd ${TARGETROOTDIR?}"
+          exit 4
+        fi
+
+
+        DBDUMPFILE=${TARGETROOTDIR?}/${SOURCEDBNAME?}.sql
+        echo -n "Creating a dump of the source database ${SOURCEDBNAME?} with user ${SOURCEDBUSER?} ..."
+        if mysqldump --user="${SOURCEDBUSER?}" --password="${SOURCEDBPASSWORD?}" \
+                     --databases "${SOURCEDBNAME?}" >${DBDUMPFILE?}
+        then
+          echo "  `cat ${DBDUMPFILE?} | wc -l` lines"
+        else
+          echo "$0 cannot create the dump with user ${SOURCEDBUSER?}"
+          exit 10
+        fi
+
+        echo -n "Changing the database dump with ${SQLSEDBATCH?} batch ... "
+        if  sed -i.bck -f ${SQLSEDBATCH?} ${DBDUMPFILE?}
+        then
+          echo "done"
+        else
+          echo "$0 cannont change the dump"
+          exit 11
+        fi
+
+        echo "continue? (Ctrl-C to stop)"
+        read ANSWER
+        echo -n "Loading the modified database dump to  ${TARGETDBNAME?} ... "
+        if mysql --user="${TARGETDBUSER?}" --password="${TARGETDBPASSWORD}"  ${TARGETDBNAME?} <${DBDUMPFILE?}
+        then
+          echo "done"
+        else
+          echo "$0 cannot load the database  ${TARGETDBNAME?} with the user "${TARGETDBUSER?}
+          exit 12
+        fi
+}
+
+
+USAGE="$0 <configdir>  the extension .joomlacp.config will be added automatically" 
+CONFIGPARAM=${1?$USAGE}
+# compute the config directory and make it absolute
+CONFIGDIR=${CONFIGPARAM}.joomlacp.config
+CONFIGDIR=`cd $CONFIGDIR ; pwd`
+
+CONFIGVALUE=${CONFIGDIR?}/joomla-cp-config
+DIRSEDBATCH=${CONFIGDIR?}/joomla-cp-dir-sedbatch
+SQLSEDBATCH=${CONFIGDIR?}/joomla-cp-sql-sedbatch
+
+source ${CONFIGVALUE}
+echo "DIRECTORY root from ${SOURCEROOTDIR?} to ${TARGETROOTDIR?}"
+echo "          joomla is ${DIRSHORTNAME?}"
+echo "DATABASE  from ${SOURCEDBNAME?} to ${TARGETDBNAME?}"
+echo "          user ${SOURCEDBUSER?} to ${TARGETDBUSER?}"
+echo "          pass ${SOURCEDBPASSWORD?} to ${TARGETDBPASSWORD?}"
+echo 
+echo "WARNING: IF THE ELEMENT ABOVE CONTAIN A REGEXPR CHARACTER THIS SCRIPT WILL NOT WORK"
+
+
+SOURCEDIR=${SOURCEROOTDIR?}/${DIRSHORTNAME?}
+TARGETDIR=${TARGETROOTDIR?}/${DIRSHORTNAME?}
+ARCHIVE=${TARGETROOTDIR?}/${DIRSHORTNAME?}.tar
+
+echo
+echo "Do you want to copy ${DIRSHORTNAME?} "
+echo "   from ${SOURCEROOTDIR?}"
+echo "   to ${TARGETROOTDIR?}"
+echo "   and then patch it ?"
+echo "yes, Ctrl-C to stop, otherwise skip "
+read ANSWER
+if [ "$ANSWER" == "yes" ]
+then
+  CopyJoomlaDirectory
+fi
+
+
+
+echo
+echo "Do you want to apply patches to the copied directory"
+echo "yes, Ctrl-C to stop, otherwise skip "
+read ANSWER
+if [ "$ANSWER" == "yes" ]
+then
+  PatchJoomlaFiles
+fi
+
+echo "Do you want to copy and then patch the database"
+echo "   from ${SOURCEDBNAME?}"
+echo "   to ${TARGETDBNAME?}"
+echo "yes, Ctrl-C to stop, otherwise skip "
+read ANSWER
+if [ "$ANSWER" == "yes" ]
+then
+  CopyAndPatchDatabase
+fi
+
+echo "Changing right access of joomla directories to be writable"
+joomlachmod 777 $TARGETDIR
+
+echo "You can now connect to the web site. CHECK THE CONFIGURATION IN THE ADMIN"
+
+

@@ -1,0 +1,66 @@
+#!/bin/bash
+# @CALLS joomla-db-dump
+# @CALLS joomla-read-config.sh
+# @CALLS tar
+# @CALLS gzip
+
+
+USAGE="usage: <configurationFile>"
+echo $USAGE
+echo "Create an archive of the JOOMLA directory and a 'relocatable' dump of the database"
+
+source `dirname $0`/../lib/joomla-read-config.sh
+
+DIRTAR=${J_BACKUPDIR?}/${J_NAME?}_DIR.tar
+DBFILE=${J_BACKUP_DBFILE_PREFIX?}.sql
+
+echo -n creating an archive of ${J_DIRECTORY?) ...
+if [ -d ${J_ROOTDIR?} ]
+then
+  cd ${J_ROOTDIR?}
+else
+  echo "Failed"
+  echo "Directory ${J_ROOTDIR?} does not exit!" >/dev/stderr
+  exit 4
+fi
+rm -f ${DIRTAR?}
+if tar cf ${DIRTAR?} ${J_NAME?} 
+then
+  echo done
+else
+  echo Cannot create the archive ${DIRTAR?} from ${J_NAME?} being in `pwd` >/dev/stderr
+  exit 1
+fi
+echo -n compressing the archive ...
+rm -f ${DIRTAR?}.gz
+gzip -9 ${DIRTAR?}
+echo done
+
+echo dumping the database $DATABASE and normalizing the prefix
+if joomla-db-dump $1 relocate
+then
+  echo "database dumped"
+else
+  echo "could not dump database $DATABASE with use $USER" >/dev/stderr
+  exit 2
+fi
+
+echo -n archiving the database dump ... 
+rm -f $DBFILE.gz
+gzip -9 $DBFILE
+echo done
+echo
+
+echo "The following files have been created."
+echo "You may want to transfer them to your localhost in the 'online' project"
+echo "DO NOT FORGET first to remove existing directory there before unpacking the archive"
+echo " (1)  $DIRTAR.gz"
+echo " (2)  $DBFILE.gz"
+
+
+
+
+
+
+
+

@@ -1,6 +1,8 @@
 #!/bin/bash
 if [ "$#" != 2 ]
 then
+  echo "Recursive grep on symbolic link targets with a unixPathRegExpr"
+  echo "Only symbolic links that direct to a matching target will be returned"
   echo "usage: $0 <rootDirectory> <unixPathRegexpr>"
   exit 1
 fi

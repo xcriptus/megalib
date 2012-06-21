@@ -1,5 +1,12 @@
 #!/bin/bash
-USAGE="$0 <rootDirectory> <unixPathRegExpr> <sedAction>"
+USAGE="usage: $0 <rootDirectory> <unixPathRegExpr> <sedAction>"
+if [ "$#" != 3 ]
+then
+  echo "change all symbolic links matching a (unix)regexpr with a sed action"
+  echo $USAGE
+  exit 1
+fi
+
 ROOTDIRECTORY=${1?$USAGE}
 FILTER=${2?$USAGE}
 ACTION=${3?$USAGE}

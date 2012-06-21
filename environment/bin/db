@@ -1,0 +1,28 @@
+#!/bin/bash
+USAGE='usage: <config>'
+source `dirname $0`/../lib/joomla-read-config.sh
+
+DBNAME=megaplan_MAIN002
+USERNAME=megaplan_MAIN002
+PASSWORD=MAIN002
+PREFIX=m101_
+
+THIS=`ls db*.sql | wc -l`
+PREV=`expr $THIS - 1`
+THISFILE=db${THIS}.sql
+PREVFILE=db${PREV}.sql
+if joomla-db-dump $1 >/dev/null
+then
+else
+fi
+
+if cmp $THISFILE $PREVFILE
+then
+  echo no difference. No file created.
+  rm $THISFILE
+else
+  echo $THISFILE `cat $THISFILE | grep INSERT  | wc -l` INSERTs 
+  DIFFFILE=diff$PREV-$THIS
+  diff --side-by-side --suppress-common-lines -W 200 ${PREVFILE} ${THISFILE} > $DIFFFILE
+  echo `cat $DIFFFILE | wc -l` lines changed. See $DIFFFILE.
+fi

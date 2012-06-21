@@ -1,0 +1,55 @@
+#!/bin/bash
+USAGE="$0 <permission> <joomladir>  Set the permission of some joomla directories"
+PERM=${1?$USAGE}
+J=${2?$USAGE}
+
+chmod ${PERM?} ${J?}/administrator/components
+chmod ${PERM?} ${J?}/administrator/language
+chmod ${PERM?} ${J?}/administrator/language/*
+chmod ${PERM?} ${J?}/administrator/language/overrides
+chmod ${PERM?} ${J?}/administrator/manifests/files
+chmod ${PERM?} ${J?}/administrator/manifests/libraries
+chmod ${PERM?} ${J?}/administrator/manifests/packages
+chmod ${PERM?} ${J?}/administrator/modules
+chmod ${PERM?} ${J?}/administrator/templates
+chmod ${PERM?} ${J?}/components
+chmod ${PERM?} ${J?}/images
+chmod ${PERM?} ${J?}/images/avatar
+chmod ${PERM?} ${J?}/images/banners
+chmod ${PERM?} ${J?}/images/bgmax
+chmod ${PERM?} ${J?}/images/originalphotos
+chmod ${PERM?} ${J?}/images/oziodownload
+chmod ${PERM?} ${J?}/images/oziogallery3
+chmod ${PERM?} ${J?}/images/pagepeel
+chmod ${PERM?} ${J?}/images/photos
+chmod ${PERM?} ${J?}/images/watermarks
+chmod ${PERM?} ${J?}/language
+chmod ${PERM?} ${J?}/language/*
+chmod ${PERM?} ${J?}/language/overrides
+chmod ${PERM?} ${J?}/libraries
+chmod ${PERM?} ${J?}/media
+chmod ${PERM?} ${J?}/modules
+chmod ${PERM?} ${J?}/plugins
+chmod ${PERM?} ${J?}/plugins/authentication
+chmod ${PERM?} ${J?}/plugins/chameleon
+chmod ${PERM?} ${J?}/plugins/community
+chmod ${PERM?} ${J?}/plugins/content
+chmod ${PERM?} ${J?}/plugins/editors
+chmod ${PERM?} ${J?}/plugins/editors-xtd
+chmod ${PERM?} ${J?}/plugins/extension
+chmod ${PERM?} ${J?}/plugins/koowa
+chmod ${PERM?} ${J?}/plugins/search
+chmod ${PERM?} ${J?}/plugins/system
+chmod ${PERM?} ${J?}/plugins/user
+chmod ${PERM?} ${J?}/plugins/xmap
+chmod ${PERM?} ${J?}/templates
+chmod ${PERM?} ${J?}/configuration.php
+chmod ${PERM?} ${J?}/cache
+chmod ${PERM?} ${J?}/administrator/cache
+chmod ${PERM?} ${J?}/logs
+chmod ${PERM?} ${J?}/tmp
+chmod ${PERM?} ${J?}/administrator/components/com_community/jomsocialupdate.ini
+chmod ${PERM?} ${J?}/administrator/components/com_multisites
+chmod ${PERM?} ${J?}/administrator/components/com_multisites/backup_on_install
+chmod ${PERM?} ${J?}/administrator/components/com_multisites/backup
+

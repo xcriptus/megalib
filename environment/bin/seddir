@@ -1,5 +1,12 @@
-#!/bin/sh
-USAGE="$0 <rootDirectory> <perlRegExpr> <sedAction> <backup> [verbose]"
+#!/bin/bash
+USAGE="usage: $0 <rootDirectory> <perlRegExpr> <sedAction> <backup> [verbose]"
+if [ "$#" -lt 4 ]
+then
+  echo "Apply a sed action on all files matching a perlRegExpr and contained recursively in a given directory"
+  echo $USAGE
+  exit 1
+fi
+       
 ROOTDIRECTORY=${1?$USAGE}
 PATTERN=${2?$USAGE}
 ACTION=${3?$USAGE}
@@ -40,7 +47,7 @@ then
           echo "CHANGED" >>$LOG 
         fi
         echo "BEGIN-CHANGES:\t$FILE" >>$LOG
-	diff $BACKUPFILE $FILE >>$LOG
+	    diff $BACKUPFILE $FILE >>$LOG
         echo "END-CHANGES:\t$FILE" >>$LOG
         if tar -rf ${ARCHIVE?} $BACKUPFILE
         then
