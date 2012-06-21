@@ -66,6 +66,14 @@ function endsWith($haystack, $needle)
   return (substr($haystack, - strlen($needle)) === $needle);
 }
 
+function scontains($haystack,$needle) {
+  if (strpos($haystack,$needle)===false) {
+    return false ;
+  } else { 
+    return true ;
+  }
+}
+
 function prefixIfNeeded($str, $prefix) {
   return startsWith($str,$prefix) ? $str : $prefix . $str ;
 }
@@ -78,6 +86,42 @@ function withoutOptionalSuffix($str, $suffix) {
   return endsWith($str,$suffix) ? substr($str,0,strlen($str)-strlen($suffix)) : $str  ;
 }
 
+function ftrim($str) {
+  return trim(preg_replace('/  /',' ',$str,-1)) ;
+}
+
+preg_match('/(?U:(.).*\1)/',"|dskjfh,sdf| fsqdfkj|" ,$matches) ;
+
+function shiftWord(&$str,$delimiters='`"\'') {
+  $str = ltrim($str) ;
+  if ($str === "") {
+    return null ;
+  } elseif (preg_match('=^(['.$delimiters.'])(?:\\\\\1|.)*?\1=',$str,$matches)) {
+    // this is the case of a words delimited by one of the delimiters.
+    // inside they can be the delimiter with \
+    $str = withoutOptionalPrefix($str,$matches[0]) ;
+    $word = substr($matches[0],1,strlen($matches[0])-2) ;
+    $word = str_replace('\\','',$word) ;
+    return $word ;
+  } elseif (preg_match('=^(?:\\\\ |[^ ])+=',$str,$matches)) {
+    $str = withoutOptionalPrefix($str,$matches[0]) ;    
+    $word = $matches[0] ;
+    $word = str_replace('\\','',$word) ;
+    return $word ;
+  } else {
+    die(__FUNCTION__.": unexpected case") ;
+  }
+}
+
+function words($str,$delimiters='`"\'') {
+  $words = array() ;
+  $word=shiftWord($str,$delimiters) ;
+  while ($word !== null) {
+    $words[] = $word ;
+    $word=shiftWord($str,$delimiters) ;
+  }
+  return $words ;  
+}
 
 
 /**
