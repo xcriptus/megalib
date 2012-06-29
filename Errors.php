@@ -55,7 +55,9 @@ interface IErrorManager {
    * @return List*(Error!) the list of errors or an empty array in case of success
    */
   public function getErrors() ;
-  
+}
+
+interface IErrorManagerWithHandler extends IErrorManager {
   /**
    * Set the error handler. It will be used for next operations until a next
    * application of this function again.
@@ -113,8 +115,15 @@ class BasicErrorManager implements IErrorManager, IErrorProducer {
   }
   
   public function mergeErrors(IErrorProducer $errorProducer, $prefix) {
-    foreach ($errorProducer->getErrors() as $error) {
-      $this->errors[]=$prefix.':'.$error ;
+    $producerErrors = $errorProducer->getErrors() ;
+    $producerErrorsCount = count($producerErrors) ;
+    if ($producerErrorsCount>0) {
+      foreach ($producerErrors as $error) {
+        $this->errors[]=$prefix.':'.$error ;
+      }
+      $this->errors[]=
+        $prefix.':'.$producerErrorsCount.' error'
+        .(($producerErrorsCount===1)?'':'s').' found.' ;
     }
   }
   /**
@@ -128,7 +137,9 @@ class BasicErrorManager implements IErrorManager, IErrorProducer {
       
     } elseif ($this->errorHandler==='echo') {
       // errors are echoed
-      var_dump($this->errors) ;
+      foreach($this->errors as $error) {
+        echo('<b><pre>ERROR: '.$error.'</pre>') ;
+      }
       return $result ;
       
     } elseif ($this->errorHandler==='die') {

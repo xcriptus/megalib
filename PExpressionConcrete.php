@@ -9,6 +9,9 @@ require_once 'PFunLibrary.php' ;
  * Parser of PExpression. 
  */
 class PExpressionParser extends AbstractParser {    
+  protected $functionLibrary  ;
+  
+  
       
   //------------------------------------------------------
   //    Parsing Rules
@@ -19,7 +22,7 @@ class PExpressionParser extends AbstractParser {
    *   part (op part)* 
    * which are translated into a POperatorExpression.
    * Note that if there is only one operator, then only the result of
-   * the parsing of part is returned.
+   * the parsing of part is returned with no operator.
    * @param String! $operator
    * @param String! $methodName name of the parse method for sub rules
    * @return POperatorExpression|PExpression
@@ -40,6 +43,16 @@ class PExpressionParser extends AbstractParser {
     }
   }
   
+  
+  protected function parseRegularToken() {
+    $token = $this->lexer->pullToken() ;
+    if (TExpressionEvaluator::isConstant($token)) {
+      return new PConstant($token) ;
+    } else {
+      return new PTExpression($token) ;
+    }
+  }
+  
   //   PFunApplication ::= <funname> <parameters> *
   //
   protected function parsePFunApplication() {
@@ -53,64 +66,194 @@ class PExpressionParser extends AbstractParser {
       // the first token is the function name
       $pFunName = $token ;
       // reads the parameters
-      $parameters = array() ;
+      $parametersExpression = array() ;
       while ( $this->lexer->hasMoreTokens() 
-              && ! $this->lexer->isNextTokenIn(array('|','&&','||',')')) ) {
-         $parameters[] = $this->lexer->pullToken() ;
+              && ! $this->lexer->isNextTokenIn(array('|','&&','||',')',']','}',',')) ) {
+        $expr = $this->parseAtom() ;
+        if ($expr==null) {
+          $this->addError("parameter of function $pFunName cannot be parsed" ) ;
+          $expr = new PInvalidExpression($this->getErrors()) ;
+        }
+        $parametersExpression[] = $expr ;
       }
-      
       //----- get the function from the library --------
-      $funLibrary = PFunLibrary::getInstance() ;
-      $funApplication = $funLibrary->getPFunApplication($pFunName,$parameters) ;
-      if ($funApplication===null) {
-        $this->addError("invalid function application $pFunName") ;
+      $funApplication = $this->functionLibrary->getPFunApplication($pFunName,$parametersExpression) ;
+      if (is_string($funApplication)) {
+        $this->addError($funApplication) ;
         return null ;
       } else {
         return $funApplication ;
       }
     }
   }
+  
+//   protected function parseTemplateExpression() {
+//     $tokens = array() ;
+//     while ( $this->lexer->hasMoreTokens()
+//         && ! $this->lexer->isNextTokenIn(array('|','&&','||',')',']','}',',')) ) {
+//       $tokens[] = $this->lexer->pullToken() ;
+//     }
+//     $template = implode(' ',$tokens) ;
+//     return new PTExpression($template) ;
+//   }
+  
+//   protected function parseBasicExpression() {
+//     if (DEBUG>10) echo "parseBasicExpression " ;
+//     $nextToken = $this->lexer->lookNextToken() ;
+//     if ($this->functionLibrary->isFunctionName($nextToken)) {
+//       return $this->parsePFunApplication() ;
+//     } else {
+//       return $this->parseTemplateExpression() ;
+//     }
+//   }
+  
+//   protected function parseTokenOrPParentherizedExpression() {
+//     $nextToken = $this->lexer->lookNextToken() ;
+//     if ($nextToken==='(') {
+//       $result = $this->parseParentherizedExpression() ;
+//     } else {
+//       $token = $this->lexer->pullToken() ;
+//       $result = new PTExpression($token) ;
+//     }
+//     if ($result===null) {
+//       $this->addError('Token or parenthesis expected') ;
+//     }
+//     return $result ;
+//   }
+  
+//   protected function parseTokenOrPAtom() {
+//     $nextToken = $this->lexer->lookNextToken() ;
+//     if (in_array($nextToken,array('(','[','{'))) {
+//       $result = $this->parseAtom() ;
+//     } else {
+//       $token = $this->lexer->pullToken() ;
+//       $result = new PTExpression($token) ;
+//     }
+//     if ($result===null) {
+//       $this->addError('Token, [, (, or { expected') ;
+//     }
+//     return $result ;
+//   }
+
+  protected function parseParentherizedExpression() {
+    $this->lexer->pullToken('(') ;
+    //=====   TSequence ::= '(' PExpression ')'
+    $texpr = $this->parsePExpression() ;
+    if ($texpr===null) {
+      $this->addError('invalid expression after ( ') ;
+      return null ;
+    }
+    $token = $this->lexer->pullToken(')') ;
+    if ($token!==')') {
+      return null ;
+    }
+    return $texpr ;
+  }
+  
+  
+  protected function parseListExpression() {
+    $this->lexer->pullToken('[') ;
+    $list = array() ;
+    //=====   "[ " (PExpression)* " ]"
+    $nextToken = $this->lexer->lookNextToken() ;
+    while ($nextToken !== ']' && $nextToken !== null) {
+      $element = $this->parseAtom() ;
+      if ($element===null) {
+        $this->addError('invalid expression in list expression [') ;
+        $element = new PInvalidExpression($this->errors) ;
+      }
+      $list[]=$element ;
+      $nextToken = $this->lexer->lookNextToken() ;
+    }
+    $token = $this->lexer->pullToken(']') ;
+    if ($token!==']') {
+      return null ;
+    }
+    $e=new POperatorExpression();
+    $e->operator='[]' ;
+    $e->operands=$list ;
+    return $e ;
+  }
+  
+  
+  protected function parseMapExpression() {
+    $this->lexer->pullToken('{') ;
+    $list = array() ;
+    //=====   "{ " ((PToken|PParentherizedExpression) PExpression)* " }"
+    $nextToken = $this->lexer->lookNextToken() ;
+    while ($nextToken !== null && $nextToken !== '}' ) {
+   
+      // get the key 
+      $key=$this->parseAtom() ;
+      if ($key===null) {
+        $this->addError('Invalid key expression in map expression.') ;
+        $key=new PInvalidExpression($this->errors) ;
+      }
+      
+      // get the expression
+      $expression = $this->parseAtom() ;
+      if ($expression===null) {
+        $this->addError('invalid value expression in map expression') ;
+        $expression=new PInvalidExpression($this->errors) ;
+      }
+      
+      $list[]=$key ;        // even elements are key
+      $list[]=$expression ; // odd elements are expressions 
+      $nextToken = $this->lexer->lookNextToken() ;
+    }
+    $token = $this->lexer->pullToken('}') ;
+    if ($token!=='}') {
+      return null ;
+    }
+    $e=new POperatorExpression();
+    $e->operator='{}' ;
+    $e->operands=$list ;
+    return $e ;
     
+    return $texpr ;
+  }
+  
   //   TAtom ::= '(' PExpression ')'
   //              |  PFunApplication ('|' PFunApplication)*   
   //
   protected function parseAtom() {
     if (DEBUG>10) echo "parseAtom " ;
-    $token = $this->lexer->lookNextToken() ;
-    if ($token===null) { 
+    $nextToken = $this->lexer->lookNextToken() ;
+    if ($nextToken===null) { 
       return null ;
     } else {
-       
-      if ($token==='(') {
-        $this->lexer->pullToken('(') ;
-        //=====   TSequence ::= '(' PExpression ')'
-        $texpr = $this->parsePExpression() ;
-        if ($texpr===null) {
-          $this->errors[] = 'invalid expression after ( ' ;
-          return null ;
-        }
-        $token = $this->lexer->pullToken(')') ;
-        if ($token!==')') {
-          return null ;
-        }
-        return $texpr ;
-      } else {
-        
-        //=====   TSequence ::= PFunApplication ('|' PFunApplication)*
-        return $this->parsePipeSequence() ;
-      }
+
+      switch ($nextToken) {
+        case '(':
+          return $this->parseParentherizedExpression() ;
+          break ;
+        case '[':
+          return $this->parseListExpression() ;
+          break ;
+        case '{':
+          return $this->parseMapExpression() ;
+          break ;
+        default:
+          if ($this->functionLibrary->isFunctionName($nextToken)) {
+            return $this->parsePFunApplication() ;
+          } else {
+            return $this->parseRegularToken() ;
+          }
+         
+      }     
+      return $this ;
     }
   }
-  
-  protected function parsePipeSequence() {
-    if (DEBUG>10) echo "parsePipeSequence " ;
-    return $this->parseOperatorExpression('|','parsePFunApplication') ;
+    
+  protected function parsePipeExpression() {
+    if (DEBUG>10) echo "parseAndExpression " ;
+    return $this->parseOperatorExpression('|','parseAtom') ;
   }
   
   protected function parseAndExpression() {
     if (DEBUG>10) echo "parseAndExpression " ;
-    return $this->parseOperatorExpression('&&','parseAtom') ;
-  }
+    return $this->parseOperatorExpression('&&','parsePipeExpression') ;
+  } 
   
   protected function parseOrExpression() {
     if (DEBUG>10) echo "parseOrExpression " ;
@@ -122,12 +265,20 @@ class PExpressionParser extends AbstractParser {
   }
   
   public function parseTopLevelRule() {
-    if (DEBUG>10) echo "parseOrExpression " ;
-    return $this->parseOrExpression() ;
+    $result = $this->parsePExpression() ;
+    if ($this->lexer->hasMoreTokens()) {
+      $tokens = array() ;
+      while ($this->lexer->hasMoreTokens  ()) {
+        $tokens[] =  $this->lexer->pullToken() ;
+      }
+      $this->addError('Remaining tokens ignored :'.implode(' ',$tokens)) ;
+    } 
+    return $result ;
   }
 
   public function __construct() {
     parent::__construct(new FunBasedLexer('words')) ;
+    $this->functionLibrary = PFunLibrary::getInstance() ;
   }
 }
 
@@ -157,6 +308,19 @@ class ConcretePExpression extends BasicErrorManager implements PExpression {
    */
   protected $abstractExpression ;
 
+  public function getStringExpression() {
+    return $this->stringExpression ;
+  }
+  
+  public function toString() {
+    $status = 
+      ($this->isValid === null)
+        ? ' [notValidatedYet]'
+        : (($this->isValid === false)
+             ? ' [INVALID]'
+             : ' [Validated]') ;        
+    return $this->stringExpression.$status ;
+  }
   public function getAbstractExpression() {
     // if not already parsed, parse the expression
     if ($this->isValid===null) {
@@ -176,14 +340,16 @@ class ConcretePExpression extends BasicErrorManager implements PExpression {
         ? $this->abstractExpression
         : null ;
   }
+  
+  
 
   public function doEval($value,&$environment) {
     $pexpr = $this->getAbstractExpression() ;
     if ($pexpr===null) {
-      $this->addError('The expression is invalid') ;
+      $this->addError('PExpression '.$this->stringExpression.' is invalid') ;
       return null ;
     } else {
-      $result = $pexpr->doEval($value,$enviroment) ;
+      $result = $pexpr->doEval($value,$environment) ;
       $errors = $this->mergeErrors($pexpr,'eval') ;
       return $result ;
     }

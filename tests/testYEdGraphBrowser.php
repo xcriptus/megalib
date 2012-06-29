@@ -6,6 +6,7 @@ require_once '../YEdGraphBrowser.php' ;
 define('ROOTDIR','../../101dev/sandbox/m12/implementations/xsdClasses') ;
 define('TARGETDIR',ROOTDIR.'/docs') ;
 define('YEDGRAPHFULLNAME',ROOTDIR.'/xsdClassesArtefactView.megal.graphml') ;
+echo "<h2>Generating a browser for the graph".YEDGRAPHFULLNAME.'</h2>' ;
 $sourceFileDirectory = ROOTDIR.'/repo' ;
 $SourceDefinitions = array(
     array('Company.xsd','xml', array('Company'=>'4-11', 'Department'=>'13-20', 'Employee'=>'22-28')),
@@ -24,5 +25,7 @@ $generator =
        $sourceFileDirectory,
        $SourceDefinitions,
        TARGETDIR) ;
+
+echo "result is in <a href='".TARGETDIR."'>".TARGETDIR."</a><br/>" ;
 
 echo "<h1>END OF TESTS</h1>" ;

@@ -248,7 +248,7 @@ function findDirectFiles($directory,$params) {
   $exclude = isset($params['$exclude']) ? $params['$exclude'] : null ;
   $predicate = isset($params['predicate']) ? $params['predicate'] : null ;
   $init = isset($params['init']) ? isset($params['init']) : array() ;
-  $apply = isset($params['apply']) ? $params['apply'] : "path" ;
+  $apply = isset($params['apply']) ? $params['apply'] : "collect" ;
   $action = isset($params['action']) ? $params['action'] : null ;
   
     
@@ -287,8 +287,7 @@ function findDirectFiles($directory,$params) {
           case "basename":
             $value = $file ;
             break ;
-          case "path":
-          default:
+          default:            
             $value = $path ;            
         }
         
@@ -354,7 +353,7 @@ function findFiles($root,$param,$currenLevel=1) {
  * @param Seq('dir','file','link','error','|')? $typeFilter the type of items to select separated by |
  * if various types are accepted. By default all types are accepted.
  * 
- * @param Pattern? $namePattern if not null a pattern (see TExpr.php) that will be used as
+ * @param Pattern? $namePattern if not null a pattern (see TExpression.php) that will be used as
  * a filter on the item name. The matching is done only on the file name, without the path.
  * $nameRegExpr should be a string of the form '/.../' or 'suffix:.c', 'etc.'. Default to null.
  * 

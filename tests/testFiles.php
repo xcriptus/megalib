@@ -12,7 +12,6 @@ testListAllLinksWithInfo('..') ;
 function testFindFiles() {
   $testCases = array(
       array('data/input',array('levels'=>2) ),
-      array('../../101results/101repo/contributions',array('excludeDotFiles'=>false,'pattern'=>'matches /\.fratala$/')) ,
     ) ;
   foreach($testCases as $t) {
     echo "<h3>findFiles</h3>" ; 

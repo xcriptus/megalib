@@ -1,7 +1,7 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
 require_once 'HTML.php' ;
-require_once 'TExpr.php' ;
+require_once 'TExpression.php' ;
 require_once 'Structures.php' ;
 require_once 'FileSystemMatcher.php' ;
 
@@ -175,7 +175,6 @@ class TaggedFragmentSet {
         @ unlink($targetFile) ;
         saveOrMergeJsonFile($targetFile, $this->fileToTaggedFragmentsMapping[$file],'array_merge_recursive',$results,$beautify) ;
       }
-      var_dump($results) ;
     }
 
 
@@ -381,7 +380,7 @@ class TaggedFragmentSetReader {
         $baseDirectory,
         array(
             'excludeDotFiles'=>false,
-            'pattern'=>'#(.*)\.fratala#'),
+            'pattern'=>'matches #(.*)\.fratala#'),
         '${1}') ;
 
     // for each definitionSet

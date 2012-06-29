@@ -58,17 +58,33 @@ require_once 'PFunLibrary.php' ;
 /** 
  * == Definition ==
  * 
+ * TopLevelExpression  ::= PExpression EOF
+ * PExpression         ::= POrExpression 
+ * POrExpression       ::= PAndExpression (" || " PAndExpression)*
+ * PAndExpression      ::= PPipeExpression (" && " PPipeExpression)*
+ * PPipeExpression     ::= PAtom (" | " PAtom)*
  * 
- * PExpression    ::= POrExpression
- * POrExpression  ::= PAndExpression (" || " PAndExpression)*
- * PAndExpression ::= PAtom (" && " PAtom)*
  * PAtom ::= 
- *     "( " PExpression " )" 
- *   | PipeSequence
+ *   | PParentherizedExpression 
+ *   | PMapExpression 
+ *   | PListExpression    
+ *   | PFunApplication
+ *   | PRegularToken
  *   
- * PipeSequence ::=
- *   PFunApplication (" | " PFunApplication)*
- *  
+ * PMapExpression ::= 
+ *   "{ " (PAtom PAtom)* " }"
+ *   
+ * PListExpression ::=
+ *   "[ " PAtom* " ]"
+ * 
+ * PBasicExpression ::=
+ *     PFunApplication
+ *   | PTemplateExpression
+ *   
+ * PFunApplication ::=
+ *     PFunName PAtom*
+ *     
+ * 
  * PFunApplication ::=             // function to be combined in a pipe mode
  * 
  *       'basename'                // unix basename, returns the short file name without directory (could be used for any string)
@@ -79,9 +95,12 @@ require_once 'PFunLibrary.php' ;
  *     | 'upper'                   // convert to uppercase
  *     | 'trim'                    // remove starting and trailing spaces
  *     | 'ftrim'                   // full trim: remove starting and trailing spaces and duplicated spaces 
- *     | 'content'                 // the content of a given file name or null if the file name cannot be read
+ *     | 'content'                 // the content of a given file name as a string or null if the file name cannot be read
+ *     | 'jsonContent'             // the content of a given json file as a structure or value or null if the file cannot be read or not json
  *     | 'nop'                     // no operation. Usefull mostly when code is generated for instance.
  *     | 'head' <n>                // the n first lines (or less)
+ *     | 'isFile'                  // null if the file does not exist
+ *     | 'isDir'                   // null if the directory does not exist
  *     | 'equals' <w>              // null if not equals to the word <w>. No special characters.
  *                                 // Example: "equals the" will match "the" but not "then".
  *     | 'equalsOne' <w>+          // null if not equals to any word in the list.
@@ -105,7 +124,8 @@ require_once 'PFunLibrary.php' ;
  *                                 //                          and * meaning any characters (.* in regexpr).
  *     | 'eval' <w>+               // 
  *     | 'exec' <cmd> <w>+         //  
- *     
+ *     | 'count'                   // nb of elements in an collection
+ *     | 'sum'                     // sum of the elements in the array
  */
 
 
@@ -159,6 +179,9 @@ function matchToTemplate($pattern,$string,$template) {
 }
 
 
+interface PExpression {
+  public function doEval($value,&$environment) ;
+}
 
 
 //--------------------------------------------------------------------------
@@ -176,11 +199,21 @@ abstract class AbstractPExpression extends BasicErrorManager implements PExpress
   
   protected abstract function apply($value,&$environment) ;
   
+  public abstract function toMap() ;
+  
+  public function toJson($beautify=true) {
+    return jsonEncode($this->toMap(),$beautify) ;
+  }
   
   public function doEval($value,&$environment) {
     $this->resetErrors() ;
+    $environment['_last'] = $value ;
     $result = $this->apply($value,$environment) ;
     return $result ;  
+  }
+  
+  public function __toString() {
+    return $this->toJson() ; 
   }
     
   public function __construct() {
@@ -188,7 +221,19 @@ abstract class AbstractPExpression extends BasicErrorManager implements PExpress
   }
 }
 
-
+class PInvalidExpression extends AbstractPExpression {
+  public $errors ;
+  public function toMap() {
+    return array("ERROR" => $errors) ;
+  }
+  protected function apply($value,&$environment) {
+    return null ;
+  }
+  public function PInvalidExpression($errors) {
+    parent::__construct() ;
+    $this->errors = $errors ;
+  }
+}
 
 class POperatorExpression extends AbstractPExpression {
   /**
@@ -200,6 +245,14 @@ class POperatorExpression extends AbstractPExpression {
    */
   public $operands ;
   
+  public function toMap() {
+    $operandsMaps = array() ;
+    foreach ($this->operands as $operands) {
+      $operandsMaps[]=$operands->toMap() ;
+    }
+    return array($this->operator => $operandsMaps) ;
+  }
+  
   protected function apply($value,&$environment) {
     switch ($this->operator) {
       case '|':
@@ -208,7 +261,7 @@ class POperatorExpression extends AbstractPExpression {
         }
         return $value ;
         break ;
-      case '&&';
+      case '&&':
         foreach($this->operands as $operand) {
           $result = $operand->apply($value,$environment) ;
           if ($result===null) {
@@ -217,7 +270,7 @@ class POperatorExpression extends AbstractPExpression {
         }
         return $result ;
         break ;
-      case '||';
+      case '||':
         foreach($this->operands as $operand) {
           $result = $operand->apply($value,$environment) ;
           if ($result!==null) {
@@ -226,6 +279,29 @@ class POperatorExpression extends AbstractPExpression {
         }
         return null ;
         break ;
+      case '[]':
+        $resultingList = array() ;
+        foreach($this->operands as $operand) {
+          $result = $operand->apply($value,$environment) ;
+          if ($result!==null) {
+            $resultingList[] = $result ;
+          }
+        }
+        return $resultingList ;
+        break ;
+      case '{}':
+        $resultingMap = array() ;
+        $nbOfPairs = count($this->operands) / 2 ;
+        for($i=1;$i<=$nbOfPairs;$i++) {
+          $keyExpression = $this->operands[($i-1)*2] ;
+          $key = $keyExpression->apply($value,$environment) ;
+          $valueForKeyExpression = $this->operands[($i-1)*2+1] ;
+          $valueForKey = $valueForKeyExpression->apply($value,$environment) ;
+          if ($key!==null && $valueForKey!==null) {
+            $resultingMap[$key] = $valueForKey ;
+          }
+        }
+        return $resultingMap ;
       default:
         die(__FUNCTION__.": operator ".$this->operator." not supported") ;
     }
@@ -246,6 +322,15 @@ class PFunApplication extends AbstractPExpression {
    */
   public $name ;
   
+  /**
+   * type CollectionMode ==
+   *     'null'      // the function cannot be applied on collection
+   *     'apply'     // the function takes a collection as parameter, so apply it
+   *     'map'       // apply the function for each element of the collection
+   *     'filter'    // select only elements that do not return null 
+   * @var CollectionMode
+   */
+  public $collectionMode ;
   /**
    * @var List+(String!)! the list of actual parameters
    */
@@ -269,6 +354,89 @@ class PFunApplication extends AbstractPExpression {
   public $native ;
   
   
+  /*
+   * @see AbstractPExpression::toMap()
+   */
+  public function toMap() {
+    $parametersMaps = array() ;
+    foreach ($this->parameters as $parameter) {
+      $parametersMaps[]= $parameter->toMap() ;  // $parameter->toMap() ;
+    }  
+    return array($this->name=>$parametersMaps) ;
+  }
+  
+  protected function _basicApply($value,&$environment=array()) {
+    $phpfun = $this->phpName ;
+    // parameter evaluation should not be done for lambda expression parameters
+    $parameterValues = array() ;
+    foreach ($this->parameters as $parameter) {
+      $r = $parameter->apply($value,$environment) ;
+      $parameterValues[]=$r ;
+    }
+    if ($this->native) {
+      switch ($this->argsMode) {
+        case 0:
+          $result = $phpfun($value) ;
+          break ;
+    
+        case 1:
+          $result = $phpfun($value,$parameterValues[0]) ;
+          break ;
+    
+        case 2:
+          $result = $phpfun($value,$parameterValues[0],$parameterValues[1]) ;
+          break ;
+    
+        case 3:
+          $result = $phpfun($value,$parameterValues[0],$parameterValues[1],$parameterValues[2]) ;
+          break ;
+    
+        case '*':
+        case '+':
+          $result = $phpfun($value,$parameterValues) ;
+          break ;
+    
+        default:
+          die(__FUNCTION__.": invalid arguments specification for pfun ".$this->name) ;
+      }
+    } else {
+      $library=PFunLibrary::getInstance() ;
+      $result = $library->$phpfun($value,$parameterValues,$environment) ;
+    }
+    return $result ;
+  }
+  
+  protected function _collectionApply($value,&$environment=array()) {
+    switch ($this->collectionMode) {
+      case null:
+        $this->addError('cannot apply '.$this->name.' function to a collection' ) ;
+        $result = null ;
+        break ; 
+      
+      case 'apply':
+        $result = $this->_basicApply($value,$environment) ;
+        break ;
+        
+      case 'map':
+      case 'filter':
+        $result = array() ;
+        $index=0 ;
+        foreach($value as $key => $elem) {
+          $environment["key"]=$key ;
+          $environment["index"]=$index ;
+          $index++ ;
+          $resultElem = $this->apply($elem,$environment) ;
+          if ($resultElem===null && $this->collectionMode==='map') {
+            $this->addError("Error on the element #$index with key $key when evaluating a map");
+          }
+          if ($resultElem!=null) {
+            $result[$key] = $resultElem ;
+          }
+        }
+    }
+    return $result ;
+  }
+  
   /**
    * Evaluate a PFunApplication for a given value and within a given environment.
    * Modify the environment accordingly.
@@ -281,42 +449,14 @@ class PFunApplication extends AbstractPExpression {
    *  !native                             => $phpName($value, $parameters, &$environment)
    */
   
-  protected function apply($value,&$environment) {
+  protected function apply($value,&$environment=array()) {
     if ($value === null) {
       $result = null ;     // TODO this test should be removed for the "default" function
     } else {
-      $environment['_last'] = $value ;
-      $phpfun = $this->phpName ;
-      $parameters = $this->parameters ;
-      if ($this->native) {
-        switch ($this->argsMode) {
-          case 0:
-            $result = $phpfun($value) ;
-            break ;
-        
-          case 1:
-            $result = $phpfun($value,$parameters[0]) ;
-            break ;
-        
-          case 2:
-            $result = $phpfun($value,$parameters[0],$parameters[1]) ;
-            break ;
-        
-          case 3:
-            $result = $phpfun($value,$parameters[0],$parameters[1],$parameters[2]) ;
-            break ;
-        
-          case '*':
-          case '+':
-            $result = $phpfun($value,$parameters) ;
-            break ;
-        
-          default:
-            die(__FUNCTION__.": invalid arguments specification for pfun ".$this->name) ;
-        }
+      if (is_array($value)) {
+        $result = $this->_collectionApply($value,$environment) ;
       } else {
-        $library=PFunLibrary::getInstance() ;
-        $result = $library->$phpfun($value,$parameters,$environment) ;
+        $result = $this->_basicApply($value,$environment) ;
       }
     }
     return $result ;
@@ -327,66 +467,100 @@ class PFunApplication extends AbstractPExpression {
 
 }
 
-
+/**
+ * A template expression
+ */
+class PTExpression extends AbstractPExpression {
+  protected $tExpression ;
+  public function toMap() {
+    return array("template"=>$this->tExpression) ;
+  }
+  public function apply($value,&$environment=array()) {
+    $evaluator = new TExpressionEvaluator() ;
+    return $evaluator->doEval($this->tExpression,$environment) ; ;
+  }
+  public function __construct($texpression) {
+    parent::__construct() ;
+    $this->tExpression = $texpression ;
+  }
+}
 
 
 /**
- * An evaluation of PExpression. This class provides methods for dealing
- * explicitelywith parsing, errors, evaluation of pexpression, etc.
- * Using this class is therefore recommended for intensive computing,
- * tracking errors, etc. Otherwise evalPExpr provides a simple yet
- * non optimized short cut.
+ * A constant expression. The value can be any php value: scale, array, etc.
  */
-class PExpressionEvaluator {
-  protected $stringExpression ;
-  protected $parsedPExpression ;
-  protected $parser ;
-  protected $environment ;
-
-  /**
-   * @param PExpressionString! $expr
-   * @return PExpression? $pexpr the parsed expression or null in case of error
-   */
-  public function compile($expr) {
-    $this->errors=array() ;
-    $this->stringExpression = $expr ;
-    $this->parser->setExpression($expr) ;
-    $this->parsedPExpression = $this->parser->parse() ;
-    $this->errors=$this->parser->getErrors() ;
-    return $this->parsedPExpression ;
+class PConstant extends AbstractPExpression {
+  protected $constantValue ; 
+  public function toMap() {
+    return $this->constantValue ;
   }
-
-  public function getParsedExpression() {
-    return $this->parsedPExpression ;
+  
+  protected function apply($value,&$environment=array()) {
+    $environment['_last'] = $value ;
+    return $this->constantValue ;
   }
-  public function doEval($value,&$environment=array()) {
-    $this->errors=array() ;
-    if ($this->parsedPExpression===null) {
-      $this->error[] = "invalid expression. Cannot run." ;
-      return null ;
-    }
-    return $this->parsedPExpression->doEval($value,$environment) ;
-  }
-
-  public function exec($expr,$value,&$environment=array(),$onErrors="echo") {
-    $this->errors=array() ;
-    $this->compile($expr) ;
-    $result = $this->doEval($value,$environment) ;
-    $errors = $this->compile($expr) ;
-    if (count($this->errors)!==0) {
-    } else {
-      return $result ;
-    }
-  }
-
-  public function __construct() {
-    $this->parser = new PExpressionParser() ;
-    $this->environment = array() ;
+  public function __construct($constantValue) {
+    parent::__construct() ;
+    $this->constantValue = $constantValue ;
   }
 }
 
-interface PExpression {
-  public function doEval($value,&$environment) ;
-}
+// /**
+//  * 
+//  * --- still used ????
+//  * An evaluation of PExpression. This class provides methods for dealing
+//  * explicitelywith parsing, errors, evaluation of pexpression, etc.
+//  * Using this class is therefore recommended for intensive computing,
+//  * tracking errors, etc. Otherwise evalPExpr provides a simple yet
+//  * non optimized short cut.
+//  */
+// class PExpressionEvaluator {
+//   protected $stringExpression ;
+//   protected $parsedPExpression ;
+//   protected $parser ;
+//   protected $environment ;
+
+//   /**
+//    * @param PExpressionString! $expr
+//    * @return PExpression? $pexpr the parsed expression or null in case of error
+//    */
+//   public function compile($expr) {
+//     $this->resetErrors() ;
+//     $this->stringExpression = $expr ;
+//     $this->parser->setExpression($expr) ;
+//     $this->parsedPExpression = $this->parser->parse() ;
+//     $this->errors=$this->parser->getErrors() ;
+//     return $this->parsedPExpression ;
+//   }
+
+//   public function getParsedExpression() {
+//     return $this->parsedPExpression ;
+//   }
+//   public function doEval($value,&$environment=array()) {
+//     $this->errors=array() ;
+//     if ($this->parsedPExpression===null) {
+//       $this->error[] = "invalid expression. Cannot run." ;
+//       return null ;
+//     }
+//     return $this->parsedPExpression->doEval($value,$environment) ;
+//   }
+
+//   public function exec($expr,$value,&$environment=array(),$onErrors="echo") {
+//     $this->errors=array() ;
+//     $this->compile($expr) ;
+//     $result = $this->doEval($value,$environment) ;
+//     $errors = $this->compile($expr) ;
+//     if (count($this->errors)!==0) {
+//     } else {
+//       return $result ;
+//     }
+//   }
+
+//   public function __construct() {
+//     $this->parser = new PExpressionParser() ;
+//     $this->environment = array() ;
+//   }
+// }
+
 
 

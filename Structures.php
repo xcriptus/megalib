@@ -594,9 +594,10 @@ function saveOrMergeJsonFile($filename,$map,$merger='array_merge_recursive',&$re
  * @die if one of the files found is not a json map
  */
 function mapFromJsonDirectory($root,$findFileParams,$keyTemplate='${0}') {
+  var_dump($findFileParams) ;
   
   if (!isset($findFileParams['pattern'])) {
-    $findFileParams['pattern'] = 'suffix:.json' ;
+    $findFileParams['pattern'] = 'endsWith json' ;
   }
   // get the list of filenames with the parameters above
   // we defintively need the full file name  and only files
@@ -614,8 +615,10 @@ function mapFromJsonDirectory($root,$findFileParams,$keyTemplate='${0}') {
     if ($map===null) {
       echo "<li>File $jsonFullFilename contains is not a valid json</li>" ;
       $map = array("ERROR") ;
-    } else 
-    $key = matchToTemplate($findFileParams['pattern'],$jsonFullFilename,$keyTemplate) ;
+      die(__FUNCTION__."Should we continue") ;
+    } else {
+      $key = matchToTemplate($findFileParams['pattern'],$jsonFullFilename,$keyTemplate) ;
+    }
     $results[$key] = $map ;
   }
   return $results ;
@@ -800,7 +803,7 @@ function array_change_keys($map,$prefix,$suffix="") {
 /**
  * Concat an list of string with an optional separators,
  * begining string and trailing string.
- * @param List*(String) $list An array of strings
+ * @param List*(String!)! $list An array of strings
  * @param String? $separator default to ""
  * @param String? $begin defaut to ""
  * @param String? $end default to ""
@@ -875,6 +878,14 @@ function array_count_all($listOfMap) {
 }
 
 
+
+function applyFun($fun,$x) {
+  if ($fun===null) {
+    return $x ;
+  } else {
+    return $fun($x) ;
+  }
+}  
 
 /*----------------------------------------------------------------------------------
  *     Synthesis of trees of maps

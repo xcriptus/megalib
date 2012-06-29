@@ -3,7 +3,7 @@ require_once 'main.config.local.php' ;
 
 require_once '../Structures.php' ;
 require_once '../HTML.php' ;
-require_once '../TExpr.php' ;
+require_once '../TExpression.php' ;
 
 testSaveLoadMerge() ;
 testJsonBeautifier() ;
@@ -50,13 +50,13 @@ function testMapFromJsonDirectory() {
           'dir'=>'data/generated/',
           'files' => array(
              'levels'=>1,
-             'pattern'=>'suffix:.summary.json'),
+             'pattern'=>'endsWith .summary.json'),
           'key'=>'${0}'
       ), 
      array(
           'dir'=>'../../101results/101repo',
           'files' => array(
-              'pattern'=>'#(.*)/\.fratala#',
+              'pattern'=>'matches #(.*)/\.fratala#',
               'excludeDotFiles'=>false,
               /*'levels'=>1*/),
           'key'=>'${1}'

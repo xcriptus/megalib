@@ -3,7 +3,7 @@ require_once 'main.config.local.php' ;
 
 require_once '../Structures.php' ;
 require_once '../HTML.php' ;
-require_once '../TExpr.php' ;
+require_once '../TExpression.php' ;
 
 $root = array('size' => 10,'elements'=> array('a','b'),'files'=>array("u"=>10)) ;
 $child1 = array('size' => 5,'elements'=> array('d1a'),121,"root",'files'=>array("u"=>6,"v"=>4)) ;

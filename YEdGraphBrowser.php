@@ -1,6 +1,6 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 require_once 'Strings.php' ;
-require_once 'SourceCode.php' ;
+require_once 'SourceFileSystem.php' ;
 require_once 'YEd.php' ;
 
 class YEdGraphBrowserGenerator {
@@ -50,12 +50,13 @@ class YEdGraphBrowserGenerator {
   
   protected function generateAHighlightedSourceFileAndItsFragments($filename,$language,$fragments=null) {
     echo "processing $filename as $language </br>" ;
-    SourceCode::generateHighlightedSource(
-        $this->sourceFileDirectory.'/'.$filename,
-        $language,
-        $this->targetDirectory,
-        $fragments,
-        "L") ;
+    $sourceFile=
+      new SourceFile(
+          $this->sourceFileDirectory.'/'.$filename,
+          null,
+          null,
+          $language) ;
+    $sourceFile->generate($this->targetDirectory,$fragments)   ;  
   }
 
   protected function generateAllHighlightedSourceFilesAndTheirFragments() {

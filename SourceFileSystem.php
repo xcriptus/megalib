@@ -698,7 +698,7 @@ abstract class SourceDirectory extends PropertyHolder {
     $setSummary['count'] = count($fileSet) ;
     $setSummary[$setName] = array() ;
     
-    foreach(array("geshiLanguage","language","technology") as $mainProperty) { 
+    foreach(array("GeSHi.language","language","technology") as $mainProperty) { 
       $mainPropertyDistribution=array() ;
       foreach($fileSet as $fileShortName => $file) {
         $fileSummary = $file->getSummary() ;

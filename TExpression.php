@@ -10,15 +10,18 @@
  *                     TODO : Add the ${x|fun|fun...} notation 
  *        ------------------------------------------------------------------------
  *
- * Evaluate a template with some variables of the form ${xxx} or $xxx.
+ * Evaluate a template with some variables of the form ${xxx} or $xxx,
+ * the value of these variables being replaced by their corresponding value in the
+ * environment passed as parameter. Note that the values in the environment can 
+ * themselves contains  variables occurrence. The replacement is done for the 
+ * first occurence, and then it start again. To avoid infinite recursion, 
+ * the maxium number of replacement can be specified.
+ *
  * Return either a string when a map is given, an array of string when an array 
  * of maps is given, or a map of string if an map of map is given.
- * Note that the values in the mapping can themselves contains variables.
- * The replacement is done for the first occurence, and then it start
- * again. To avoid infinite recursion, the maxium number of replacement
- * can be specified.
  *
  * type TVarName == [a-zA-Z0-9_]+
+ * 
  * TVarExpr ::= 
  *     "$" TVarName 
  *   | "${" TVarName <rest> "}"    // TODO: currently rest is ignored. Could be used for more bash like expr
@@ -65,7 +68,7 @@ function evalTExpression($texpression,&$environement,&$evaluator=null) {
     if (! isset($evaluator)) {
       $evaluator = new TExpressionEvaluator() ;
     }
-    return $evaluator->doEval($texpression,$texpression) ;
+    return $evaluator->doEval($texpression,$environement) ;
   }
 }
 
@@ -135,8 +138,11 @@ class TExpressionEvaluator {
   public function getTrace() {
     return $this->trace ;
   }
+  
   /** 
-   * 
+   * Extract the first left-moft variable occurrence that occur
+   * in a string starting first with ${xxx} format and only then
+   * to $xxx format 
    * @param Template $template the template to use.
    */
   
