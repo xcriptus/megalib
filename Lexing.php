@@ -150,7 +150,7 @@ abstract class AbstractAtOnceWithHelperLexer extends AbstractHelperLexer impleme
   public function setExpression($expression) {
     if (!is_string($expression)) {
       var_dump($expression) ;
-      die(__FUNCTION__.': cannot be used as an expression') ;
+      die(__FUNCTION__.': the expression dumped above cannot be used as an expression') ;
     }
     $this->expression = $expression ;
   } 
