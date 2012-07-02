@@ -1,6 +1,6 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 require_once 'Strings.php' ;
-require_once 'SourceFileSystem.php' ;
+require_once 'Source  Directories.php' ;
 require_once 'YEd.php' ;
 
 class YEdGraphBrowserGenerator {

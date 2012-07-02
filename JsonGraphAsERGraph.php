@@ -2,7 +2,7 @@
 require_once 'ERGraph.php' ;
 require_once 'ERGraphAsRDF.php' ;
 require_once 'HTML.php' ;
-require_once 'Structures.php' ;
+require_once 'Json.php' ;
 
 
 /**

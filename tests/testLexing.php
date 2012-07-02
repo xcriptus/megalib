@@ -14,3 +14,4 @@ $wslexer = new FunBasedLexer("words") ;
 $wslexer->setExpression($text) ;
 
 echo implode(' | ',$wslexer->getTokenList()) ;
+echo '<h1>END OF TESTS</h1>' ;

@@ -1,6 +1,7 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
 require_once 'CSV.php' ;
+require_once 'Json.php' ;
 require_once 'PExpressionConcrete.php' ;
 require_once 'TExpression.php' ;
 

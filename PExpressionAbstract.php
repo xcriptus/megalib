@@ -1,7 +1,9 @@
 <?php
 
 require_once 'Errors.php' ;
+require_once 'Json.php' ;
 require_once 'PFunLibrary.php' ;
+
 /*----
  * PExpression stands for (p)ipe expression or (p)attern expression as they actually support
  * both patterns and pipe-like model of computation. This kind of expression if both

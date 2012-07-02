@@ -3,8 +3,8 @@ require_once 'main.config.local.php' ;
 
 define('GIT_ACCOUNT','101companies') ;
 define('GIT_REPOSITORY','101repo') ;
-//define('GIT_FILE','https://github.com/megaplanet/101implementations/blob/master/xsdClasses/xsd/Company.xsd') ;
-define('GIT_FILE','http://planet-mde.org/idm06/') ;
+define('GIT_FILE','https://github.com/megaplanet/101implementations/blob/master/xsdClasses/xsd/Company.xsd') ;
+//define('GIT_FILE','http://planet-mde.org/idm06/') ;
 echo 'If this page display errors then have a look in the corresponding configs/configXXX.php file<br/>' ;
 echo 'Possible errors can come from the Github API so refresh the script to see that the problem persist<br/>' ;
 

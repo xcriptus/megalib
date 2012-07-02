@@ -1,5 +1,6 @@
 <?php
 
+require_once '../Colors.php' ;
 // MODIFIED by Jean-Marie Favre
 
 /* PTagCloud PHP class is Copyright (C) 2009 Jeannette Global Enterprises LLC.
@@ -23,77 +24,76 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
 CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */ 
-
-
 	
 class CoreTagCloud {
-  var $m_arTags = array();
+  protected $tagFrequency = array();
+  protected $tagDescription = array() ;
+  protected $tagUrl = array() ;
   
-  //custom parameters
-  var $m_displayedElementsCount;
-  var $m_searchURL; 
-  var $m_backgroundImage;
-  var $m_backgroundColor;
-  var $m_width;
-  var $m_arColors;
-  var $m_bUTF8;
   
-  var $fontfamily="arial" ;
-  var $letterspacing="0px" ;  
-  var $padding="0px" ;
+  protected $tagClass = array() ;
   
-  var $m_description ;
-  var $m_url ;
+  // style
+  protected $fontfamily="arial" ;
+  protected $letterspacing="0px" ;
+  protected $padding="0px" ;
+  protected $width;  // width of the div
   
-  function __construct($displayedElementCount, $arSeedWords = false) {
-    $this->m_displayedElementsCount = $displayedElementCount;
-    $this->m_bUTF8 = false;
-    $this->m_backgroundColor = "#000";
-    $this->m_arColors = 
-      array("#5122CC","#229926","#330099","#819922","#22CCC3",
-            "#99008D","#943131","#B23B3B","#229938","#419922");
-    if ($arSeedWords !== false && is_array($arSeedWords)) {
-      foreach ($arSeedWords as $key => $value) {
-        $this->addTag($value);
-      }
-    }
-  }
+  // custom parameters
+  protected $maxTagDisplayed;
+  protected $genericURL; 
+  protected $backgroundImage;
+  protected $backgroundColor;
+  protected $UTF8;
+  
+  protected $colorLow;
+  protected $colorHigh;
+  protected $colorGrades;
+  protected $nbSteps ;
+
+  
   	
-  function setSearchURL($searchURL) {
-    $this->m_searchURL = $searchURL;
+  public function setGenericURL($url) {
+    $this->genericURL = $url;
   }
 
-  function setUTF8($bUTF8) {
-	$this->m_bUTF8 = $bUTF8;
+  public function setUTF8($bUTF8) {
+	$this->UTF8 = $bUTF8;
   }
 
-  function setWidth($width) {
-    $this->m_width = $width ;
+  public function setWidth($width) {
+    $this->width = $width ;
   }
 
-  function setBackgroundImage($backgroundImage) {
-    $this->m_backgroundImage = $backgroundImage;
+  public function setBackgroundImage($backgroundImage) {
+    $this->backgroundImage = $backgroundImage;
   }
 
-  function setBackgroundColor($backgroundColor) {
-    $this->m_backgroundColor = $backgroundColor;
+  public function setBackgroundColor($backgroundColor) {
+    $this->backgroundColor = $backgroundColor;
   }
 	
-  function setTextColors($arColors) {
-    $this->m_arColors = $arColors;
+  public function setTextColors($arColors) {
+    $this->colorGrades = $arColors;
   }
 	
-  function addTag($tag, $useCount = 1, $description=null, $url=null) {
-    @ $this->m_arTags[$tag] += $useCount;
+  public function addTag($tag, $frequency=1, $class=null, $description=null, $url=null) {
+    if (!is_string($tag)) {
+      echo "introduction of this value" ;var_dump($tag) ;
+    }
+    @ $this->tagFrequency[$tag] += $frequency;
     if (isset($description)) {
-      $this->m_description[$tag] = $description ;
+      $this->tagDescription[$tag] = $description ;
     }
     if (isset($url)) {
-      $this->m_url[$tag] = $url ;
+      $this->tagUrl[$tag] = $url ;
+    }
+    if (isset($class)) {
+      $this->tagClass[$tag] = $class ;
     }
   }
 	 
-  function gradeFrequency($frequency) {
+  protected function gradeFrequency($frequency) {
 	$grade = 0;
     if ($frequency >= 90)
     	$grade = 9;
@@ -117,75 +117,116 @@ class CoreTagCloud {
     return $grade;
   }
 	 
-  function cloud($bHTML = true) {
-	arsort($this->m_arTags);    
-	$arTopTags = array_slice($this->m_arTags, 0, $this->m_displayedElementsCount);
-    
-    //XXX uasort($arTopTags, 'randomSort');
-	
-    $this->maxCount = max($this->m_arTags);
-    if (is_array($this->m_arTags)) {
-      if ($bHTML) { 
-		$result = 
-		    '<div id="id_tag_cloud" style="' . (isset($this->m_width) ? ("width:". $this->m_width. ";") : "")            
-		  . 'line-height:70%;"><div style="border-style:solid;border-width:1px;'
-		  . (isset($this->m_backgroundImage) ? ("background:url('". $this->m_backgroundImage ."');") : "") 
-		  . 'border-color:#888;margin-top:20px;margin-bottom:10px;padding:5px 5px 20px 5px;background-color:'.$this->m_backgroundColor.';">';
-      } else {
-        $result = array();
-      }
-      
-      foreach ($arTopTags as $tag => $useCount) {
-        $grade = $this->gradeFrequency(($useCount * 100) / $this->maxCount);
-        if ($bHTML) {
-          $title = $tag ." (".$useCount.")" ;
-          if (isset($m_description[$tag])) {
-            $title .= " -- ".$m_description[$tag] ;
-          } 
-          if (isset($m_url[$tag])) {
-            $url = urlencode($m_url[$tag]) ;
-          } else {
-            $url = $this->m_searchURL.urlencode($tag).'"' ; 
-          }
-          $color = $this->m_arColors[$grade] ;
-          $fontsize = (0.6 + 0.2 * $grade).'em' ;
-          $result .= 
-              '<a '
-            . ' href="'.$url.'"'
-            . ' title="'.$title.'"'
-            . ' style="color:'.$color.';'
-            . ' text-decoration:none;">' 
-            . '<span style="color:'.$color.';'
-            . 'padding:'.$this->padding.';' 
-            . 'font-family:'.$this->fontfamily.';'
-            . 'letter-spacing:'.$this->letterspacing.';' 
-            . 'font-weight:900;'
-            . 'font-size:'.$fontsize.'">'
-            . $tag. '</span>'
-            . "</a> " ;
-        } else {
-          $result[$tag] = $grade;
-        }
-      }
-      if ($bHTML) {
-        $result .=  "</div></div>" ;
-      }
-      return $result;
+  protected function getTagURL($tag) {
+    if (isset($this->tagUrl[$tag])) {
+      return urlencode($this->tagUrl[$tag]) ;
+    } else {
+      return $this->genericURL.urlencode($tag) ;
     }
   }
+  
+  protected function htmlHeader() {
+    $result =
+      '<div id="id_tag_cloud" style="' 
+      . (isset($this->width) ? ("width:". $this->width. ";") : "")
+      . 'line-height:70%;"><div style="border-style:solid;border-width:1px;'
+      . (isset($this->backgroundImage) ? ("background:url('". $this->backgroundImage ."');") : "")
+      . 'border-color:#888;margin-top:20px;margin-bottom:10px;padding:5px 5px 20px 5px;'
+      . 'background-color:'.$this->backgroundColor.';">';
+    return $result ;
+  }
+  
+  protected function htmlFooter() {
+    return "</div></div>" ;
+  }
+  
+  protected function tagToHtmlLink($tag,$grade) {
+    $frequency = $this->tagFrequency[$tag] ;
+    $title = $tag ." (".$frequency.")" ;
+    if (isset($this->tagDescription[$tag])) {
+      $title .= " -- ".$this->tagDescription[$tag] ;
+    }
+    $url = $this->getTagURL($tag) ;
+    $color = $this->colorGrades[$grade] ;
+    $fontsize = (0.6 + 0.2 * $grade).'em' ;
+    return
+      '<a '
+    . ' href="'.$url.'"'
+    . ' title="'.$title.'"'
+    . ' style="color:'.$color.';'
+    . ' text-decoration:none;">'
+       . '<span style="color:'.$color.';'
+             . 'padding:'.$this->padding.';'
+             . 'font-family:'.$this->fontfamily.';'
+             . 'letter-spacing:'.$this->letterspacing.';'
+             . 'font-weight:900;'
+             . 'font-size:'.$fontsize.'">'
+           . $tag
+        . '</span>'
+    . "</a> " ;
+  }
+  
+  /**
+   * @param Boolean? $generateHtml indicates whether a structure or some HTML must be generated
+   * @return string
+   */
+  public function cloud($generateHtml = true, $sortFun='ksort') {
+    // if there is a limit in terms of tag to display then select only these tags
+	arsort($this->tagFrequency);    
+	$topTags = array_slice($this->tagFrequency, 0, $this->maxTagDisplayed);
+	$sortFun($topTags) ; 
+	
+    $this->maxCount = max($this->tagFrequency);
+    if ($generateHtml) { 
+	  $result = $this->htmlHeader() ;
+    } else {
+      $result = array();
+    }
+      
+    foreach ($topTags as $tag => $count) {
+      $grade = $this->gradeFrequency(($count * 100) / $this->maxCount);
+      if ($generateHtml) {
+        $result .= $this->tagToHtmlLink($tag,$grade) ;
+      } else {
+        $result[$tag] = $grade;
+      }
+    }
+    
+    if ($generateHtml) {
+      $result .=  $this->htmlFooter() ;
+    }
+    return $result;
+  }
+  
+  public function __construct($maxTagDisplayed=null, $arSeedWords = false) {
+    $this->maxTagDisplayed = $maxTagDisplayed ;
+    $this->UTF8 = false;
+    $this->backgroundColor = "#DDDDDD";
+    $this->colorLow = 0x2C4B48 ;
+    $this->colorHigh = 0xF20204 ;
+    $this->nbSteps = 10 ; 
+    $this->colorGrades = getColorGrades($this->colorLow,$this->colorHigh,$this->nbSteps) ;
+    if ($arSeedWords !== false && is_array($arSeedWords)) {
+      foreach ($arSeedWords as $key => $value) {
+        $this->addTag($value);
+      }
+    }
+  }
+  
 }
+
 
 
 class TagCloud extends CoreTagCloud {
   
   /* word replace helper */
-  function str_replace_word($needle, $replacement, $haystack) {
+  public function str_replace_word($needle, $replacement, $haystack) {
     $pattern = "/\b$needle\b/i";
     $haystack = preg_replace($pattern, $replacement, $haystack);
     return $haystack;
   }
   
-  function keywords_extract($text) {
+  public function keywords_extract($text) {
     $text = strtolower($text);
     $text = strip_tags($text);
   
@@ -215,7 +256,7 @@ class TagCloud extends CoreTagCloud {
     /*
      * Changed to handle international characters
     */
-    if ($this->m_bUTF8)
+    if ($this->UTF8)
       $text = preg_replace('/[^\p{L}0-9\s]|\n|\r/u',' ',$text);
     else
       $text = preg_replace('/[^a-zA-Z0-9\s]|\n|\r/',' ',$text);
@@ -236,7 +277,7 @@ class TagCloud extends CoreTagCloud {
     return $keywords;
   }
   
-  function addTagsFromText($SeedText) {
+  public function addTagsFromText($SeedText) {
     $words = $this->keywords_extract($SeedText);
     foreach ($words as $key => $value) {
       $this->addTag($value);

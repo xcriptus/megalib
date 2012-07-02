@@ -8,7 +8,9 @@ require_once '../FileSystemMatcher.php' ;
 
 require_once '../CSV.php' ;
 define('OUTPUT_DIR','data/generated/sourceCodePatterns') ;
-define('RULES_FILE','data/input/sourceDirectoryMatchingRules.csv') ;
+//define('RULES_FILE','data/input/sourceDirectoryMatchingRules.csv') ;
+define('RULES_FILE','data/input/sourceDirectoryMatchingRulesNew1.rules.json') ;
+
 
 if (!is_dir(addToPath(ABSPATH_BASE,'101results'))) {
   $dir101results = addToPath(ABSPATH_BASE,'../../101results') ;
@@ -34,5 +36,6 @@ $matchedFilesGrouping=array(
            'groupedBy' => 'technology'
        )
  ) ;
-$r = $matcher->generate($exploreDir,OUTPUT_DIR,$matchedFilesGrouping,array('language','technology')) ;
+$matcher->matchFileSystem($exploreDir) ;
+$matcher->generate(OUTPUT_DIR,$matchedFilesGrouping,array('language','technology')) ;
 echo 'files generated are in <a href="'.OUTPUT_DIR.'" target="_blank">'.OUTPUT_DIR.'</a>' ;

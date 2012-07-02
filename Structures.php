@@ -60,6 +60,32 @@ function is_string_map($x) {
     return false ;
   }
 }
+function non_string_values($x) {
+  $r = array() ;
+  foreach ($x as $key => $value) {
+    if (!is_string($value)) {
+      $r[]=$value ;
+    }
+  }
+  return $r ;
+}
+function non_string_keys($x) {
+  $r = array() ;
+  foreach ($x as $key => $value) {
+    if (!is_string($key)) {
+      $r[]=$key ;
+    }
+  }
+  return $r ;
+}
+function remove_non_string_keys(&$x) {
+  foreach($x as $key => $value) {
+      if (!is_string($key)) {
+      unset($x[$key]) ;
+    }
+  }
+}
+
 
 function is_map_to_string($x) {
   if (is_array($x)) {
@@ -410,387 +436,6 @@ function columnValuesFromArrayMap($arrayMap,$key,$distinct=false) {
 
 
 
-/*----------------------------------------------------------------------------------
- *     Json processing
- *----------------------------------------------------------------------------------
- */
-
-
-/**
- * Return the last error message produced by json_encode and json_decode.
- * @return String! Error message.
- */
-function jsonLastErrorMessage() {
-  $JSON_ERRORS = array(
-      JSON_ERROR_NONE => 'No errors|',
-      JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
-      JSON_ERROR_STATE_MISMATCH => 'Underflow or the modes mismatch',
-      JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
-      JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
-      JSON_ERROR_UTF8 =>'Malformed UTF-8 characters, possibly incorrectly encoded'
-  );
-  return $JSON_ERRORS[json_last_error()];
-}
-
-
-
-/**
- * Decode a json string and die if the result is not a map
- * @param JSON! $json
- * @param $die 
- * @return Map$(Scalar!,Any!)! the map
- * @die if the results is not an map
- */
-function jsonDecodeAsMap($json,$dieIfInvalidJson=true) {
-  $result = json_decode($json,true) ;
-  if ($dieIfInvalidJson && !is_array($result)) {
-    die('jsonDecodeAsMap: cannot be decoded as a map : '.$json) ;
-  }
-  return $result ;
-}
-
-
-/**
- * Load a json file and decoded it as a map. Die in case of error.
- * @param Filename! $jsonFilename
- * @return Map$(Scalar!,Any!)! the map
- * @die if the file doesn't exist or is not a valid json, or is not an map
- */
-function jsonLoadFileAsMap($jsonFilename,$dieIfInvalidJson=true) {
-  $json = loadFile($jsonFilename,$results) ;
-  return jsonDecodeAsMap($json,$dieIfInvalidJson) ;
-}
-
-/**
- * Indents a flat JSON string to make it more human-readable.
- * @param string $json The original JSON string to process.
- * @return string Indented version of the original JSON string.
- */
-function jsonBeautifier($json) {
-
-  $result      = '';
-  $pos         = 0;
-  $strLen      = strlen($json);
-  $indentStr   = '  ';
-  $newLine     = "\n";
-  $prevChar    = '';
-  $outOfQuotes = true;
-
-  for ($i=0; $i<=$strLen; $i++) {
-
-    // Grab the next character in the string.
-    $char = substr($json, $i, 1);
-
-    // Are we inside a quoted string?
-    if ($char == '"' && $prevChar != '\\') {
-      $outOfQuotes = !$outOfQuotes;
-
-      // If this character is the end of an element,
-      // output a new line and indent the next line.
-    } else if(($char == '}' || $char == ']') && $outOfQuotes) {
-      $result .= $newLine;
-      $pos --;
-      for ($j=0; $j<$pos; $j++) {
-        $result .= $indentStr;
-      }
-    }
-
-    // Add the character to the result string.
-    $result .= $char;
-
-    // If the last character was the beginning of an element,
-    // output a new line and indent the next line.
-    if (($char == ',' || $char == '{' || $char == '[') && $outOfQuotes) {
-      $result .= $newLine;
-      if ($char == '{' || $char == '[') {
-        $pos ++;
-      }
-
-      for ($j = 0; $j < $pos; $j++) {
-        $result .= $indentStr;
-      }
-    }
-
-    $prevChar = $char;
-  }
-  return $result;
-}
-
-/**
- * Encode a value in json and beautify it if requested
- * @param Any $value
- * @param Boolean? $beautify whether the json results should be indented or not.
- * Default to false.
- * @return JSON! The json string.  
- * @Die in case of error.
- */
-function jsonEncode($value, $beautify=false) {
-  $json = json_encode($value) ;
-  if ($json===null) {
-    $msg = jsonLastErrorMessage() ;
-    die('jsonEncode: '.msg) ;
-  }
-  if ($beautify) {
-    $json=jsonBeautifier($json) ;
-  }
-  return $json ;
-}
-
-/**
- * Save a value (typically a map) as a json file.
- * @param Filename! $filename The name of the file to save. 
- * Directory will be created recursively if necessary. 
- * @param Any! $value the value to save. Typically a map.
- * @param inout>Map(Filename,Integer|String) $results an array in which
- * results are accumulated. That is if the filename is save then
- * its name will be added in the map with the number of byte saved
- * otherwise an error message will be returned. Use is_string to
- * check if an error occured.
- * @param Boolean? $beautify whether the json results should be indented or not.
- * Default to false.
- * @return Boolean! true if the file as been saved successfully,
- * false otherwise. It is not necessary to test this value after
- * each file save as the result is keep anyway in $results.
- */
-function saveAsJsonFile($filename,$value,&$results=array(),$beautify=false) {
-  $json = jsonEncode($value,$beautify) ;
-  return saveFile($filename,$json,$results) ;
-}
-
-
-/**
- * Save a map to as as json file or merge this map to the existing map if the file already
- * exist. By contrast to saveAsJsonFile that override an potential existing file, here the
- * previous and current value are merged.
- * @param Filename! $filename name of the file to save or to merge
- * @param Map*(Scalar!,Any!)! $map map to save or to merge
- * @param Function? $merger the function to merge the two arrays. Default to "array_merge_recursive"
- * but could be set also to "array_merge" or any other functions taking two maps and returning a map. 
- * @param Boolean? $beautify whether the json results should be indented or not.
- * Default to false.
- * @return Boolean! true in case of successof the file writing, false otherwise. It is not
- * necessary to test the result directly as it is recorded in $results anyway.
- * @die if the file exist and is not a valid json map.
- */
-function saveOrMergeJsonFile($filename,$map,$merger='array_merge_recursive',&$results=array(),$beautify=false) {
-  if (file_exists($filename)) {
-    // the file exist, so load the existing structure
-    $existingMap = jsonLoadFileAsMap($filename) ;
-    $newMap = $merger($existingMap,$map) ;
-    $result = saveAsJsonFile($filename,$newMap,$results,$beautify) ;
-  } else {
-    $result = saveAsJsonFile($filename,$map,$results,$beautify) ;
-  }
-  return $result ;
-}
-
-
-/**
- * 
- * @param unknown_type $root
- * @param unknown_type $findFileParams
- * @param unknown_type $keyTemplate
- * @die if the directory is not readable
- * @die if one of the files found is not a json map
- */
-function mapFromJsonDirectory($root,$findFileParams,$keyTemplate='${0}') {
-  var_dump($findFileParams) ;
-  
-  if (!isset($findFileParams['pattern'])) {
-    $findFileParams['pattern'] = 'endsWith json' ;
-  }
-  // get the list of filenames with the parameters above
-  // we defintively need the full file name  and only files
-  $findFileParams["apply"] = "path" ;
-  $findFileParams["types"] = "file" ;
-  
-  $jsonFullFilenames = findFiles($root, $findFileParams) ;
-  if ($jsonFullFilenames === null) {
-    die(__FUNCTION__.': directory "'.$root.'" cannot be read') ;
-  }  
-  $results = array () ;
-  foreach ($jsonFullFilenames as $jsonFullFilename) {
-    $map = jsonLoadFileAsMap($jsonFullFilename,false) ;
-    
-    if ($map===null) {
-      echo "<li>File $jsonFullFilename contains is not a valid json</li>" ;
-      $map = array("ERROR") ;
-      die(__FUNCTION__."Should we continue") ;
-    } else {
-      $key = matchToTemplate($findFileParams['pattern'],$jsonFullFilename,$keyTemplate) ;
-    }
-    $results[$key] = $map ;
-  }
-  return $results ;
-}
-
-/*----------------------------------------------------------------------------------
- *     Summary
-*----------------------------------------------------------------------------------
-*/
-
-/**
- * Create a summary of a map of map. That is create a structure
- * with cardinalities, domains, ranges, etc.
- * type MapOfMapSummary == Map{
- *   'kind' => 'mapOfMap',
- *   'domain1Card' => Integer,
- *   'domain1'     => Set*(Scalar) ?, // only if $returnSets
- *   'domain2'     => Set*(Scalar) ?, // only if $returnSets
- *   'domain2Card' => Map{
- *     'min' => Integer,
- *     'max' => Integer,
- *     'sum' => Integer,
- *     'unique' => Integer,
- *     'map' => Map(Scalar => Integer) ?  // only if $returnMaps
- *   }
- *   'range'       => Set*(Scalar) ?, // defined if $returnSets
- *   'rangeCard'   => Integer
- * }
- * 
- * @param Map(Scalar,Map(Scalar,Value)) $mapmap A map of map
- * 
- * @param Any? $valueIfEmpty If specified this value returned if the map
- * is empty. Default to null, so if nothing is provided, the summary
- * will be performed as usual but cardinalities will be 0, sets will be
- * empty, etc. 
-
- * @param Boolean! $returnKind indicated if the kind attribute should be
- * returned.
- *
- * @param Boolean! $returnSets indicates if domains and range should be
- * returned. These may contains many values. Default is false.
- * 
- * @param Boolean! $returnMaps indicates if the domain2Card map is returned.
- *  
- * @return MapOfMapSummary|$valueIfEmpty
- */
-function mapOfMapSummary($mapmap,$valueIfEmpty=null,$returnKind=false,$returnSets=false,$returnMaps=false) {
-  if (count($mapmap)===0 && isset($valueIfEmpty)) {
-    return $valueIfEmpty ;
-  } else {
-    $r = array() ;
-    if ($returnKind) {
-      $r['kind']='mapOfMap' ;
-    }
-    $r['domain1card']=count($mapmap) ;
-    $r['domain1']=array_keys($mapmap) ;
-    $r['domain2']=array() ;
-    $r['range']=array() ;
-    $r['domain2Card']=array() ;
-    $r['domain2Card']['sum']=0 ;
-    foreach($mapmap as $key1 => $map2) {
-      $n = count($map2) ;
-      if ($returnMaps) {
-        $r['domain2Card']['map'][$key1] = count($map2) ;
-      }
-      if (!isset($r['domain2Card']['min']) || ($n < $r['domain2Card']['min'])) {
-        $r['domain2Card']['min'] = $n ;
-      }
-      if (!isset($r['domain2Card']['max']) || ($n > $r['domain2Card']['max'])) {
-        $r['domain2Card']['max'] = $n ;
-      }
-      $r['domain2Card']['sum'] += $n ;
-      $r['domain2']=union($r['domain2'],array_keys($map2)) ;
-      $r['range']=union($r['range'],array_values($map2)) ;
-    }
-    $r['domain2Card']['unique'] = count($r['domain2']) ;
-    $r['rangeCard']=count($r['range']) ;
-    if (!$returnSets) {
-      unset($r['domain1']) ;
-      unset($r['domain2']) ;
-      unset($r['range']) ;
-    }
-    return $r ;
-  }
-}
-
-
-
-/**
- * Create a summary of a map. For map of map it may be better to use
- * mapOfMapSummary as it provides more information. 
- *
- * type MapSummary == Map{
- *   'kind' => 'map' ?,              // only if $returnKind
- *   'domain'     => Set*(Scalar) ?, // defined if $returnSets
- *   'domainCard' => Integer,
- *   'range'       => Set*(Scalar) ?, // defined if $returnSets
- *   'rangeCard'   => Integer
- * }
- * 
- * @param Map*(Scalar,Any!) $map a map
- * 
- * @param Any? $valueIfEmpty If specified this value returned if the map
- * is empty. Default to null, so if nothing is provided, the summary
- * will be performed as usual but cardinalities will be 0, sets will be
- * empty, etc. 
- * 
- * @param Boolean! $returnKind indicated if the kind attribute should be
- * returned.
- *
- * @param Boolean! $returnSets indicates if domain and range should be
- * returned. These may contains many values.
- * 
- * @return MapSummary|$valueIfEmpty
- * 
- */
-function mapSummary($map,$valueIfEmpty=null,$returnKind=false,$returnSets=false) {
-  if (count($map)===0 && isset($valueIfEmpty)) {
-    return $valueIfEmpty ;
-  } else {
-    $r = array() ;
-    if($returnKind) {
-      $r['kind']='map' ;
-    }
-    $range=array_unique(array_values($map)) ;
-    if ($returnSets) {
-      $r['domain'] = array_keys($map);
-      $r['range']=$range ;
-    }
-    $r['domainCard']=count($map) ;
-    $r['rangeCard']=count($range) ;
-    return $r ;
-  }
-}
-
-
-
-
-
-/**
- * @param Any? $value a value or null
- */
-function mixedValueSummary($value,$valueIfEmpty=null,$returnKind=false) {
-  $valueToReturn = $value 
-                      ? $value 
-                      : (isset($valueIfEmpty)?$valueIfEmpty : $value) ;
-  if (!$returnKind) {
-    return $valueToReturn ;
-  } else {
-    $r = array() ;
-    $r['kind']=typeOf($valueToReturn) ;
-    $r['value']=$valueToReturn ;
-    return $r ;
-  }
-}
-
-/**
- * Return a summary for a given value according to its type.
- */
-function valueSummary($value,$valueIfEmpty=null,$returnKind=false,$returnSets=false,$returnMaps=false) {
-  if (is_map_of_map($value)) {
-    return mapOfMapSummary($value,$valueIfEmpty,$returnKind,$returnSets,$returnMaps) ;
-  } elseif (is_array($value)) {
-    return mapSummary($value,$valueIfEmpty,$returnKind,$returnSets) ;
-  } else {
-    return mixedValueSummary($value,$valueIfEmpty,$returnKind) ;
-  }
-}
-
-
-
-
 function array_change_keys($map,$prefix,$suffix="") {
   $result = array() ;
   foreach($map as $key=>$value) {
@@ -798,8 +443,24 @@ function array_change_keys($map,$prefix,$suffix="") {
   }
   return $result ;
 }
-
-
+function array_select_matches($map,$regexpr) {
+  $r = array() ;
+  foreach($map as $key=>$value) {
+    if (preg_match($regexpr,$value)) {
+      $r[$key]=$value ;
+    }
+  }
+  return $r ;
+}
+function array_exclude_matches($map,$regexpr) {
+  $r = array() ;
+  foreach($map as $key=>$value) {
+    if (!preg_match($regexpr,$value)) {
+      $r[$key]=$value ;
+    }
+  }
+  return $r ;
+}
 /**
  * Concat an list of string with an optional separators,
  * begining string and trailing string.
@@ -878,7 +539,6 @@ function array_count_all($listOfMap) {
 }
 
 
-
 function applyFun($fun,$x) {
   if ($fun===null) {
     return $x ;
@@ -886,108 +546,3 @@ function applyFun($fun,$x) {
     return $fun($x) ;
   }
 }  
-
-/*----------------------------------------------------------------------------------
- *     Synthesis of trees of maps
- *----------------------------------------------------------------------------------
- */
-
-
-class Synthesizer {
-
-  /*----------------------------------------------------------------------------------
-   *     Aggregating functions.
-   *----------------------------------------------------------------------------------
-   */
-  
-  
-  /**
-   * @param Fun:List*(Any1)->Any2 $aggregator
-   * @param unknown_type $rootKey
-   * @param unknown_type $value
-   * @param unknown_type $childValues
-   */
-  public static function aggregate($aggregator,$rootKey,$value,$childValues) {
-    $values = array($value) ;
-    foreach ($childValues as $childId => $childValue) {
-      $values[] = $childValue ;
-    }
-    return $aggregator($values) ;
-  }
-  
-  public static function count($rootKey,$value,$childValues) {
-    return self::aggregate('count',$rootKey,$value,$childValues);
-  }
-  
-  public static function sum($rootKey,$value,$childValues) {
-    return self::aggregate('array_sum',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function product($rootKey,$value,$childValues) {
-    return self::aggregate('array_product',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function concat($rootKey,$value,$childValues) {
-    return self::aggregate('array_concat',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function min($rootKey,$value,$childValues) {
-    return self::aggregate('min',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function max($rootKey,$value,$childValues) {
-    return self::aggregate('max',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function avg($rootKey,$value,$childValues) {
-    return self::aggregate('array_avg',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function mergeAll($rootKey,$value,$childValues) {
-    return self::aggregate('array_merge_all',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function replaceAll($rootKey,$value,$childValues) {
-    return self::aggregate('array_replace_all',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function fusionAll($rootKey,$value,$childValues) {
-    return self::aggregate('array_fusion_all',$rootKey,$value,$childValues) ;
-  }
-  
-  public static function countAll($rootKey,$value,$childValues) {
-    return self::aggregate('array_count_all',$rootKey,$value,$childValues);
-  }  
-  
-  
-  
-  /*----------------------------------------------------------------------------------
-   *     
-   *----------------------------------------------------------------------------------
-   */
-  
-  public static function prefixAll($rootKey,$map,$childMaps,$separator='/') {
-    $results = $map ;
-    foreach ($childMaps as $childId => $childMap) {
-      foreach ($childMap as $key => $value) {
-        $results[$childId.$separator.$key] = $value ;
-      }
-    }
-    return $results ;
-  }
-  
-}
-
-
-function synthesizeMap($rootMap,$childMaps,$attibuteSynthesizer) {
-  $result=array() ;
-  foreach($rootMap as $rootKey => $rootValue) {
-    $childValues = array() ;
-    foreach($childMaps as $childId => $childMap) {
-      $childValues[$childId]=$childMap[$rootKey] ;
-    }
-    $newmap = $attibuteSynthesizer($rootKey,$rootValue,$childValues) ;
-    $result=array_fusion($result,$newmap) ;
-  }
-  return $result ;
-}

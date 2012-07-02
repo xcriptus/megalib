@@ -2,7 +2,8 @@
 
 require_once 'HTML.php' ;
 require_once 'TExpression.php' ;
-require_once 'Structures.php' ;
+require_once 'Structures.php' ;  // is it usefull?
+require_once 'Json.php' ;
 require_once 'FileSystemMatcher.php' ;
 
 

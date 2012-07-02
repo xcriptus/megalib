@@ -399,7 +399,8 @@ class SourceFile extends AbstractFile implements SomeFile {
    *
    * @param Filename! $filename The filename of the source
    *
-   * @param SourceDirectory! $sourcedirectory
+   * @param SourceDirectory? $sourcedirectory The source directory in which
+   * this file is connected. This parameter is optional.
    *
    * @param GeshiLanguage? $geshiLanguage Geshi language code.
    * If not provided then the language code will be computed via

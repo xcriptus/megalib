@@ -100,7 +100,7 @@ class RDFTripleSet {
    */
   public function load($url) {
     $this->reset() ;
-    $parser = ARC2::getRDFParser();
+    $parser = ARC2::getRDFParser();    
     $parser->parse($url);
     if ($parser->getErrors()) {
       return false ;
@@ -1132,7 +1132,7 @@ class RDFStore {
    * Load an RDFTripleSet into the store and reset the TripleSet (default).
    * @param RDFTripleSet! $tripleSet The triple set to load.
    * @param URI! $graphURI The target named graph where to put the triples.
-   * @param Boolean $resetTripleSet Should the triple set be emptied. 
+   * @param Boolean $emptyTripleSet Should the triple set be emptied. 
    * True by default.
    * @return Integer! The number of triples added.
    */
