@@ -367,3 +367,53 @@ class ConcretePExpression extends BasicErrorManager implements PExpression {
     }
   }
 }
+
+
+//--------------------------------------------------------------------------
+//   top level functions or helpers
+//--------------------------------------------------------------------------
+
+/**
+ * Simplest way to evaluate PExpression. Prefer PExpressionEvaluator
+ * for non trivial cases.
+ */
+function evalPExpression($expr,$value,&$environment=array(),$onErrors="die") {
+  $e = new ConcretePExpression($expr) ;
+  $result = $e->doEval($value,$environment) ;
+  return $result ;
+}
+
+/**
+ * The objective of this function is to replace the preg_match
+ * used in particular in files.
+ * @param unknown_type $expr
+ * @param unknown_type $value
+ * @param unknown_type $matches
+ * @return number
+ */
+function matchPattern($expr,$value,&$matches) {
+  $environment = array() ;
+  $result = evalPExpression($expr,$value,$environment) ;
+  if ($result===null) {
+    return 0 ;
+  } else {
+    return 1 ;
+  }
+}
+
+/**
+ * Match the given pattern and return the template where string
+ * segments have replaced ${n} variables. Return null in case
+ * of no match.
+ * @param Pattern! $pattern
+ * @param String! $string
+ * @param Template! $template
+ * @return TResult?
+ */
+function matchToTemplate($pattern,$string,$template) {
+  if (matchPattern($pattern,$string,$matches)) {
+    return evalTExpression($template,$matches) ;
+  } else {
+    return null ;
+  }
+}
