@@ -1,4 +1,43 @@
 <?php
+require_once '../tests/main.config.local.php' ;
+
+require_once '../Symbols.php' ;
+$json = file_get_contents('../tests/data/tmp/Wiki101Full.json') ;
+if ($json===false) {
+  echo "not found" ;
+} else {
+  $g = json_decode($json,true) ;
+}
+
+function collect($array,$x) {
+  $r=array() ;
+  foreach ($array as $v) {
+    $r[]=$v[$x] ;
+  }
+  return $r ;
+}
+
+foreach (array('Concept','Language','Technology','Implementation','Feature','Page','Category') as $type) {
+  $names = collect($g[$type],'name') ;
+  echo '<h2>'.count($names).' '.$type.'</h2>' ; 
+  echo implode(' | ',collect($g[$type],'name')) ;
+}
+
+
+//--------- create symbol indexes  ---------------
+$decomposer = new RegExprBasedSymbolDecomposer() ;
+$indexes = new SymbolIndexes() ;
+
+// load the all texts from source files and construct the text map
+
+foreach($g['Implementation'] as $name=>$x) {
+  $text = $g['Implementation'][$name]['motivation'] ;
+  $indexes->addText($name,$text,$decomposer) ;
+}
+echo $indexes->getCloud(null,'A') ;
+
+
+exit (0) ;
 
 $req_url = 'https://fireeagle.yahooapis.com/oauth/request_token';
 $authurl = 'https://fireeagle.yahoo.net/oauth/authorize';
