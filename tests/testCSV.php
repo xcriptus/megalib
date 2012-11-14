@@ -8,8 +8,8 @@ $csv->load(CSVFILE) ;
 var_dump($csv->getHeader()) ;
 
 echo implode ('   ',$csv->getHeader())."<br/>" ;
-echo $csv->getRowNumber() ;
-echo $csv->getJSON() ;
+echo $csv->getRowNumber()."<br/>" ;
+echo $csv->getJSON()."<br/>" ;
 echo "<h1>END OF TESTS </h1>" ;
 
 

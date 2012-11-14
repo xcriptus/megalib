@@ -59,6 +59,23 @@ class CSVFile {
   }
   
   /**
+   * Get a row.
+   * @param String! $rowid
+   * @return Map<(String|Integer)!,String!>?
+   */
+  public function getRow(/*String!*/ $rowid) {
+    assert('$this->valid') ;
+    assert('strlen($rowid)>=1') ;
+    $row = $this->table[$rowid] ;
+    return $row ;
+  }
+  
+  public function /*List*<(Integer|String)!>!*/ getAllRowKeys() {
+    assert('$this->valid') ;
+    return array_keys($this->table) ;
+  }
+  
+  /**
    * The list of column names.
    * @return List+(String|Integer)!
    */
@@ -91,7 +108,8 @@ class CSVFile {
   }
   
   /**
-   * @return multitype:
+   * @param Boolean? $removeBlankCells 
+   * @return List*(Map())
    */
   public function getListOfMaps($removeBlankCells=true) {
     $listOfMaps = array() ;
@@ -108,17 +126,6 @@ class CSVFile {
     
   }
 
-  public function /*Map<(String|Integer)!,String!>?*/ getRow(/*String!*/ $rowid) {
-    assert('$this->valid') ;
-    assert('strlen($rowid)>=1') ;
-    $row = $this->table[$rowid] ;
-    return $row ;
-  }
-  
-  public function /*List*<(Integer|String)!>!*/ getAllRowKeys() {
-    assert('$this->valid') ;
-    return array_keys($this->table) ;
-  }
 
   
   /**
@@ -132,7 +139,8 @@ class CSVFile {
    * @param Boolean? $hasHeader indicates if the first line is the header. Default to true.
    * If there is no header lines then number starting with 1 will be used as column names.
    * 
-   * @param String|Integer? $keyfield the field that will be used as the key. 
+   * @param NOTUSED String|Integer? $keyfield the field that will be used as the key. NOT U
+   * // FIXME 
    * 
    * @param String? $separator the separator of the CSV file. Default to ','.
    * 
