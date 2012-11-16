@@ -1,49 +1,41 @@
 <?php defined('_MEGALIB') or die("No direct access") ;
 
-require_once '../libraries/stemmer/Stemmer.php' ;
 require_once '../libraries/tagCloud/TagCloud.php' ;
 
 require_once 'Summary.php' ;
+require_once 'Decomposers.php';
+require_once 'Corpus.php' ;
 
-/**
- * The two class below were expected to make the indexes more compact
- * by avoiding string duplication but unfortunately only scalar can be
- * used as array indexes...
- * Currently although the symbol table is maintained SymbolIndexes store
- * strings because the function sym(string) return the string itself.
- */
-class Symbol {
-  protected $string ;
-  public function __toString() {
-    return $string ;
-  }
-  public function __construct($string) {
-    $this->string = $string ;
-  }
-}
 
 class SymbolTable {
-  protected $nb ;
-  protected $strToSym ;
-  protected $idToSym ;
-  
+  protected $nb = 0;
+  protected $stringToSymbol ;
+  protected $symbolToString ;
+
   /**
    * Convert a string into a symbol. Ensure that there is a 1:1 mapping
    * between string and symbols.
    * @param String! $string
-   * The id of the symbol
+   * @return The id of the symbol
    */
-  public function sym($string) {
+  public function symbol($string) {
     // add the string to the symbol table if not already there
-    if (!isset($this->strToSym[$string])) {
-      $symbol = new Symbol($string) ;
-      $this->strToSym[$string] = $symbol ;
+    if (!isset($this->stringToSymbol[$string])) {
       $this->nb++ ;
+      $symbol = $this->nb ;
+      $this->stringToSymbol[$string] = $symbol ;
+      $this->symbolToString[$symbol] = $string ;
     }
-    
-    // return $this->strToSym[$string] ;
+
+    // return $this->stringToSymbol[$string] ;
     return $string ;
-  }  
+  }
+  
+  public function string($symbol) {
+    if (!isset($this->stringToSymbol[$symbol])) {
+      die ('UNDEFINED SYMBOLS '.$symbol) ;
+    }
+  }
 }
 
 
@@ -91,111 +83,6 @@ class SymbolTable {
 
 
 /*------------------------------------------------------------------------------
- *   Symbol decomposition 
- *------------------------------------------------------------------------------   
- * SymbolDecomposers provide operations to decompose symbols are different levels.
- * This represents the operational, transient, extraction of the module.
- * The "SymbolIndexes" classes in the next section will on the contrary ensure
- * persistence and navigation.
- */
-
-/**
- * Symbol decomposer interface. 
- * This interface provides the core hierarchy navigation T2Q#, Q2C, C2A, A2R
- * That is, the decomposition top-down from text to root symbol 
- * Implementations can realize this hierarchy in anyway they want.
- */
-interface SymbolDecomposer {
-  /**
-   * Extract qualified symbols from a text and return frequencies of occurrences.
-   * @param String $text
-   * @return Map*(String!,Integer>=1)! a frequency map of qualified symbols in the text
-   */
-  public function textToQualifiedSymbolFrequencies($text) ;
-  /**
-   * Extract the composite symbol sequence from a qualified symbol
-   * @param String $qualifiedSymbol
-   * @return List+(String!)! the list of composite symbols
-   */
-  public function qualifiedSymbolToCompositeSymbol($qualifiedSymbol) ;
-  /**
-   * Extract the atomic symbol sequence from a composite symbol
-   * @param String $compositeSymbol
-   * @return List+(String!)! the list of atomic symbols
-   */
-  public function compositeSymbolToAtomicSymbol($compositeSymbol) ;
-
-  /**
-   * Get the root of the atomic symbol
-   * @param String! $atomicSymbol
-   * @param String! the root of the atomic symbol
-   * @return String!
-   */
-  public function atomicSymbolToRootSymbol($atomicSymbol) ;
-}
-
-
-
-
-/**
- * A symbol decomposer based on Regular Expressions for T2Q#, Q2C, C2A and 
- * stemming for A2R
- * TODO: this class has to be reviewed as the implementation may work only on particular
- * parameter configuration
- */
-class RegExprBasedSymbolDecomposer implements SymbolDecomposer {
-  /**
-   * @var String! for in  QSymbol, separator character between CSymbol 
-   * Used by qualifiedSymbolToCompositeSymbol with explode TODO change this
-   */
-  protected $qualifier ;
-  /**
-   * @var RegExprPart! Same as above but as a RegExprPart
-   */
-  protected $qualifiedSymbolSeparatorRegExprPart ;
-  
-  protected $atomicSymbolRemoveRegExpr ;
-  
-  /**
-   * @var Stemmer for A2R
-   */
-  protected $stemmer ;
-
-  public function textToQualifiedSymbolFrequencies($text) {
-    $freqids = idsFrequencies($text,'/\w+(?:'.$this->qualifiedSymbolSeparatorRegExprPart.'\w+)*/') ;
-    remove_non_string_keys($freqids) ;
-//     if (!is_string_map($freqids)) {
-//       echo __FUNCTION__."ERROR: some integers were returned for this text" ;
-//       echo '<pre>'.$text.'</pre>' ;
-//       var_dump($freq) ;
-//       exit(1) ;
-//     }
-    return $freqids ;
-  }
-  public function qualifiedSymbolToCompositeSymbol($qualifiedSymbol) {
-    return array_exclude_matches(explode($this->qualifier,$qualifiedSymbol),'/^[0-9]*$/') ;
-  }
-  public function compositeSymbolToAtomicSymbol($compositeSymbol) {
-    return array_exclude_matches(idSegments($compositeSymbol,null,$this->atomicSymbolRemoveRegExpr),'/^[0-9]*$/') ;
-  }
-  public function atomicSymbolToRootSymbol($atomicSymbol) {
-    return $this->stemmer->stem(strtolower($atomicSymbol)) ;
-  }
-
-  public function __construct($qualifier='.',$qualifiedSymbolSeparatorRegExprPart='\.',$atomicSymbolRemoveRegExpr='/[0-9_\.]/') {
-    $this->qualifier = $qualifier ;
-    $this->qualifiedSymbolSeparatorRegExprPart = $qualifiedSymbolSeparatorRegExprPart ;
-    $this->atomicSymbolRemoveRegExpr= $atomicSymbolRemoveRegExpr;
-    $this->stemmer = new Stemmer() ;
-  }
-}
-
-
-
-
-
-
-/*------------------------------------------------------------------------------
  *   Symbol Indexes
  *------------------------------------------------------------------------------
  * Persitence of symbol decomposition. Gather results computed by SymbolDecomposers 
@@ -206,7 +93,7 @@ class RegExprBasedSymbolDecomposer implements SymbolDecomposer {
 /**
  * Navigate in the schema of indexes at different levels
  *
- * type SymbolKind = T'|'Q'|'C'|'A'|'R'
+ * type SymbolKind = 'T'|'Q'|'C'|'A'|'R'
  * type SymbolKindName = 'Text','Qualified','Composite','Atomic','Root'
  * type SymbolKindIndex = Integer [0..4]
  * 
@@ -393,37 +280,51 @@ class SymbolIndexesStore extends SymbolIndexesSchema {
 class SymbolIndexesBuilder extends SymbolIndexesStore {  
   
   /**
-   * Add new text maps and update indexes accordingly.
-   * Runs at T2Q level but trigger levels lbelow
-   * @param Map*(TextId!,Text)! $textMap
-   * @param SymbolDecomposer! the decomposer
+   * Add all the texts in the corpus. This operation can be called
+   * various time for different corpus if necessary.
+   * @param DecomposableTextCorpus! $corpus
    * @return void
    */
-  public function addTexts($textMap,SymbolDecomposer $decomposer) {
-    // for all new texts
-    $newQualifiedSymbols = array() ;
+  public function addCorpus(DecomposableTextCorpus $corpus) {
+    foreach($corpus->ids() as $tSymbol) {
+      $this->addText($tSymbol,$corpus->text($tSymbol),$corpus->decomposer($tSymbol)) ;
+    }
+  }
+  
+  
+  /**
+   * addCorpus method is preferred.
+   * Add new text maps and update indexes accordingly.
+   * This function is just a helper if no corpus class is defined
+   * and if the corpus is actually represented by a map in extension.
+   * @param Map*(TextId!,Text)! $textMap
+   * @param TextSymbolDecomposer! the decomposer
+   * @return void
+   */
+  public function addTexts($textMap,TextSymbolDecomposer $decomposer) {
     foreach($textMap as $tSymbol => $text) {
       $this->addText($Symbol,$text,$decomposer) ;
     }
   }
   
   /**
+   * addCorpus method is preferred.
    * Add a new text and update indexes accordingly.
    * Runs at T2Q level but trigger levels below
    * @param TextId! $tSymbol id of the text to add
    * @param String! $text the text to index
-   * @param SymbolDecomposer! the decomposer
+   * @param TextSymbolDecomposer! the decomposer
    * @return List*(QSymbol!)! new qualified symbols added 
    */
-  public function addText($tSymbol,$text,SymbolDecomposer $decomposer) {
+  public function addText($tSymbol,$text,TextSymbolDecomposer $decomposer) {
     $newQualifiedSymbols = array() ;
-    $tIdSymbol = $this->s->sym($tSymbol) ;
+    $tIdSymbol = $this->s->symbol($tSymbol) ;
     if (!isset($this->indexes[$tIdSymbol])) {
     
       // Computation
       $frequencies = $decomposer->textToQualifiedSymbolFrequencies($text) ;
       foreach($frequencies as $qSymbol => $count) {
-        $qIdSymbol = $this->s->sym($qSymbol) ;
+        $qIdSymbol = $this->s->symbol($qSymbol) ;
         // Forward
         $this->indexes['T'][$tIdSymbol]['Q'][$qIdSymbol] = $count ;
         @ $this->indexes['T'][$tIdSymbol]['#'] += $count ;
@@ -439,9 +340,10 @@ class SymbolIndexesBuilder extends SymbolIndexesStore {
       }
     }
     $this->addQualifiedSymbols($newQualifiedSymbols,$decomposer) ;
-   }
+  }
   
-
+  
+  
   
   /**
    * Add new qualified symbols. This function is normally called only by addTexts.
@@ -449,11 +351,11 @@ class SymbolIndexesBuilder extends SymbolIndexesStore {
    * @param List*(QSymbol)! $qualifiedSymbols
    * @return List*(CSymbol)! list of new composite symbol added
    */
-  public function addQualifiedSymbols($qualifiedSymbols, SymbolDecomposer $decomposer) {
+  protected function addQualifiedSymbols($qualifiedSymbols, SymbolDecomposer $decomposer) {
     $newCompositeSymbols = array() ;
     // for all qualified symbols
     foreach($qualifiedSymbols as $qSymbol) {
-      $qIdSymbol = $this->s->sym($qSymbol) ;
+      $qIdSymbol = $this->s->symbol($qSymbol) ;
       
       if (!isset($this->indexes['Q'][$qIdSymbol]['C'])) {
         // Computation Q2C
@@ -462,7 +364,7 @@ class SymbolIndexesBuilder extends SymbolIndexesStore {
         
         $cIdsSymbols = array() ;
         foreach ($cSymbols as $cSymbol) {
-          $cIdSymbol = $this->s->sym($cSymbol) ;
+          $cIdSymbol = $this->s->symbol($cSymbol) ;
           $cIdsSymbols[] = $cIdSymbol ;
           
           // Chaining
@@ -489,11 +391,11 @@ class SymbolIndexesBuilder extends SymbolIndexesStore {
    * Add new composite symbols. This function is normally called only by addQualifiedSymbols.
    * Runs at C2A level but trigger levels below
    */
-  public function addCompositeSymbols($compositeSymbols, SymbolDecomposer $decomposer) {
+  protected function addCompositeSymbols($compositeSymbols, SymbolDecomposer $decomposer) {
     $newAtomicSymbols = array();
     // for all compound symbols found in the previous step
     foreach($compositeSymbols as $cSymbol) {
-      $cIdSymbol = $this->s->sym($cSymbol) ;
+      $cIdSymbol = $this->s->symbol($cSymbol) ;
       
       if (!isset($this->indexes['C'][$cIdSymbol]['A'])) {
         // Computation C2A
@@ -502,7 +404,7 @@ class SymbolIndexesBuilder extends SymbolIndexesStore {
 
         $aIdsSymbols = array() ;
         foreach ($aSymbols as $aSymbol) {
-          $aIdSymbol = $this->s->sym($aSymbol) ;
+          $aIdSymbol = $this->s->symbol($aSymbol) ;
           $aIdsSymbols[] = $aIdSymbol ;
           
           // Chaining 
@@ -528,7 +430,7 @@ class SymbolIndexesBuilder extends SymbolIndexesStore {
    * Add new atomic symbols. This function is normally called only by addCompositeSymbols.
    * Runs at A2R level
    */
-    public function addAtomicSymbols($atomicSymbols, SymbolDecomposer $decomposer) {
+  protected function addAtomicSymbols($atomicSymbols, SymbolDecomposer $decomposer) {
     // for all atomic symbols found in the previous step
     foreach($atomicSymbols as $aSymbol) {
       if (!isset($this->indexes['A'][$aSymbol]['R'])) {
@@ -545,8 +447,26 @@ class SymbolIndexesBuilder extends SymbolIndexesStore {
     }
   }
 
-  public function __construct($filename=null, SymbolTable $symbolTable=null) {
-    parent::__construct($filename,$symbolTable) ;
+  /**
+   * Build indexes from a corpus or load existing indexes from the file specified
+   * @param DecomposableTextCorpus|Filename|null $corpusOrExistingIndexFilenameOrNull 
+   * If a corpus is given, then the index is build from this initial corpus.
+   * If a string is given, it is assumed to be an existing indexes file name. Initialize
+   * the indexes with it.  
+   * If null is provided the indexes are initialized to empty.
+   * @param SymbolTable? $symbolTable an optional symbol table.
+   */
+  public function __construct($corpusOrExistingIndexFilenameOrNull=null, SymbolTable $symbolTable=null) {
+    if ($corpusOrExistingIndexFilenameOrNull instanceof TextCorpus) {
+      $corpus = $corpusOrExistingIndexFilenameOrNull ;
+      // a corpus is given. Initialize the index from this corpus
+      parent::__construct(null,$symbolTable) ;
+      $this->addCorpus($corpus) ;
+    } else {
+      // this is not a corpus, just initialize the parent class
+      $existingIndexFilenameOrNull = $corpusOrExistingIndexFilenameOrNull ;
+      parent::__construct($existingIndexFilenameOrNull,$symbolTable) ;
+    }
   }
 }
 
@@ -557,10 +477,7 @@ class SymbolIndexesBuilder extends SymbolIndexesStore {
  * Symbol indexes with navigation, synthesized information, etc.
  */
 class SymbolIndexes extends SymbolIndexesBuilder {
-  
-  
-  
-  
+    
   // TSymbol -> Map*(QSymbol,Integer>=1)
   // QSymbol -> List*(CSymbol)
   // CSymbol -> List*(ASymbol)
@@ -619,8 +536,14 @@ class SymbolIndexes extends SymbolIndexesBuilder {
     return array_keys($this->indexes[$kind]) ;
   }
   
+  public function exists($kind,$symbol) {
+    return isset($this->indexes[$kind][$symbol]) ;
+  }
+  
+  
+  
   /*--------------------------------------------------------------------------
-   * Navigation down
+   * Navigation down (starting from texts and going towards smaller symbols)
    *-------------------------------------------------------------------------- 
    */
   
@@ -713,19 +636,16 @@ class SymbolIndexes extends SymbolIndexesBuilder {
     return count($this->getFrequencies($tSymbolSet,$targetElementKind)) ;
   }
   
-  /**
-   * Return a tag cloud representing the frequencies of symbols in a given tSymbolSet 
-   * @see getFrequencies for the documentation
-   * @param $tSymbolSet? $tSymbolSet  
-   * @param SymbolKind! $targetElementKind
-   * @return HTMLString the tag cloud corresponding to symbol usage
+  
+  /*--------------------------------------------------------------------------
+   * Navigation up
+   *--------------------------------------------------------------------------
+   * Staring from a given symbol at a given level, indicates where this symbol
+   * is used.
    */
-  public function getCloud($tSymbolSet=null,$targetElementKind) {
-    return cloud($this->getFrequencies($tSymbolSet,$targetElementKind)) ;
-  }
   
   /**
-   *
+   * Return the direct containers of a given element
    */
   public function getDirectContainers($element,$elementKind) {
     $previousKind = $this->getPreviousLevel($elementKind) ;
@@ -736,7 +656,7 @@ class SymbolIndexes extends SymbolIndexesBuilder {
   }
   
   /**
-   *
+   * Return the direct containers of a given element
    */
   public function getContainersTree($element,$elementKind,$containerKind='T') {
     if ($elementKind==$containerKind) {
@@ -756,7 +676,7 @@ class SymbolIndexes extends SymbolIndexesBuilder {
       return $containerTree ;
     }
   }
- 
+  
   /**
    *
    */
@@ -775,24 +695,37 @@ class SymbolIndexes extends SymbolIndexesBuilder {
       return $out ;
     }
   }
+  
+  
+  /**
+   * Return a tag cloud representing the frequencies of symbols in a given tSymbolSet 
+   * @see getFrequencies for the documentation
+   * @param $tSymbolSet? $tSymbolSet  
+   * @param SymbolKind! $targetElementKind
+   * @return HTMLString the tag cloud corresponding to symbol usage
+   */
+  public function getCloud($tSymbolSet=null,$targetElementKind) {
+    return cloud($this->getFrequencies($tSymbolSet,$targetElementKind)) ;
+  }
+  
+
+ 
     
   
 
-  
-
-  
-    
-  public function __construct($filename=null, SymbolTable $symbolTable=null) {
-    parent::__construct($filename,$symbolTable) ;
+  /**
+   * Build indexes from a corpus or load existing indexes from the file specified
+   * @param DecomposableTextCorpus|Filename|null $corpusOrExistingIndexFilenameOrNull
+   * If a corpus is given, then the index is build from this initial corpus.
+   * If a string is given, it is assumed to be an existing indexes file name. Initialize
+   * the indexes with it.
+   * If null is provided the indexes are initialized to empty.
+   * @param SymbolTable? $symbolTable an optional symbol table.
+   */
+  public function __construct($corpusOrExistingIndexFilenameOrNull=null, SymbolTable $symbolTable=null) {
+    parent::__construct($corpusOrExistingIndexFilenameOrNull,$symbolTable) ;
   }
 }
-
-
-
-
-
-
-
 
 
 
@@ -813,60 +746,6 @@ function cloud($frequencies) {
 }
 
 
-/**
- * Extract identifier occurrences from a text.
- * Identifiers are segments that are between nonIdRegExpr (see below).
- * No processing is done on these identifiers.
- * Does not apply any kind of lexical analysis to avoid comments, strings, etc.
- * @param String $text The text to analyse.
- * @param RegExpr? $nonIdRegexpr non ids segments that will be ignored.
- * Default to /[^a-zA-Z_]+/
- * @param 'alpha'|'frequence' $order order of the result. Default to 'alpha'
- * @return Map(String!,Integer>0!)! The frequency map of each identifiers.
- */
-function idsFrequencies($text,$idRegExpr='/[a-zA-Z_]\w*/',$order='alpha') {
-  if (preg_match_all($idRegExpr,$text,$matches,PREG_PATTERN_ORDER)) {
-    $ids=$matches[0] ;
-    $frequencies = array_frequencies($ids) ;
-    remove_non_string_keys($frequencies) ;
-    switch($order) {
-      case 'alpha':
-        ksort($frequencies) ;
-        break ;
-      case '':
-        arsort($frequencies) ;
-        break ;
-      default :
-    }
-    return $frequencies ;
-  } else {
-    return array() ;
-  }
-}
 
-
-/**
- * Split an identifier in its logical segmements.
- * @param String $id
- * @param (Function(String!):String!)? A function to apply on each segment.
- * Could be either a anonymous function or a function name like "strtolower",
- * "strtoupper" or "ucfirst". If null is provided then each segment is left as is.
- * Default to strtolower.
- * left as is.
- * @param $regExpr
- * @param $replacement
- * @return List*(String!*)! The list of segment in the identifier
- */
-function idSegments($id,$fun="strtolower",$regExpr='/_/',$replacement=' ') {
-  $idnew = preg_replace( '/([a-z])([A-Z])/', '$1 $2', $id );
-  $idnew = preg_replace($regExpr, $replacement, $idnew) ;
-  $idnew = preg_replace( '/([A-Z]+)([A-Z][a-z]+)/', "$1 $2", $idnew );
-  $idnew = trim(preg_replace('/  /',' ',$idnew)) ;
-  $segments = explode(' ',$idnew) ;
-  if (isset($fun)) {
-    $segments = array_map($fun,$segments) ;
-  }
-  return $segments ;
-}
 
 

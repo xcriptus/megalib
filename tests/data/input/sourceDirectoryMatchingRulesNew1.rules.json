@@ -1,0 +1,23 @@
+
+[
+  {
+    "rule.id": "_1",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java",
+    "rule.origin": "TeTaLa/.latala",
+    "renderer": "GeSHi",
+    "language": "java",
+    "GeSHi.language": "java"
+  },
+  {
+    "rule.id": "_2",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .pl",
+    "rule.origin": "Perl/.latala",
+    "renderer": "GeSHi",
+    "language": "Perl",
+    "GeSHi.language": "perl"
+  }
+  
+
+]

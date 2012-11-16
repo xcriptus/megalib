@@ -1,0 +1,1579 @@
+
+[
+  {
+    "rule.id": "_1",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .tetala",
+    "rule.origin": "TeTaLa/.latala",
+    "renderer": "GeSHi",
+    "language": "TeTaLa",
+    "GeSHi.language": "javascript"
+  },
+  {
+    "rule.id": "_2",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .pl",
+    "rule.origin": "Perl/.latala",
+    "renderer": "GeSHi",
+    "language": "Perl",
+    "GeSHi.language": "perl"
+  },
+  {
+    "rule.id": "_3",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .fratala",
+    "rule.origin": "FraTaLa/.latala",
+    "renderer": "GeSHi",
+    "language": "FraTaLa",
+    "GeSHi.language": "javascript"
+  },
+  {
+    "rule.id": "_5",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .st",
+    "rule.origin": "Smalltalk/.latala",
+    "renderer": "GeSHi",
+    "language": "Smalltalk",
+    "GeSHi.language": "smalltalk"
+  },
+  {
+    "rule.id": "_4",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java",
+    "rule.origin": "Java/.latala",
+    "renderer": "GeSHi",
+    "language": "Java",
+    "GeSHi.language": "java",
+    "locator": "technology/JFragmentLocator/locator.py",
+    "matchingRegexpr": "'#^import *(.*) *$#'"
+  },
+  {
+    "rule.id": "_6",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .html",
+    "rule.origin": "HTML/.latala",
+    "renderer": "GeSHi",
+    "language": "HTML",
+    "GeSHi.language": "html"
+  },
+  {
+    "rule.id": "_8",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .scala",
+    "rule.origin": "Scala/.latala",
+    "renderer": "GeSHi",
+    "language": "Scala",
+    "GeSHi.language": "scala"
+  },
+  {
+    "rule.id": "_7",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .erl",
+    "rule.origin": "Erlang/.latala",
+    "renderer": "GeSHi",
+    "language": "Erlang",
+    "GeSHi.language": "erlang"
+  },
+  {
+    "rule.id": "_9",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .wsdl",
+    "rule.origin": "WSDL/.latala",
+    "renderer": "GeSHi",
+    "language": "WSDL",
+    "GeSHi.language": "xml"
+  },
+  {
+    "rule.id": "_10",
+    "rule.restriction": "file",
+    "rule.condition": "endsWithOne .xq .xqery",
+    "rule.origin": "XQuery/.latala",
+    "renderer": "GeSHi",
+    "language": "XQuery",
+    "GeSHi.language": "xml",
+    "locator": "technology/XmlFragmentLocator/locator.py"
+  },
+  {
+    "rule.id": "_13",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .rsc",
+    "rule.origin": "Rascal/.latala",
+    "renderer": "GeSHi",
+    "language": "Rascal",
+    "GeSHi.language": "text"
+  },
+  {
+    "rule.id": "_12",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .py",
+    "rule.origin": "Python/.latala",
+    "renderer": "GeSHi",
+    "language": "Python",
+    "GeSHi.language": "python"
+  },
+  {
+    "rule.id": "_11",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .fs",
+    "rule.origin": "FSharp/.latala",
+    "renderer": "GeSHi",
+    "language": "FSharp",
+    "GeSHi.language": "text"
+  },
+  {
+    "rule.id": "_14",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .xsd",
+    "rule.origin": "XSD/.latala",
+    "renderer": "GeSHi",
+    "language": "XSD",
+    "GeSHi.language": "xml",
+    "locator": "technology/XmlFragmentLocator/locator.py"
+  },
+  {
+    "rule.id": "_15",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .cs",
+    "rule.origin": "CSharp/.latala",
+    "renderer": "GeSHi",
+    "language": "CSharp",
+    "GeSHi.language": "csharp"
+  },
+  {
+    "rule.id": "_16",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .aj",
+    "rule.origin": "AspectJ/.latala",
+    "renderer": "GeSHi",
+    "language": "AspectJ",
+    "GeSHi.language": "text"
+  },
+  {
+    "rule.id": "_17",
+    "rule.restriction": "file",
+    "rule.condition": "endsWithOne .sql .sqlcmdvars .sqldeployment .sqlpermissions .sqlsettings",
+    "rule.origin": "SQL/.latala",
+    "renderer": "GeSHi",
+    "language": "SQL",
+    "GeSHi.language": "sql"
+  },
+  {
+    "rule.id": "_18",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .xhtml",
+    "rule.origin": "XHTML/.latala",
+    "renderer": "GeSHi",
+    "language": "XHTML",
+    "GeSHi.language": "html"
+  },
+  {
+    "rule.id": "_19",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .json",
+    "rule.origin": "JSON/.latala",
+    "renderer": "GeSHi",
+    "language": "JSON",
+    "GeSHi.language": "javascript"
+  },
+  {
+    "rule.id": "_20",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .css",
+    "rule.origin": "CSS/.latala",
+    "renderer": "GeSHi",
+    "language": "CSS",
+    "GeSHi.language": "css"
+  },
+  {
+    "rule.id": "_21",
+    "rule.restriction": "file",
+    "rule.condition": "endsWithOne .erb .rb",
+    "rule.origin": "Ruby/.latala",
+    "renderer": "GeSHi",
+    "language": "Ruby",
+    "GeSHi.language": "text"
+  },
+  {
+    "rule.id": "_22",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .hs",
+    "rule.origin": "Haskell/.latala",
+    "renderer": "GeSHi",
+    "language": "Haskell",
+    "GeSHi.language": "haskell",
+    "locator": "technology/HsFragmentLocator/locator.py",
+    "matcher": "technology/HsImportMatcher/matcher.py"
+  },
+  {
+    "rule.id": "_23",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .atl",
+    "rule.origin": "ATL/.latala",
+    "renderer": "GeSHi",
+    "language": "ATL",
+    "GeSHi.language": "text"
+  },
+  {
+    "rule.id": "_24",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .ecore",
+    "rule.origin": "Ecore/.latala",
+    "renderer": "GeSHi",
+    "language": "Ecore",
+    "GeSHi.language": "xml",
+    "locator": "technology/XmlFragmentLocator/locator.py"
+  },
+  {
+    "rule.id": "_25",
+    "rule.restriction": "file",
+    "rule.condition": "endsWithOne .php .php4 .php5",
+    "rule.origin": "PHP/.latala",
+    "renderer": "GeSHi",
+    "language": "PHP",
+    "GeSHi.language": "php"
+  },
+  {
+    "rule.id": "_27",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .pro",
+    "rule.origin": "Prolog/.latala",
+    "renderer": "GeSHi",
+    "language": "Prolog",
+    "GeSHi.language": "prolog"
+  },
+  {
+    "rule.id": "_26",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .xmi",
+    "rule.origin": "XMI/.latala",
+    "renderer": "GeSHi",
+    "language": "XMI",
+    "GeSHi.language": "xml",
+    "locator": "technology/XmlFragmentLocator/locator.py"
+  },
+  {
+    "rule.id": "_28",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .xml",
+    "rule.origin": "XML/.latala",
+    "renderer": "GeSHi",
+    "language": "XML",
+    "GeSHi.language": "xml",
+    "locator": "technology/XmlFragmentLocator/locator.py"
+  },
+  {
+    "rule.id": "_29",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .latala",
+    "rule.origin": "LaTaLa/.latala",
+    "renderer": "GeSHi",
+    "language": "LaTaLa",
+    "GeSHi.language": "javascript"
+  },
+  {
+    "rule.id": "_31",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .js",
+    "rule.origin": "JavaScript/.latala",
+    "renderer": "GeSHi",
+    "language": "JavaScript",
+    "GeSHi.language": "javascript"
+  },
+  {
+    "rule.id": "_30",
+    "rule.restriction": "file",
+    "rule.condition": "endsWithOne .cpp .hpp",
+    "rule.origin": "CPlusPlus/.latala",
+    "renderer": "GeSHi",
+    "language": "CPlusPlus",
+    "GeSHi.language": "cpp",
+    "matchingRegexpr": "/^ .#include *(.*) *$#'"
+  },
+  {
+    "rule.id": "_32",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .cob",
+    "rule.origin": "Cobol/.latala",
+    "renderer": "GeSHi",
+    "language": "Cobol",
+    "GeSHi.language": "cobol"
+  },
+  {
+    "rule.id": "_33",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .xml && content | matches null | eval ${1} | equals basename | matches #^[.]project$#",
+    "rule.origin": "Eclipse/.tetala#0",
+    "elementKind": "source",
+    "language": "XML",
+    "technology": "Eclipse"
+  },
+  {
+    "rule.id": "_34",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .xml && content | matches null | eval ${1} | equals basename | matches #^[.]classpath$#",
+    "rule.origin": "Eclipse/.tetala#1",
+    "elementKind": "source",
+    "language": "XML",
+    "technology": "Eclipse"
+  },
+  {
+    "rule.id": "_35",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.bouncycastle",
+    "rule.origin": "Bouncy Castle/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Bouncy Castle"
+  },
+  {
+    "rule.id": "_36",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.bcel",
+    "rule.origin": "BCEL/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "BCEL"
+  },
+  {
+    "rule.id": "_37",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^xom-(.*)[.]jar$#",
+    "rule.origin": "JDOM/.tetala#0",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JDOM"
+  },
+  {
+    "rule.id": "_38",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.struts$",
+    "rule.origin": "Struts/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Struts"
+  },
+  {
+    "rule.id": "_39",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^gwt-servlet[.]jar$#",
+    "rule.origin": "GWT/.tetala#0",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "GWT"
+  },
+  {
+    "rule.id": "_40",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.antlr.runtime",
+    "rule.origin": "ANTLR/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "ANTLR"
+  },
+  {
+    "rule.id": "_41",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals antlr.collections",
+    "rule.origin": "ANTLR/.tetala#1",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "ANTLR"
+  },
+  {
+    "rule.id": "_42",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^antlr-(.*)[.]jar$#",
+    "rule.origin": "ANTLR/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "ANTLR"
+  },
+  {
+    "rule.id": "_43",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^ant-antlr[.]jar$#",
+    "rule.origin": "ANTLR/.tetala#3",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "ANTLR"
+  },
+  {
+    "rule.id": "_44",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^(.*)[.]g$#",
+    "rule.origin": "ANTLR/.tetala#4",
+    "elementKind": "source",
+    "language": "text",
+    "technology": "ANTLR"
+  },
+  {
+    "rule.id": "_45",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^(.*)[.]tokens$#",
+    "rule.origin": "ANTLR/.tetala#5",
+    "elementKind": "source",
+    "language": "text",
+    "technology": "ANTLR"
+  },
+  {
+    "rule.id": "_46",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals basename | matches #^(.*)Lexer[.]java$#",
+    "rule.origin": "ANTLR/.tetala#6",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "ANTLR"
+  },
+  {
+    "rule.id": "_47",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals basename | matches #^(.*)Parser[.]java$#",
+    "rule.origin": "ANTLR/.tetala#7",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "ANTLR"
+  },
+  {
+    "rule.id": "_48",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.hamcrest",
+    "rule.origin": "Hamcrest/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Hamcrest"
+  },
+  {
+    "rule.id": "_49",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.xml.bind",
+    "rule.origin": "JAXB/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JAXB"
+  },
+  {
+    "rule.id": "_50",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jaxb-api[.]jar$#",
+    "rule.origin": "JAXB/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JAXB"
+  },
+  {
+    "rule.id": "_51",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jaxrs-api[.]jar$#",
+    "rule.origin": "JAXB/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JAXB"
+  },
+  {
+    "rule.id": "_52",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jaxws-api[.]jar$#",
+    "rule.origin": "JAXB/.tetala#3",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JAXB"
+  },
+  {
+    "rule.id": "_53",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^google_sql[.]jar$#",
+    "rule.origin": "JDBC/.tetala#0",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JDBC"
+  },
+  {
+    "rule.id": "_54",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^mysql-connector-java-(.*)-bin[.]jar$#",
+    "rule.origin": "JDBC/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JDBC"
+  },
+  {
+    "rule.id": "_55",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.mortbay.jetty",
+    "rule.origin": "Jetty/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Jetty"
+  },
+  {
+    "rule.id": "_56",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.oro",
+    "rule.origin": "ORO/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "ORO"
+  },
+  {
+    "rule.id": "_57",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.activation",
+    "rule.origin": "JAF/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JAF"
+  },
+  {
+    "rule.id": "_58",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^activation[.]jar$#",
+    "rule.origin": "JAF/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JAF"
+  },
+  {
+    "rule.id": "_59",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals junit",
+    "rule.origin": "JUnit/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JUnit"
+  },
+  {
+    "rule.id": "_60",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^junit[.]jar$#",
+    "rule.origin": "JUnit/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JUnit"
+  },
+  {
+    "rule.id": "_61",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.bsf",
+    "rule.origin": "BSF/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "BSF"
+  },
+  {
+    "rule.id": "_62",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.lucene",
+    "rule.origin": "Lucene/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Lucene"
+  },
+  {
+    "rule.id": "_63",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^lucene-core[.]jar$#",
+    "rule.origin": "Lucene/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Lucene"
+  },
+  {
+    "rule.id": "_64",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.swing",
+    "rule.origin": "Swing/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Swing"
+  },
+  {
+    "rule.id": "_65",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals com.sun.swing",
+    "rule.origin": "Swing/.tetala#1",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Swing"
+  },
+  {
+    "rule.id": "_66",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals com.lowagie.text",
+    "rule.origin": "iText/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "iText"
+  },
+  {
+    "rule.id": "_67",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^itext[.]jar$#",
+    "rule.origin": "iText/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "iText"
+  },
+  {
+    "rule.id": "_68",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^itext-rtf[.]jar$#",
+    "rule.origin": "iText/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "iText"
+  },
+  {
+    "rule.id": "_69",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.slf4j",
+    "rule.origin": "SLF4J/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "SLF4J"
+  },
+  {
+    "rule.id": "_70",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^slf4j-api[.]jar$#",
+    "rule.origin": "SLF4J/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "SLF4J"
+  },
+  {
+    "rule.id": "_71",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^slf4j-log4j(.*)[.]jar$#",
+    "rule.origin": "SLF4J/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "SLF4J"
+  },
+  {
+    "rule.id": "_72",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.jaxen",
+    "rule.origin": "Jaxen/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Jaxen"
+  },
+  {
+    "rule.id": "_73",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.jfree.chart",
+    "rule.origin": "JFreeChart/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JFreeChart"
+  },
+  {
+    "rule.id": "_74",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.jfree.data",
+    "rule.origin": "JFreeChart/.tetala#1",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JFreeChart"
+  },
+  {
+    "rule.id": "_75",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jfreechart[.]jar$#",
+    "rule.origin": "JFreeChart/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JFreeChart"
+  },
+  {
+    "rule.id": "_76",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals com.opensymphony.oscache",
+    "rule.origin": "OSCache/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "OSCache"
+  },
+  {
+    "rule.id": "_77",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.hibernate",
+    "rule.origin": "Hibernate/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Hibernate"
+  },
+  {
+    "rule.id": "_78",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^hibernate(.*)[.]jar$#",
+    "rule.origin": "Hibernate/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Hibernate"
+  },
+  {
+    "rule.id": "_79",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals com.apple.eawt",
+    "rule.origin": "Java_platform/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Java_platform"
+  },
+  {
+    "rule.id": "_80",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.media",
+    "rule.origin": "JMF/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JMF"
+  },
+  {
+    "rule.id": "_81",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^Makefile$#",
+    "rule.origin": "make/.tetala#0",
+    "elementKind": "source",
+    "language": "text",
+    "technology": "make"
+  },
+  {
+    "rule.id": "_82",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .cs && content | matches null | eval ${1} | equals System.Xml",
+    "rule.origin": ".NET/.tetala#0",
+    "elementKind": "source",
+    "language": "CSharp",
+    "technology": ".NET"
+  },
+  {
+    "rule.id": "_83",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.dom4j",
+    "rule.origin": "dom4j/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "dom4j"
+  },
+  {
+    "rule.id": "_84",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^xalan[.]jar$#",
+    "rule.origin": "dom4j/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "dom4j"
+  },
+  {
+    "rule.id": "_85",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.print",
+    "rule.origin": "Java Print/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Java Print"
+  },
+  {
+    "rule.id": "_86",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^gretl[.]jar$#",
+    "rule.origin": "GReTL/.tetala#0",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "GReTL"
+  },
+  {
+    "rule.id": "_87",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals java.awt",
+    "rule.origin": "AWT/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "AWT"
+  },
+  {
+    "rule.id": "_88",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals sun.awt",
+    "rule.origin": "AWT/.tetala#1",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "AWT"
+  },
+  {
+    "rule.id": "_89",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.commons",
+    "rule.origin": "Apache Commons/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_90",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-beanutils[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_91",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-cli-(.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_92",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-codec(-.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#3",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_93",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-collections(-.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#4",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_94",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-digester[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#5",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_95",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-el-(.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#6",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_96",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-httpclient(-.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#7",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_97",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-io[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#8",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_98",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-lang(-.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#9",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_99",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-logging(-.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#10",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_100",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-logging-api-(.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#11",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_101",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^commons-net-(.*)[.]jar$#",
+    "rule.origin": "Apache Commons/.tetala#12",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Apache Commons"
+  },
+  {
+    "rule.id": "_102",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.htmlparser",
+    "rule.origin": "HTML Parser/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "HTML Parser"
+  },
+  {
+    "rule.id": "_103",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^htmlparser[.]jar$#",
+    "rule.origin": "HTML Parser/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "HTML Parser"
+  },
+  {
+    "rule.id": "_104",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.ecs",
+    "rule.origin": "ECS/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "ECS"
+  },
+  {
+    "rule.id": "_105",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^xalan[.]jar$#",
+    "rule.origin": "Xalan-Java/.tetala#0",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Xalan-Java"
+  },
+  {
+    "rule.id": "_106",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.jdom",
+    "rule.origin": "XOM/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "XOM"
+  },
+  {
+    "rule.id": "_107",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jdom-(.*)[.]jar$#",
+    "rule.origin": "XOM/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "XOM"
+  },
+  {
+    "rule.id": "_108",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .xml && content | matches null | eval ${1} | equals basename | matches #^build[.]xml$#",
+    "rule.origin": "Ant/.tetala#0",
+    "elementKind": "source",
+    "language": "XML",
+    "technology": "Ant"
+  },
+  {
+    "rule.id": "_109",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.springframework",
+    "rule.origin": "Spring/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Spring"
+  },
+  {
+    "rule.id": "_110",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^spring[.]jar$#",
+    "rule.origin": "Spring/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Spring"
+  },
+  {
+    "rule.id": "_111",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.objectweb.asm",
+    "rule.origin": "ASM/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "ASM"
+  },
+  {
+    "rule.id": "_112",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^asm[.]jar$#",
+    "rule.origin": "ASM/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "ASM"
+  },
+  {
+    "rule.id": "_113",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^asm-attrs[.]jar$#",
+    "rule.origin": "ASM/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "ASM"
+  },
+  {
+    "rule.id": "_114",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jsf-api[.]jar$#",
+    "rule.origin": "JSF/.tetala#0",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JSF"
+  },
+  {
+    "rule.id": "_115",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jsf-facelets[.]jar$#",
+    "rule.origin": "JSF/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JSF"
+  },
+  {
+    "rule.id": "_116",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jsf-impl[.]jar$#",
+    "rule.origin": "JSF/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JSF"
+  },
+  {
+    "rule.id": "_117",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.servlet",
+    "rule.origin": "Servlet API/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Servlet API"
+  },
+  {
+    "rule.id": "_118",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^servlet-api[.]jar$#",
+    "rule.origin": "Servlet API/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Servlet API"
+  },
+  {
+    "rule.id": "_119",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.avalon",
+    "rule.origin": "Avalon/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Avalon"
+  },
+  {
+    "rule.id": "_120",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.jgraph",
+    "rule.origin": "JGraph/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JGraph"
+  },
+  {
+    "rule.id": "_121",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals Jama",
+    "rule.origin": "JAMA/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JAMA"
+  },
+  {
+    "rule.id": "_122",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals ognl",
+    "rule.origin": "OGNL/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "OGNL"
+  },
+  {
+    "rule.id": "_123",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.xml.sax",
+    "rule.origin": "SAX/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "SAX"
+  },
+  {
+    "rule.id": "_124",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javassist",
+    "rule.origin": "Javassist/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Javassist"
+  },
+  {
+    "rule.id": "_125",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.python",
+    "rule.origin": "Jython/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Jython"
+  },
+  {
+    "rule.id": "_126",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.w3c.tidy",
+    "rule.origin": "Tidy/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Tidy"
+  },
+  {
+    "rule.id": "_127",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals java_cup.runtime",
+    "rule.origin": "CUP/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "CUP"
+  },
+  {
+    "rule.id": "_128",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals com.thoughtworks.xstream",
+    "rule.origin": "XStream/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "XStream"
+  },
+  {
+    "rule.id": "_129",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals com.google.common",
+    "rule.origin": "Guava/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Guava"
+  },
+  {
+    "rule.id": "_130",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.transaction",
+    "rule.origin": "JTA/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JTA"
+  },
+  {
+    "rule.id": "_131",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jta[.]jar$#",
+    "rule.origin": "JTA/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JTA"
+  },
+  {
+    "rule.id": "_132",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.velocity",
+    "rule.origin": "Velocity/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Velocity"
+  },
+  {
+    "rule.id": "_133",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.jivesoftware.smack",
+    "rule.origin": "Smack/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "Smack"
+  },
+  {
+    "rule.id": "_134",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.mail",
+    "rule.origin": "JavaMail/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JavaMail"
+  },
+  {
+    "rule.id": "_135",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^mail[.]jar$#",
+    "rule.origin": "JavaMail/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JavaMail"
+  },
+  {
+    "rule.id": "_136",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.naming",
+    "rule.origin": "JNDI/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JNDI"
+  },
+  {
+    "rule.id": "_137",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-debug[.]jar$#",
+    "rule.origin": "Seam/.tetala#0",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_138",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-debug-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_139",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-excel[.]jar$#",
+    "rule.origin": "Seam/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_140",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-excel-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#3",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_141",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-ioc[.]jar$#",
+    "rule.origin": "Seam/.tetala#4",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_142",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-ioc-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#5",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_143",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam[.]jar$#",
+    "rule.origin": "Seam/.tetala#6",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_144",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-jul[.]jar$#",
+    "rule.origin": "Seam/.tetala#7",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_145",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-mail[.]jar$#",
+    "rule.origin": "Seam/.tetala#8",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_146",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-mail-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#9",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_147",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-pdf[.]jar$#",
+    "rule.origin": "Seam/.tetala#10",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_148",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-pdf-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#11",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_149",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-remoting[.]jar$#",
+    "rule.origin": "Seam/.tetala#12",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_150",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-remoting-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#13",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_151",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-rss[.]jar$#",
+    "rule.origin": "Seam/.tetala#14",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_152",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-rss-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#15",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_153",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#16",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_154",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-ui[.]jar$#",
+    "rule.origin": "Seam/.tetala#17",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_155",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-ui-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#18",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_156",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-wicket-ant-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#19",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_157",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jboss-seam-wicket-sources[.]jar$#",
+    "rule.origin": "Seam/.tetala#20",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_158",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^meldware-mailapi[.]jar$#",
+    "rule.origin": "Seam/.tetala#21",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_159",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^meldware-mailjmx[.]jar$#",
+    "rule.origin": "Seam/.tetala#22",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_160",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^metawidget-backend[.]jar$#",
+    "rule.origin": "Seam/.tetala#23",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_161",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^metawidget-frontend[.]jar$#",
+    "rule.origin": "Seam/.tetala#24",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_162",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^metawidget[.]jar$#",
+    "rule.origin": "Seam/.tetala#25",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_163",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^mvel14[.]jar$#",
+    "rule.origin": "Seam/.tetala#26",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_164",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^thirdparty-all[.]jar$#",
+    "rule.origin": "Seam/.tetala#27",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "Seam"
+  },
+  {
+    "rule.id": "_165",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals com.jgoodies",
+    "rule.origin": "JGoodies/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JGoodies"
+  },
+  {
+    "rule.id": "_166",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.persistence",
+    "rule.origin": "JPA/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JPA"
+  },
+  {
+    "rule.id": "_167",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .hs && exec technology/HsImportMatcher/matcher.py Text.XML.HXT",
+    "rule.origin": "HXT/.tetala#0",
+    "elementKind": "source",
+    "language": "Haskell",
+    "technology": "HXT"
+  },
+  {
+    "rule.id": "_168",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals javax.ejb",
+    "rule.origin": "EJB/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "EJB"
+  },
+  {
+    "rule.id": "_169",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^ejb-api[.]jar$#",
+    "rule.origin": "EJB/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "EJB"
+  },
+  {
+    "rule.id": "_170",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.jgroups",
+    "rule.origin": "JGroups/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "JGroups"
+  },
+  {
+    "rule.id": "_171",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^jgroups[.]jar$#",
+    "rule.origin": "JGroups/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "JGroups"
+  },
+  {
+    "rule.id": "_172",
+    "rule.restriction": "file",
+    "rule.condition": "endsWith .java && content | matches '#^import *(.*) *$#' | eval ${1} | equals org.apache.log4j",
+    "rule.origin": "log4j/.tetala#0",
+    "elementKind": "source",
+    "language": "Java",
+    "technology": "log4j"
+  },
+  {
+    "rule.id": "_173",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^log4j[.]jar$#",
+    "rule.origin": "log4j/.tetala#1",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "log4j"
+  },
+  {
+    "rule.id": "_174",
+    "rule.restriction": "file",
+    "rule.condition": "basename | matches #^log4j-(.*)[.]jar$#",
+    "rule.origin": "log4j/.tetala#2",
+    "elementKind": "archive",
+    "language": "Java",
+    "technology": "log4j"
+  }
+]
