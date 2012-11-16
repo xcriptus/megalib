@@ -4,6 +4,10 @@ require_once '../PExpressionConcrete.php' ;
 
 
 $exprs=array(
+    "lower",
+    "isFile",
+    "nop",
+    "content",
     "basename",
     "dirname",
     "eval deux",

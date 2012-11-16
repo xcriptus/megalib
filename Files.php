@@ -234,7 +234,7 @@ function /*Set*<String!>?*/ listFileNames(
             'pattern'               => isset($pattern) ? 'basename | matches '.$pattern : null,
             'excludeDotFiles'       => $excludeDotFiles,
             'excludeDotDirectories' => $excludeDotDirectories,
-            'apply'                 => ($prefixWithDirectory ? 'n' : 'basename')
+            'apply'                 => ($prefixWithDirectory ? 'nop' : 'basename')
           )) ;
 }
       
@@ -248,10 +248,13 @@ function findDirectFiles($directory,$params) {
   $exclude = isset($params['$exclude']) ? $params['$exclude'] : null ;
   $predicate = isset($params['predicate']) ? $params['predicate'] : null ;
   $init = isset($params['init']) ? isset($params['init']) : array() ;
-  $apply = isset($params['apply']) ? $params['apply'] : "collect" ;
-  $action = isset($params['action']) ? $params['action'] : null ;
+  $apply = isset($params['apply']) ? $params['apply'] : "path" ;
+  $action = isset($params['action']) ? $params['action'] : "collect" ;
   
-    
+  if (!in_array  ($apply,array('basename','path','dirname'))) {
+    $applyPExpression = new ConcretePExpression($apply) ; 
+  }
+  
   $allowedTypes=explode('|',$types) ;
   
   $accumulator = $init ;
@@ -260,6 +263,7 @@ function findDirectFiles($directory,$params) {
     // process each directory item
     while (($file = readdir($dh)) !== false) {
       $path = addToPath($directory,$file) ;
+      $matches = array() ;
       // the filetype generates a warning for a broken link so use @
       @ $type = filetype($path) ;
       // a broken link returns false. Not obvious to know which other cases
@@ -273,22 +277,29 @@ function findDirectFiles($directory,$params) {
                   && in_array($type,$allowedTypes) 
                   && ($type!=='file' || $excludeDotFiles!==TRUE || substr($file,0,1)!='.')
                   && ($type!=='dir' || $excludeDotDirectories!==TRUE || substr($file,0,1)!='.')
-                  && (!isset($predicate) || $predicate($file)) 
+                  && (!isset($predicate) || $predicate($file))                   
                   
-                  
-                  
-      // TODO use ConcretePExpression instead as the analysis of the expression will be done only once!            
+      // TODO use AbstractPExpression instead as the analysis of the expression will be done only once!            
                   && (!isset($exclude) || !matchPattern($exclude,$path))                 
                   && (!isset($pattern) || matchPattern($pattern,$path,$matches)) ;
                   
       if ($selected) {
         
         switch ($apply) {
+          // some fast tracks
           case "basename":
             $value = $file ;
             break ;
-          default:            
-            $value = $path ;            
+          case "path":
+            $value = $path ;
+            break ;
+          case "dirname";
+            $value = dirname($value) ;
+            break ;
+          // general case, this is a pexpression
+          default:
+            // TODO use AbstractPExpression instead as the analysis of the expression will be done only once!
+            $value = $applyPExpression->doEval($path,$matches) ;
         }
         
         switch ($action) {

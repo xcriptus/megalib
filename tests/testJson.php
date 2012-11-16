@@ -13,7 +13,7 @@ testMapFromJsonDirectory() ;
 function testSaveLoadMerge() {
   echo "<h2>test Save, Load, Merge json files</h2>" ;
   $in="data/input/index.summary.json" ;
-  $out="ata/generated/x.json" ;
+  $out="data/generated/x.json" ;
   $m = jsonLoadFileAsMap($in) ;
   $m['toto']='added' ;
   if (saveAsJsonFile($out,$m)) {

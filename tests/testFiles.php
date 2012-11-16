@@ -1,7 +1,10 @@
 <?php
 require_once 'main.config.local.php' ;
-
 require_once '../Files.php' ;
+
+var_dump(listFileNames('..')) ;
+
+
 testFindFiles() ;
 testIsAbsolutePath() ;
 testGetRelativePath() ;
@@ -9,7 +12,9 @@ testListFileNameFunctions('listFileNames','..') ;
 testListFileNameFunctions('listAllFileNames','.') ;
 testListAllLinksWithInfo('..') ;
 
+
 function testFindFiles() {
+  echo "<hr/><h2>Testing findFiles</h2>" ;
   $testCases = array(
       array('data/input',array('levels'=>2) ),
     ) ;
@@ -23,7 +28,7 @@ function testFindFiles() {
 }
 
 function testIsAbsolutePath() {
-  echo "<h2>Testing isAbsolutePath</h2>" ;
+  echo "<hr/><h2>Testing isAbsolutePath</h2>" ;
   $a=explode(' ',
       'c:/x/b x:\e\f ./sdkfjs flf/kdf:a \sdfkj /skfjs/sdfkj .. sdfsdf'
       . ' http://domain.org/toto file://') ;
@@ -35,7 +40,7 @@ function testIsAbsolutePath() {
 }
 
 function testGetRelativePath() {
-  echo "<h2>Testing getRelativePath</h2>" ;
+  echo "<hr/><h2>Testing getRelativePath</h2>" ;
   $a= array(
       array('/srv/foo/bar','/srv','foo/bar'),
       array('/srv/foo/bar','/srv/','foo/bar'),
@@ -56,7 +61,7 @@ function testGetRelativePath() {
 }
 
 function testListFileNameFunctions($funname,$dir) {
-  echo "<h2>Testing $funname</h2>" ;
+  echo "<hr/><h2>Testing $funname</h2>" ;
   echo "<h4>$funname($dir)</h4>" ;
   $items = $funname($dir) ;
   echo implode('<br/>',$items) ;

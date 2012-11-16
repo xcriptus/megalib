@@ -1,4 +1,4 @@
-gs<?php
+<?php
 require_once 'main.config.local.php' ;
 
 require_once '../SourceDirectories.php' ;
@@ -6,6 +6,7 @@ require_once '../FileSystemMatcher.php' ;
 
 define('OUTPUT_DIR','data/generated/') ;
 define('RULES_FILE','data/input/sourceDirectoryMatchingRules.csv') ;
+
 $basedir = '../../101results/101repo' ;
 $dir='contributions/gwtTree' ; // gwtTree
 

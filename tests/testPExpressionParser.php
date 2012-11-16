@@ -5,6 +5,9 @@ require_once '../PExpressionConcrete.php' ;
 $parser = new PExpressionParser() ;
 
 $exprs=array(
+    "nop",
+    "isFile",
+    "lower",
     "basename",
     "content | matches '#!/bin/sh'",
     "endsWith .gif",
